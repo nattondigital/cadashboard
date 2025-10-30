@@ -38,8 +38,6 @@ export function Followups() {
   const [loading, setLoading] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingData, setEditingData] = useState<{
-    trigger_event: string
-    module: string
     whatsapp_template_id: string | null
   } | null>(null)
 
@@ -83,8 +81,6 @@ export function Followups() {
   const handleEdit = (assignment: FollowupAssignment) => {
     setEditingId(assignment.id)
     setEditingData({
-      trigger_event: assignment.trigger_event,
-      module: assignment.module,
       whatsapp_template_id: assignment.whatsapp_template_id || '__none__'
     })
   }
@@ -98,8 +94,6 @@ export function Followups() {
       const { error } = await supabase
         .from('followup_assignments')
         .update({
-          trigger_event: editingData.trigger_event,
-          module: editingData.module,
           whatsapp_template_id: editingData.whatsapp_template_id === '__none__' ? null : editingData.whatsapp_template_id
         })
         .eq('id', assignmentId)
@@ -180,40 +174,20 @@ export function Followups() {
                         className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
                       >
                         <td className="py-3 px-4">
-                          {isEditing ? (
-                            <Input
-                              value={editingData?.trigger_event || ''}
-                              onChange={(e) => setEditingData(editingData ? { ...editingData, trigger_event: e.target.value } : null)}
-                              placeholder="e.g., LEAD_CREATED"
-                              className="w-full"
-                            />
-                          ) : (
-                            <>
-                              <div className="font-medium text-gray-900">
-                                {formatTriggerEvent(assignment.trigger_event)}
-                              </div>
-                              <div className="text-xs text-gray-500 font-mono mt-1">
-                                {assignment.trigger_event}
-                              </div>
-                            </>
-                          )}
+                          <div className="font-medium text-gray-900">
+                            {formatTriggerEvent(assignment.trigger_event)}
+                          </div>
+                          <div className="text-xs text-gray-500 font-mono mt-1">
+                            {assignment.trigger_event}
+                          </div>
                         </td>
                         <td className="py-3 px-4">
-                          {isEditing ? (
-                            <Input
-                              value={editingData?.module || ''}
-                              onChange={(e) => setEditingData(editingData ? { ...editingData, module: e.target.value } : null)}
-                              placeholder="e.g., Leads"
-                              className="w-32"
-                            />
-                          ) : (
-                            <Badge
-                              className={moduleColors[assignment.module] || 'bg-gray-100 text-gray-800'}
-                              variant="secondary"
-                            >
-                              {assignment.module}
-                            </Badge>
-                          )}
+                          <Badge
+                            className={moduleColors[assignment.module] || 'bg-gray-100 text-gray-800'}
+                            variant="secondary"
+                          >
+                            {assignment.module}
+                          </Badge>
                         </td>
                         <td className="py-3 px-4">
                           {isEditing ? (
