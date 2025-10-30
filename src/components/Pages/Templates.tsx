@@ -2,10 +2,11 @@ import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import {
   Plus, Eye, Edit, Trash2, Copy, Download, Upload, Star, X, Save,
-  Globe, Zap, Workflow, ExternalLink,
+  Globe, Zap, Workflow, ExternalLink, MessageSquare,
   Search, Filter, Grid, List, Play, Pause, Settings,
   Image, Video, Link, Tag, Calendar, User, Heart,
-  TrendingUp, Users, Clock, Award, CheckCircle
+  TrendingUp, Users, Clock, Award, CheckCircle, FileText,
+  FileImage, FileVideo, FileAudio, File
 } from 'lucide-react'
 import { PageHeader } from '@/components/Common/PageHeader'
 import { KPICard } from '@/components/Common/KPICard'
@@ -17,6 +18,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { formatDate } from '@/lib/utils'
+import { supabase } from '@/lib/supabase'
 
 // Mock data for different template types
 const mockWebsites = [
@@ -140,6 +142,39 @@ const mockN8nWorkflows = [
   }
 ]
 
+const mockWhatsappTemplates = [
+  {
+    id: 'WA-001',
+    name: 'Welcome Message',
+    type: 'Text',
+    mediaUrl: null,
+    bodyText: 'Welcome to our service! We\'re excited to have you here. How can we assist you today?',
+    createdBy: 'Admin User',
+    createdAt: '2024-01-22',
+    status: 'Published'
+  },
+  {
+    id: 'WA-002',
+    name: 'Product Demo Video',
+    type: 'Video',
+    mediaUrl: 'https://example.com/demo.mp4',
+    bodyText: 'Check out this quick demo of our latest product features!',
+    createdBy: 'Marketing Team',
+    createdAt: '2024-01-20',
+    status: 'Published'
+  },
+  {
+    id: 'WA-003',
+    name: 'Promotional Image',
+    type: 'Image',
+    mediaUrl: 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=400',
+    bodyText: 'Limited time offer! Get 50% off on all products this week.',
+    createdBy: 'Sales Team',
+    createdAt: '2024-01-18',
+    status: 'Published'
+  }
+]
+
 
 const statusColors: Record<string, string> = {
   'Published': 'bg-green-100 text-green-800',
@@ -159,7 +194,7 @@ const categoryColors: Record<string, string> = {
 }
 
 export function Templates() {
-  const [activeTab, setActiveTab] = useState<'websites' | 'landing-pages' | 'n8n-workflows'>('websites')
+  const [activeTab, setActiveTab] = useState<'websites' | 'landing-pages' | 'n8n-workflows' | 'whatsapp-templates'>('websites')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [searchTerm, setSearchTerm] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
@@ -177,13 +212,19 @@ export function Templates() {
     videoUrl: '',
     redirectUrl: '',
     tags: '',
-    features: ''
+    features: '',
+    type: 'Text',
+    mediaUrl: '',
+    bodyText: ''
   })
+  const [uploadingFile, setUploadingFile] = useState(false)
+  const [fileError, setFileError] = useState('')
 
   // State for each template type
   const [websites, setWebsites] = useState(mockWebsites)
   const [landingPages, setLandingPages] = useState(mockLandingPages)
   const [n8nWorkflows, setN8nWorkflows] = useState(mockN8nWorkflows)
+  const [whatsappTemplates, setWhatsappTemplates] = useState(mockWhatsappTemplates)
 
   // Get current templates based on active tab
   const getCurrentTemplates = () => {
@@ -191,6 +232,7 @@ export function Templates() {
       case 'websites': return websites
       case 'landing-pages': return landingPages
       case 'n8n-workflows': return n8nWorkflows
+      case 'whatsapp-templates': return whatsappTemplates
       default: return []
     }
   }
@@ -200,6 +242,7 @@ export function Templates() {
       case 'websites': setWebsites(templates); break
       case 'landing-pages': setLandingPages(templates); break
       case 'n8n-workflows': setN8nWorkflows(templates); break
+      case 'whatsapp-templates': setWhatsappTemplates(templates); break
     }
   }
 
@@ -207,9 +250,10 @@ export function Templates() {
   
   const filteredTemplates = currentTemplates.filter(template => {
     const matchesSearch = template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         template.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         template.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
-    const matchesCategory = !categoryFilter || template.category === categoryFilter
+                         (template.description && template.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                         (template.bodyText && template.bodyText.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                         (template.tags && template.tags.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase())))
+    const matchesCategory = !categoryFilter || template.category === categoryFilter || (activeTab === 'whatsapp-templates' && (!categoryFilter || template.type === categoryFilter))
     const matchesStatus = !statusFilter || template.status === statusFilter
     return matchesSearch && matchesCategory && matchesStatus
   })
@@ -217,8 +261,8 @@ export function Templates() {
   // Calculate KPIs
   const totalTemplates = currentTemplates.length
   const publishedTemplates = currentTemplates.filter(t => t.status === 'Published').length
-  const totalDownloads = currentTemplates.reduce((sum, t) => sum + t.downloads, 0)
-  const avgRating = currentTemplates.reduce((sum, t) => sum + t.rating, 0) / currentTemplates.length
+  const totalDownloads = activeTab === 'whatsapp-templates' ? 0 : currentTemplates.reduce((sum, t) => sum + (t.downloads || 0), 0)
+  const avgRating = activeTab === 'whatsapp-templates' ? 0 : (currentTemplates.reduce((sum, t) => sum + (t.rating || 0), 0) / currentTemplates.length || 0)
 
   const handleViewTemplate = (template: any) => {
     setSelectedTemplate(template)
@@ -227,38 +271,73 @@ export function Templates() {
 
   const handleEditTemplate = (template: any) => {
     setSelectedTemplate(template)
-    setFormData({
-      name: template.name,
-      description: template.description,
-      category: template.category,
-      status: template.status,
-      thumbnail: template.thumbnail,
-      videoUrl: template.videoUrl || '',
-      redirectUrl: template.redirectUrl || '',
-      tags: template.tags.join(', '),
-      features: template.features.join(', ')
-    })
+    if (activeTab === 'whatsapp-templates') {
+      setFormData({
+        name: template.name,
+        description: '',
+        category: '',
+        status: template.status,
+        thumbnail: '',
+        videoUrl: '',
+        redirectUrl: '',
+        tags: '',
+        features: '',
+        type: template.type || 'Text',
+        mediaUrl: template.mediaUrl || '',
+        bodyText: template.bodyText || ''
+      })
+    } else {
+      setFormData({
+        name: template.name,
+        description: template.description,
+        category: template.category,
+        status: template.status,
+        thumbnail: template.thumbnail,
+        videoUrl: template.videoUrl || '',
+        redirectUrl: template.redirectUrl || '',
+        tags: template.tags.join(', '),
+        features: template.features.join(', '),
+        type: 'Text',
+        mediaUrl: '',
+        bodyText: ''
+      })
+    }
     setShowEditModal(true)
   }
 
   const handleCreateTemplate = () => {
-    const newTemplate = {
-      id: `${activeTab.toUpperCase().replace('-', '')}-${String(Date.now()).slice(-3)}`,
-      name: formData.name,
-      description: formData.description,
-      category: formData.category,
-      thumbnail: formData.thumbnail,
-      videoUrl: formData.videoUrl || null,
-      redirectUrl: formData.redirectUrl || null,
-      rating: 0,
-      downloads: 0,
-      tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
-      createdBy: 'Admin User',
-      createdAt: new Date().toISOString().split('T')[0],
-      status: formData.status,
-      features: formData.features.split(',').map(feature => feature.trim()).filter(feature => feature)
+    let newTemplate: any
+
+    if (activeTab === 'whatsapp-templates') {
+      newTemplate = {
+        id: `WA-${String(Date.now()).slice(-3)}`,
+        name: formData.name,
+        type: formData.type,
+        mediaUrl: formData.mediaUrl || null,
+        bodyText: formData.bodyText,
+        createdBy: 'Admin User',
+        createdAt: new Date().toISOString().split('T')[0],
+        status: formData.status
+      }
+    } else {
+      newTemplate = {
+        id: `${activeTab.toUpperCase().replace('-', '')}-${String(Date.now()).slice(-3)}`,
+        name: formData.name,
+        description: formData.description,
+        category: formData.category,
+        thumbnail: formData.thumbnail,
+        videoUrl: formData.videoUrl || null,
+        redirectUrl: formData.redirectUrl || null,
+        rating: 0,
+        downloads: 0,
+        tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
+        createdBy: 'Admin User',
+        createdAt: new Date().toISOString().split('T')[0],
+        status: formData.status,
+        features: formData.features.split(',').map(feature => feature.trim()).filter(feature => feature)
+      }
     }
-    
+
     const updatedTemplates = [...currentTemplates, newTemplate]
     setCurrentTemplates(updatedTemplates)
     setShowCreateModal(false)
@@ -266,20 +345,33 @@ export function Templates() {
   }
 
   const handleUpdateTemplate = () => {
-    const updatedTemplate = {
-      ...selectedTemplate,
-      name: formData.name,
-      description: formData.description,
-      category: formData.category,
-      thumbnail: formData.thumbnail,
-      videoUrl: formData.videoUrl || null,
-      redirectUrl: formData.redirectUrl || null,
-      tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
-      features: formData.features.split(',').map(feature => feature.trim()).filter(feature => feature),
-      status: formData.status
+    let updatedTemplate: any
+
+    if (activeTab === 'whatsapp-templates') {
+      updatedTemplate = {
+        ...selectedTemplate,
+        name: formData.name,
+        type: formData.type,
+        mediaUrl: formData.mediaUrl || null,
+        bodyText: formData.bodyText,
+        status: formData.status
+      }
+    } else {
+      updatedTemplate = {
+        ...selectedTemplate,
+        name: formData.name,
+        description: formData.description,
+        category: formData.category,
+        thumbnail: formData.thumbnail,
+        videoUrl: formData.videoUrl || null,
+        redirectUrl: formData.redirectUrl || null,
+        tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
+        features: formData.features.split(',').map(feature => feature.trim()).filter(feature => feature),
+        status: formData.status
+      }
     }
-    
-    const updatedTemplates = currentTemplates.map(template => 
+
+    const updatedTemplates = currentTemplates.map(template =>
       template.id === selectedTemplate.id ? updatedTemplate : template
     )
     setCurrentTemplates(updatedTemplates)
@@ -294,6 +386,43 @@ export function Templates() {
     }
   }
 
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    // Check file size (14 MB = 14 * 1024 * 1024 bytes)
+    const maxSize = 14 * 1024 * 1024
+    if (file.size > maxSize) {
+      setFileError('File size must be less than 14 MB')
+      return
+    }
+
+    setFileError('')
+    setUploadingFile(true)
+
+    try {
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Math.random()}.${fileExt}`
+      const filePath = `whatsapp-media/${fileName}`
+
+      const { error: uploadError, data } = await supabase.storage
+        .from('media-files')
+        .upload(filePath, file)
+
+      if (uploadError) throw uploadError
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('media-files')
+        .getPublicUrl(filePath)
+
+      setFormData(prev => ({ ...prev, mediaUrl: publicUrl }))
+    } catch (error: any) {
+      setFileError(error.message || 'Failed to upload file')
+    } finally {
+      setUploadingFile(false)
+    }
+  }
+
   const resetForm = () => {
     setFormData({
       name: '',
@@ -304,9 +433,13 @@ export function Templates() {
       videoUrl: '',
       redirectUrl: '',
       tags: '',
-      features: ''
+      features: '',
+      type: 'Text',
+      mediaUrl: '',
+      bodyText: ''
     })
     setSelectedTemplate(null)
+    setFileError('')
   }
 
   const getCategoriesForTab = () => {
@@ -314,6 +447,7 @@ export function Templates() {
       case 'websites': return ['SaaS', 'E-commerce', 'Portfolio', 'Business']
       case 'landing-pages': return ['Education', 'Lead Generation', 'Sales', 'Marketing']
       case 'n8n-workflows': return ['Email Marketing', 'Social Media', 'CRM', 'Automation']
+      case 'whatsapp-templates': return ['Text', 'Video', 'Audio', 'Image', 'Document']
       default: return []
     }
   }
@@ -332,14 +466,27 @@ export function Templates() {
       case 'websites': return Globe
       case 'landing-pages': return Zap
       case 'n8n-workflows': return Workflow
+      case 'whatsapp-templates': return MessageSquare
       default: return Globe
+    }
+  }
+
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'Text': return FileText
+      case 'Video': return FileVideo
+      case 'Audio': return FileAudio
+      case 'Image': return FileImage
+      case 'Document': return File
+      default: return FileText
     }
   }
 
   const tabs = [
     { id: 'websites', label: 'Websites', icon: Globe },
     { id: 'landing-pages', label: 'Landing Pages', icon: Zap },
-    { id: 'n8n-workflows', label: 'n8n Workflows', icon: Workflow }
+    { id: 'n8n-workflows', label: 'n8n Workflows', icon: Workflow },
+    { id: 'whatsapp-templates', label: 'WhatsApp Templates', icon: MessageSquare }
   ]
 
   return (
@@ -526,62 +673,111 @@ export function Templates() {
           >
             {viewMode === 'grid' ? (
               <Card className="shadow-xl hover:shadow-2xl transition-all duration-300 h-full flex flex-col">
-                <div className="relative">
-                  <img
-                    src={template.thumbnail}
-                    alt={template.name}
-                    className="w-full h-48 object-cover rounded-t-lg"
-                  />
-                  <div className="absolute top-4 right-4">
-                    <Badge className={statusColors[template.status]}>{template.status}</Badge>
-                  </div>
-                  <div className="absolute top-4 left-4">
-                    <Badge variant="outline" className={categoryColors[template.category]}>
-                      {template.category}
-                    </Badge>
-                  </div>
-                  {template.videoUrl && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 hover:opacity-100 transition-opacity duration-300">
-                      <Button size="sm" className="bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm">
-                        <Play className="w-4 h-4 mr-2" />
-                        Play Video
-                      </Button>
+                {activeTab === 'whatsapp-templates' ? (
+                  <div className="relative bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-t-lg">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-2">
+                        {React.createElement(getTypeIcon(template.type), { className: 'w-6 h-6 text-green-600' })}
+                        <Badge variant="outline" className="bg-white">{template.type}</Badge>
+                      </div>
+                      <Badge className={statusColors[template.status]}>{template.status}</Badge>
                     </div>
-                  )}
-                </div>
+                    {template.mediaUrl && template.type === 'Image' && (
+                      <img
+                        src={template.mediaUrl}
+                        alt={template.name}
+                        className="w-full h-32 object-cover rounded-lg mb-4"
+                      />
+                    )}
+                    {template.mediaUrl && template.type === 'Video' && (
+                      <div className="w-full h-32 bg-gray-200 rounded-lg mb-4 flex items-center justify-center">
+                        <FileVideo className="w-12 h-12 text-gray-400" />
+                      </div>
+                    )}
+                    {template.mediaUrl && template.type === 'Audio' && (
+                      <div className="w-full h-32 bg-gray-200 rounded-lg mb-4 flex items-center justify-center">
+                        <FileAudio className="w-12 h-12 text-gray-400" />
+                      </div>
+                    )}
+                    {template.mediaUrl && template.type === 'Document' && (
+                      <div className="w-full h-32 bg-gray-200 rounded-lg mb-4 flex items-center justify-center">
+                        <File className="w-12 h-12 text-gray-400" />
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <img
+                      src={template.thumbnail}
+                      alt={template.name}
+                      className="w-full h-48 object-cover rounded-t-lg"
+                    />
+                    <div className="absolute top-4 right-4">
+                      <Badge className={statusColors[template.status]}>{template.status}</Badge>
+                    </div>
+                    <div className="absolute top-4 left-4">
+                      <Badge variant="outline" className={categoryColors[template.category]}>
+                        {template.category}
+                      </Badge>
+                    </div>
+                    {template.videoUrl && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 hover:opacity-100 transition-opacity duration-300">
+                        <Button size="sm" className="bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm">
+                          <Play className="w-4 h-4 mr-2" />
+                          Play Video
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
                 
                 <CardContent className="p-6 flex-1 flex flex-col">
                   <div className="flex-1">
                     <h3 className="text-xl font-bold text-brand-text mb-2 line-clamp-2">
                       {template.name}
                     </h3>
-                    
-                    <p className="text-gray-600 mb-4 line-clamp-2">
-                      {template.description}
-                    </p>
-                    
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center space-x-1">
-                        {renderStars(template.rating)}
-                        <span className="text-sm text-gray-600 ml-2">
-                          {template.rating} ({template.downloads} downloads)
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {template.tags.slice(0, 3).map((tag) => (
-                        <Badge key={tag} variant="outline" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
-                      {template.tags.length > 3 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{template.tags.length - 3} more
-                        </Badge>
-                      )}
-                    </div>
-                    
+
+                    {activeTab === 'whatsapp-templates' ? (
+                      <>
+                        <p className="text-gray-600 mb-4 line-clamp-3 whitespace-pre-wrap">
+                          {template.bodyText}
+                        </p>
+                        {template.mediaUrl && (
+                          <div className="text-sm text-gray-500 mb-2">
+                            <span className="font-medium">Media:</span> Attached
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-gray-600 mb-4 line-clamp-2">
+                          {template.description}
+                        </p>
+
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center space-x-1">
+                            {renderStars(template.rating)}
+                            <span className="text-sm text-gray-600 ml-2">
+                              {template.rating} ({template.downloads} downloads)
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {template.tags.slice(0, 3).map((tag: string) => (
+                            <Badge key={tag} variant="outline" className="text-xs">
+                              {tag}
+                            </Badge>
+                          ))}
+                          {template.tags.length > 3 && (
+                            <Badge variant="outline" className="text-xs">
+                              +{template.tags.length - 3} more
+                            </Badge>
+                          )}
+                        </div>
+                      </>
+                    )}
+
                     <div className="text-sm text-gray-500 mb-4">
                       <div>Created by {template.createdBy}</div>
                       <div>{formatDate(template.createdAt)}</div>
@@ -806,107 +1002,182 @@ export function Templates() {
             </div>
             
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Template Name *</label>
-                  <Input
-                    value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="Enter template name"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Category *</label>
-                  <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {getCategoriesForTab().map(category => (
-                        <SelectItem key={category} value={category}>{category}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Description *</label>
-                <Textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Enter template description"
-                  rows={3}
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Thumbnail Image URL *</label>
-                <Input
-                  value={formData.thumbnail}
-                  onChange={(e) => setFormData(prev => ({ ...prev, thumbnail: e.target.value }))}
-                  placeholder="Enter image URL"
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Video URL (Optional)</label>
-                  <Input
-                    value={formData.videoUrl}
-                    onChange={(e) => setFormData(prev => ({ ...prev, videoUrl: e.target.value }))}
-                    placeholder="Enter video URL"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Redirect URL (Optional)</label>
-                  <Input
-                    value={formData.redirectUrl}
-                    onChange={(e) => setFormData(prev => ({ ...prev, redirectUrl: e.target.value }))}
-                    placeholder="Enter redirect URL"
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                <Select value={formData.status} onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Draft">Draft</SelectItem>
-                    <SelectItem value="Published">Published</SelectItem>
-                    <SelectItem value="Under Review">Under Review</SelectItem>
-                    <SelectItem value="Archived">Archived</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Tags (comma-separated)</label>
-                <Input
-                  value={formData.tags}
-                  onChange={(e) => setFormData(prev => ({ ...prev, tags: e.target.value }))}
-                  placeholder="e.g., AI, Automation, Customer Service"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Features (comma-separated)</label>
-                <Textarea
-                  value={formData.features}
-                  onChange={(e) => setFormData(prev => ({ ...prev, features: e.target.value }))}
-                  placeholder="e.g., 24/7 Support, Multi-language, CRM Integration"
-                  rows={2}
-                />
-              </div>
+              {activeTab === 'whatsapp-templates' ? (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Template Name *</label>
+                    <Input
+                      value={formData.name}
+                      onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="Enter template name"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Type *</label>
+                    <Select value={formData.type} onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Text">Text</SelectItem>
+                        <SelectItem value="Video">Video</SelectItem>
+                        <SelectItem value="Audio">Audio</SelectItem>
+                        <SelectItem value="Image">Image</SelectItem>
+                        <SelectItem value="Document">Document</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {formData.type !== 'Text' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Media File (Max 14 MB)</label>
+                      <div className="space-y-2">
+                        <Input
+                          type="file"
+                          onChange={handleFileUpload}
+                          accept={formData.type === 'Video' ? 'video/*' : formData.type === 'Audio' ? 'audio/*' : formData.type === 'Image' ? 'image/*' : '*'}
+                          disabled={uploadingFile}
+                        />
+                        {uploadingFile && <p className="text-sm text-blue-600">Uploading...</p>}
+                        {fileError && <p className="text-sm text-red-600">{fileError}</p>}
+                        {formData.mediaUrl && (
+                          <p className="text-sm text-green-600">File uploaded successfully!</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Body Text *</label>
+                    <Textarea
+                      value={formData.bodyText}
+                      onChange={(e) => setFormData(prev => ({ ...prev, bodyText: e.target.value }))}
+                      placeholder="Enter message body text"
+                      rows={5}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                    <Select value={formData.status} onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Draft">Draft</SelectItem>
+                        <SelectItem value="Published">Published</SelectItem>
+                        <SelectItem value="Under Review">Under Review</SelectItem>
+                        <SelectItem value="Archived">Archived</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Template Name *</label>
+                      <Input
+                        value={formData.name}
+                        onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                        placeholder="Enter template name"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Category *</label>
+                      <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {getCategoriesForTab().map(category => (
+                            <SelectItem key={category} value={category}>{category}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Description *</label>
+                    <Textarea
+                      value={formData.description}
+                      onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                      placeholder="Enter template description"
+                      rows={3}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Thumbnail Image URL *</label>
+                    <Input
+                      value={formData.thumbnail}
+                      onChange={(e) => setFormData(prev => ({ ...prev, thumbnail: e.target.value }))}
+                      placeholder="Enter image URL"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Video URL (Optional)</label>
+                      <Input
+                        value={formData.videoUrl}
+                        onChange={(e) => setFormData(prev => ({ ...prev, videoUrl: e.target.value }))}
+                        placeholder="Enter video URL"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Redirect URL (Optional)</label>
+                      <Input
+                        value={formData.redirectUrl}
+                        onChange={(e) => setFormData(prev => ({ ...prev, redirectUrl: e.target.value }))}
+                        placeholder="Enter redirect URL"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                    <Select value={formData.status} onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Draft">Draft</SelectItem>
+                        <SelectItem value="Published">Published</SelectItem>
+                        <SelectItem value="Under Review">Under Review</SelectItem>
+                        <SelectItem value="Archived">Archived</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Tags (comma-separated)</label>
+                    <Input
+                      value={formData.tags}
+                      onChange={(e) => setFormData(prev => ({ ...prev, tags: e.target.value }))}
+                      placeholder="e.g., AI, Automation, Customer Service"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Features (comma-separated)</label>
+                    <Textarea
+                      value={formData.features}
+                      onChange={(e) => setFormData(prev => ({ ...prev, features: e.target.value }))}
+                      placeholder="e.g., 24/7 Support, Multi-language, CRM Integration"
+                      rows={2}
+                    />
+                  </div>
+                </>
+              )}
             </div>
-            
+
             <div className="flex items-center space-x-3 mt-6">
-              <Button 
-                onClick={handleCreateTemplate} 
-                disabled={!formData.name || !formData.description || !formData.category || !formData.thumbnail}
+              <Button
+                onClick={handleCreateTemplate}
+                disabled={activeTab === 'whatsapp-templates' ? (!formData.name || !formData.bodyText) : (!formData.name || !formData.description || !formData.category || !formData.thumbnail)}
               >
                 <Save className="w-4 h-4 mr-2" />
                 Create Template
@@ -931,107 +1202,182 @@ export function Templates() {
             </div>
             
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Template Name *</label>
-                  <Input
-                    value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="Enter template name"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Category *</label>
-                  <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {getCategoriesForTab().map(category => (
-                        <SelectItem key={category} value={category}>{category}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Description *</label>
-                <Textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Enter template description"
-                  rows={3}
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Thumbnail Image URL *</label>
-                <Input
-                  value={formData.thumbnail}
-                  onChange={(e) => setFormData(prev => ({ ...prev, thumbnail: e.target.value }))}
-                  placeholder="Enter image URL"
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Video URL (Optional)</label>
-                  <Input
-                    value={formData.videoUrl}
-                    onChange={(e) => setFormData(prev => ({ ...prev, videoUrl: e.target.value }))}
-                    placeholder="Enter video URL"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Redirect URL (Optional)</label>
-                  <Input
-                    value={formData.redirectUrl}
-                    onChange={(e) => setFormData(prev => ({ ...prev, redirectUrl: e.target.value }))}
-                    placeholder="Enter redirect URL"
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                <Select value={formData.status} onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Draft">Draft</SelectItem>
-                    <SelectItem value="Published">Published</SelectItem>
-                    <SelectItem value="Under Review">Under Review</SelectItem>
-                    <SelectItem value="Archived">Archived</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Tags (comma-separated)</label>
-                <Input
-                  value={formData.tags}
-                  onChange={(e) => setFormData(prev => ({ ...prev, tags: e.target.value }))}
-                  placeholder="e.g., AI, Automation, Customer Service"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Features (comma-separated)</label>
-                <Textarea
-                  value={formData.features}
-                  onChange={(e) => setFormData(prev => ({ ...prev, features: e.target.value }))}
-                  placeholder="e.g., 24/7 Support, Multi-language, CRM Integration"
-                  rows={2}
-                />
-              </div>
+              {activeTab === 'whatsapp-templates' ? (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Template Name *</label>
+                    <Input
+                      value={formData.name}
+                      onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="Enter template name"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Type *</label>
+                    <Select value={formData.type} onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Text">Text</SelectItem>
+                        <SelectItem value="Video">Video</SelectItem>
+                        <SelectItem value="Audio">Audio</SelectItem>
+                        <SelectItem value="Image">Image</SelectItem>
+                        <SelectItem value="Document">Document</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {formData.type !== 'Text' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Media File (Max 14 MB)</label>
+                      <div className="space-y-2">
+                        <Input
+                          type="file"
+                          onChange={handleFileUpload}
+                          accept={formData.type === 'Video' ? 'video/*' : formData.type === 'Audio' ? 'audio/*' : formData.type === 'Image' ? 'image/*' : '*'}
+                          disabled={uploadingFile}
+                        />
+                        {uploadingFile && <p className="text-sm text-blue-600">Uploading...</p>}
+                        {fileError && <p className="text-sm text-red-600">{fileError}</p>}
+                        {formData.mediaUrl && (
+                          <p className="text-sm text-green-600">File uploaded successfully!</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Body Text *</label>
+                    <Textarea
+                      value={formData.bodyText}
+                      onChange={(e) => setFormData(prev => ({ ...prev, bodyText: e.target.value }))}
+                      placeholder="Enter message body text"
+                      rows={5}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                    <Select value={formData.status} onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Draft">Draft</SelectItem>
+                        <SelectItem value="Published">Published</SelectItem>
+                        <SelectItem value="Under Review">Under Review</SelectItem>
+                        <SelectItem value="Archived">Archived</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Template Name *</label>
+                      <Input
+                        value={formData.name}
+                        onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                        placeholder="Enter template name"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Category *</label>
+                      <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {getCategoriesForTab().map(category => (
+                            <SelectItem key={category} value={category}>{category}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Description *</label>
+                    <Textarea
+                      value={formData.description}
+                      onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                      placeholder="Enter template description"
+                      rows={3}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Thumbnail Image URL *</label>
+                    <Input
+                      value={formData.thumbnail}
+                      onChange={(e) => setFormData(prev => ({ ...prev, thumbnail: e.target.value }))}
+                      placeholder="Enter image URL"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Video URL (Optional)</label>
+                      <Input
+                        value={formData.videoUrl}
+                        onChange={(e) => setFormData(prev => ({ ...prev, videoUrl: e.target.value }))}
+                        placeholder="Enter video URL"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Redirect URL (Optional)</label>
+                      <Input
+                        value={formData.redirectUrl}
+                        onChange={(e) => setFormData(prev => ({ ...prev, redirectUrl: e.target.value }))}
+                        placeholder="Enter redirect URL"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                    <Select value={formData.status} onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Draft">Draft</SelectItem>
+                        <SelectItem value="Published">Published</SelectItem>
+                        <SelectItem value="Under Review">Under Review</SelectItem>
+                        <SelectItem value="Archived">Archived</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Tags (comma-separated)</label>
+                    <Input
+                      value={formData.tags}
+                      onChange={(e) => setFormData(prev => ({ ...prev, tags: e.target.value }))}
+                      placeholder="e.g., AI, Automation, Customer Service"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Features (comma-separated)</label>
+                    <Textarea
+                      value={formData.features}
+                      onChange={(e) => setFormData(prev => ({ ...prev, features: e.target.value }))}
+                      placeholder="e.g., 24/7 Support, Multi-language, CRM Integration"
+                      rows={2}
+                    />
+                  </div>
+                </>
+              )}
             </div>
-            
+
             <div className="flex items-center space-x-3 mt-6">
-              <Button 
-                onClick={handleUpdateTemplate} 
-                disabled={!formData.name || !formData.description || !formData.category || !formData.thumbnail}
+              <Button
+                onClick={handleUpdateTemplate}
+                disabled={activeTab === 'whatsapp-templates' ? (!formData.name || !formData.bodyText) : (!formData.name || !formData.description || !formData.category || !formData.thumbnail)}
               >
                 <Save className="w-4 h-4 mr-2" />
                 Save Changes
