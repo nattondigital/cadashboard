@@ -108,14 +108,22 @@ Deno.serve(async (req: Request) => {
         }
       }
     } else if (['Audio', 'Video', 'Image', 'Document'].includes(template.type)) {
-      // For media messages
+      // For media messages - replace placeholders in caption
+      let captionText = template.body_text || ''
+      if (trigger_data) {
+        captionText = replacePlaceholders(captionText, trigger_data)
+      }
+      if (contact_name) {
+        captionText = captionText.replace(/\{\{contact_name\}\}/g, contact_name)
+      }
+
       messageBody = {
         to: formattedPhone,
         from: senderNumber,
         messageId: crypto.randomUUID(),
         content: {
           mediaUrl: template.media_url || '',
-          caption: template.body_text || ''
+          caption: captionText
         }
       }
       
