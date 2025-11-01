@@ -63,7 +63,7 @@ interface SidebarProps {
 
 export function Sidebar({ collapsed = false, onClose }: SidebarProps) {
   const location = useLocation()
-  const [salesExpanded, setSalesExpanded] = useState(false)
+  const [salesExpanded, setSalesExpanded] = useState(true)
   const [mastersExpanded, setMastersExpanded] = useState(false)
   const [membersExpanded, setMembersExpanded] = useState(false)
   const [teamExpanded, setTeamExpanded] = useState(false)

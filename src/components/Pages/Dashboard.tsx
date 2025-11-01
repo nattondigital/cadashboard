@@ -189,23 +189,9 @@ export function Dashboard() {
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
-    // Simulate loading dashboard data
-    const loadDashboardData = async () => {
-      setIsLoading(true)
-      try {
-        // In real app, these would be separate API calls
-        // const data = await makeApiCall('/dashboard/overview')
-        // setDashboardData(data)
-        
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 1000))
-      } catch (error) {
-        console.log('Demo mode: Using mock data')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    loadDashboardData()
+    // In production, this would load real dashboard data
+    // For now, using mock data without delay
+    setIsLoading(false)
   }, [])
 
   const containerVariants = {
