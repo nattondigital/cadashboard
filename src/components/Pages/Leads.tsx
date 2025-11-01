@@ -516,6 +516,14 @@ export function Leads() {
       }
 
       setAvailableStages(stagesMap)
+
+      // If no default pipeline found, use the first pipeline
+      if (!defaultPipelineId && pipelinesData && pipelinesData.length > 0) {
+        defaultPipelineId = pipelinesData[0].id
+        const firstPipelineStages = stagesMap[defaultPipelineId] || []
+        setStageColumns(firstPipelineStages)
+      }
+
       setSelectedPipelineId(defaultPipelineId)
       setPipelineFilter(defaultPipelineId)
       setFormData(prev => ({ ...prev, pipeline_id: defaultPipelineId }))
