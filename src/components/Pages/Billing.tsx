@@ -206,7 +206,7 @@ export function Billing() {
             notes: formData.notes,
             terms: formData.terms,
             status: formData.status || 'Draft',
-            payment_method: formData.paymentMethod,
+            receipts: [],
             issue_date: formData.issueDate,
             due_date: formData.dueDate
           }])
@@ -242,7 +242,7 @@ export function Billing() {
           break
         case 'receipts':
           const amountPaid = parseFloat(formData.amountPaid) || 0
-          await supabase.from('receipts').insert([{
+          const { data: newReceipt, error: receiptError } = await supabase.from('receipts').insert([{
             invoice_id: formData.invoiceId || null,
             customer_name: formData.customerName,
             customer_email: formData.customerEmail,
@@ -254,12 +254,16 @@ export function Billing() {
             description: formData.description,
             notes: formData.notes,
             status: formData.status || 'Completed'
-          }])
+          }]).select().single()
 
-          if (formData.invoiceId) {
+          if (receiptError) {
+            console.error('Error creating receipt:', receiptError)
+          }
+
+          if (formData.invoiceId && newReceipt) {
             const { data: invoice, error: invoiceError } = await supabase
               .from('invoices')
-              .select('paid_amount, total_amount')
+              .select('paid_amount, total_amount, receipts')
               .eq('id', formData.invoiceId)
               .maybeSingle()
 
@@ -269,13 +273,22 @@ export function Billing() {
               const newPaidAmount = (parseFloat(invoice.paid_amount) || 0) + amountPaid
               const newBalanceDue = (parseFloat(invoice.total_amount) || 0) - newPaidAmount
 
+              const existingReceipts = invoice.receipts || []
+              const updatedReceipts = [...existingReceipts, {
+                receipt_id: newReceipt.receipt_id,
+                amount_paid: amountPaid,
+                payment_date: formData.paymentDate,
+                payment_method: formData.paymentMethod,
+                payment_reference: formData.paymentReference || null
+              }]
+
               const { error: updateError } = await supabase
                 .from('invoices')
                 .update({
                   paid_amount: newPaidAmount,
                   balance_due: newBalanceDue,
                   status: newBalanceDue <= 0 ? 'Paid' : invoice.paid_amount === 0 ? 'Pending' : 'Partially Paid',
-                  paid_date: newBalanceDue <= 0 ? formData.paymentDate : null
+                  receipts: updatedReceipts
                 })
                 .eq('id', formData.invoiceId)
 
@@ -349,7 +362,6 @@ export function Billing() {
               notes: formData.notes,
               terms: formData.terms,
               status: formData.status,
-              payment_method: formData.paymentMethod,
               issue_date: formData.issueDate,
               due_date: formData.dueDate
             })
@@ -393,16 +405,29 @@ export function Billing() {
             })
             .eq('id', selectedItem.id)
 
-          if (selectedItem.invoice_id && amountDifference !== 0) {
+          if (selectedItem.invoice_id) {
             const { data: invoice } = await supabase
               .from('invoices')
-              .select('paid_amount, total_amount')
+              .select('paid_amount, total_amount, receipts')
               .eq('id', selectedItem.invoice_id)
-              .single()
+              .maybeSingle()
 
             if (invoice) {
               const updatedPaidAmount = (parseFloat(invoice.paid_amount) || 0) + amountDifference
               const updatedBalanceDue = (parseFloat(invoice.total_amount) || 0) - updatedPaidAmount
+
+              const existingReceipts = invoice.receipts || []
+              const updatedReceipts = existingReceipts.map((r: any) =>
+                r.receipt_id === selectedItem.receipt_id
+                  ? {
+                      ...r,
+                      amount_paid: newAmountPaid,
+                      payment_date: formData.paymentDate,
+                      payment_method: formData.paymentMethod,
+                      payment_reference: formData.paymentReference || null
+                    }
+                  : r
+              )
 
               await supabase
                 .from('invoices')
@@ -410,7 +435,7 @@ export function Billing() {
                   paid_amount: updatedPaidAmount,
                   balance_due: updatedBalanceDue,
                   status: updatedBalanceDue <= 0 ? 'Paid' : updatedPaidAmount === 0 ? 'Pending' : 'Partially Paid',
-                  paid_date: updatedBalanceDue <= 0 ? formData.paymentDate : null
+                  receipts: updatedReceipts
                 })
                 .eq('id', selectedItem.invoice_id)
             }
@@ -440,20 +465,23 @@ export function Billing() {
       if (activeTab === 'receipts') {
         const { data: receipt } = await supabase
           .from('receipts')
-          .select('invoice_id, amount_paid')
+          .select('invoice_id, amount_paid, receipt_id')
           .eq('id', id)
-          .single()
+          .maybeSingle()
 
         if (receipt?.invoice_id) {
           const { data: invoice } = await supabase
             .from('invoices')
-            .select('paid_amount, total_amount')
+            .select('paid_amount, total_amount, receipts')
             .eq('id', receipt.invoice_id)
-            .single()
+            .maybeSingle()
 
           if (invoice) {
             const updatedPaidAmount = (parseFloat(invoice.paid_amount) || 0) - (parseFloat(receipt.amount_paid) || 0)
             const updatedBalanceDue = (parseFloat(invoice.total_amount) || 0) - updatedPaidAmount
+
+            const existingReceipts = invoice.receipts || []
+            const updatedReceipts = existingReceipts.filter((r: any) => r.receipt_id !== receipt.receipt_id)
 
             await supabase
               .from('invoices')
@@ -461,7 +489,7 @@ export function Billing() {
                 paid_amount: updatedPaidAmount,
                 balance_due: updatedBalanceDue,
                 status: updatedBalanceDue <= 0 ? 'Paid' : updatedPaidAmount === 0 ? 'Pending' : 'Partially Paid',
-                paid_date: updatedBalanceDue <= 0 ? invoice.paid_date : null
+                receipts: updatedReceipts
               })
               .eq('id', receipt.invoice_id)
           }
@@ -633,10 +661,8 @@ export function Billing() {
       notes: estimate.notes,
       terms: '',
       status: 'Draft',
-      paymentMethod: '',
       issueDate: today,
-      dueDate: today,
-      paidDate: ''
+      dueDate: today
     })
     setViewState('add')
     setShowCreateModal(true)
@@ -1479,25 +1505,6 @@ export function Billing() {
                         className="rounded-xl"
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
-                      <Select
-                        value={formData.paymentMethod || ''}
-                        onValueChange={(value) => setFormData({ ...formData, paymentMethod: value })}
-                      >
-                        <SelectTrigger className="rounded-xl">
-                          <SelectValue placeholder="Select method" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Cash">Cash</SelectItem>
-                          <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
-                          <SelectItem value="UPI">UPI</SelectItem>
-                          <SelectItem value="Credit Card">Credit Card</SelectItem>
-                          <SelectItem value="Debit Card">Debit Card</SelectItem>
-                          <SelectItem value="Cheque">Cheque</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
                   </>
                 )}
 
@@ -1756,12 +1763,7 @@ function InvoicesTable({ data, onView, onEdit, onDelete, onRecordReceipt, onView
                         <Badge className={statusColors[item.status]}>{item.status}</Badge>
                       </td>
                       <td className="py-3 px-4">
-                        <div>
-                          <div className="font-medium">{formatDate(item.due_date)}</div>
-                          {item.paid_date && (
-                            <div className="text-sm text-green-600">Paid: {formatDate(item.paid_date)}</div>
-                          )}
-                        </div>
+                        <div className="font-medium">{formatDate(item.due_date)}</div>
                       </td>
                       <td className="py-3 px-4">
                         <DropdownMenu>
