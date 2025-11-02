@@ -212,10 +212,14 @@ export function Billing() {
           }])
 
           if (formData.estimateId) {
-            await supabase
+            const { error: updateError } = await supabase
               .from('estimates')
               .update({ status: 'Invoiced' })
               .eq('id', formData.estimateId)
+
+            if (updateError) {
+              console.error('Error updating estimate status:', updateError)
+            }
           }
           break
         case 'subscriptions':
@@ -2335,6 +2339,7 @@ function FormModal({ title, formData, setFormData, onSave, onCancel, type, loadi
                           <SelectItem value="Accepted">Accepted</SelectItem>
                           <SelectItem value="Rejected">Rejected</SelectItem>
                           <SelectItem value="Expired">Expired</SelectItem>
+                          <SelectItem value="Invoiced">Invoiced</SelectItem>
                         </>
                       ) : (
                         <>
