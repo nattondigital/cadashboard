@@ -51,6 +51,7 @@ export function PipelineSettings() {
   const [isAddingStage, setIsAddingStage] = useState(false)
   const [editingStage, setEditingStage] = useState<PipelineStage | null>(null)
   const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
 
   const [pipelineForm, setPipelineForm] = useState({
     name: '',
@@ -117,32 +118,80 @@ export function PipelineSettings() {
       return
     }
 
+    if (submitting) return
+
     try {
-      const maxOrder = pipelines.length > 0 ? Math.max(...pipelines.map(p => p.display_order)) : 0
-      const nextPipelineNumber = pipelines.length + 1
+      setSubmitting(true)
+
+      const { data: existingPipelines, error: fetchError } = await supabase
+        .from('pipelines')
+        .select('pipeline_id, name')
+        .order('pipeline_id', { ascending: false })
+
+      if (fetchError) {
+        console.error('Error fetching existing pipelines:', fetchError)
+        alert(`Failed to verify pipeline data: ${fetchError.message}`)
+        return
+      }
+
+      const existingNames = existingPipelines?.map(p => p.name.toLowerCase()) || []
+      if (existingNames.includes(pipelineForm.name.toLowerCase())) {
+        alert('A pipeline with this name already exists. Please choose a different name.')
+        return
+      }
+
+      let nextPipelineNumber = 1
+      if (existingPipelines && existingPipelines.length > 0) {
+        const pipelineNumbers = existingPipelines
+          .map(p => {
+            const match = p.pipeline_id.match(/^P(\d+)$/)
+            return match ? parseInt(match[1], 10) : 0
+          })
+          .filter(num => num > 0)
+
+        if (pipelineNumbers.length > 0) {
+          nextPipelineNumber = Math.max(...pipelineNumbers) + 1
+        }
+      }
+
       const pipelineId = `P${String(nextPipelineNumber).padStart(3, '0')}`
+
+      const maxOrder = pipelines.length > 0 ? Math.max(...pipelines.map(p => p.display_order)) : 0
 
       const { data, error } = await supabase
         .from('pipelines')
         .insert([{
           pipeline_id: pipelineId,
           name: pipelineForm.name,
-          description: pipelineForm.description,
+          description: pipelineForm.description || null,
           entity_type: pipelineForm.entity_type,
           display_order: maxOrder + 1
         }])
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error('Error inserting pipeline:', error)
+        if (error.code === '23505') {
+          alert('A pipeline with this ID already exists. Please try again.')
+        } else if (error.message) {
+          alert(`Failed to add pipeline: ${error.message}`)
+        } else {
+          alert('Failed to add pipeline. Please check your connection and try again.')
+        }
+        return
+      }
 
       await fetchPipelines()
       setSelectedPipeline(data)
       setIsAddingPipeline(false)
       setPipelineForm({ name: '', description: '', entity_type: 'lead' })
+      alert('Pipeline added successfully!')
     } catch (error) {
-      console.error('Error adding pipeline:', error)
-      alert('Failed to add pipeline')
+      console.error('Unexpected error adding pipeline:', error)
+      alert('An unexpected error occurred. Please try again.')
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -311,7 +360,7 @@ export function PipelineSettings() {
           <h2 className="text-2xl font-bold text-brand-text">Pipeline Management</h2>
           <p className="text-gray-600 mt-1">Configure pipelines and stages for your workflows</p>
         </div>
-        <Button onClick={() => setIsAddingPipeline(true)}>
+        <Button onClick={() => setIsAddingPipeline(true)} disabled={submitting}>
           <Plus className="w-4 h-4 mr-2" />
           Add Pipeline
         </Button>
@@ -578,11 +627,18 @@ export function PipelineSettings() {
                   </select>
                 </div>
                 <div className="flex justify-end space-x-2 pt-4">
-                  <Button variant="outline" onClick={() => setIsAddingPipeline(false)}>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsAddingPipeline(false)}
+                    disabled={submitting}
+                  >
                     Cancel
                   </Button>
-                  <Button onClick={handleAddPipeline}>
-                    Add Pipeline
+                  <Button
+                    onClick={handleAddPipeline}
+                    disabled={submitting || !pipelineForm.name.trim()}
+                  >
+                    {submitting ? 'Adding...' : 'Add Pipeline'}
                   </Button>
                 </div>
               </div>
