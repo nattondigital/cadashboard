@@ -257,17 +257,19 @@ export function Billing() {
           }])
 
           if (formData.invoiceId) {
-            const { data: invoice } = await supabase
+            const { data: invoice, error: invoiceError } = await supabase
               .from('invoices')
               .select('paid_amount, total_amount')
               .eq('id', formData.invoiceId)
-              .single()
+              .maybeSingle()
 
-            if (invoice) {
+            if (invoiceError) {
+              console.error('Error fetching invoice:', invoiceError)
+            } else if (invoice) {
               const newPaidAmount = (parseFloat(invoice.paid_amount) || 0) + amountPaid
               const newBalanceDue = (parseFloat(invoice.total_amount) || 0) - newPaidAmount
 
-              await supabase
+              const { error: updateError } = await supabase
                 .from('invoices')
                 .update({
                   paid_amount: newPaidAmount,
@@ -276,11 +278,24 @@ export function Billing() {
                   paid_date: newBalanceDue <= 0 ? formData.paymentDate : null
                 })
                 .eq('id', formData.invoiceId)
+
+              if (updateError) {
+                console.error('Error updating invoice:', updateError)
+              }
             }
           }
           break
       }
+
       await loadData()
+
+      if (activeTab === 'receipts' && formData.invoiceId) {
+        const { data: invoicesData } = await supabase
+          .from('invoices')
+          .select('*')
+          .order('created_at', { ascending: false })
+        setInvoices(invoicesData || [])
+      }
       setShowCreateModal(false)
       setViewState('list')
       resetForm()
