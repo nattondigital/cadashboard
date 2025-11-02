@@ -92,6 +92,7 @@ export function Settings() {
   const [searchParams, setSearchParams] = useSearchParams()
   const { userProfile, refreshProfile } = useAuth()
   const [activeTab, setActiveTab] = useState<'profile' | 'notifications' | 'integrations' | 'api' | 'system' | 'webhooks' | 'appearance' | 'calendar' | 'pipelines' | 'media-folders' | 'custom-fields'>('profile')
+  const [profileSubTab, setProfileSubTab] = useState<'personal' | 'business'>('personal')
   const [showApiKey, setShowApiKey] = useState<Record<string, boolean>>({})
   const [editingIntegration, setEditingIntegration] = useState<string | null>(null)
   const [integrationConfig, setIntegrationConfig] = useState<Record<string, any>>({})
@@ -102,6 +103,18 @@ export function Settings() {
     department: '',
     role: '',
     status: 'Active'
+  })
+  const [businessData, setBusinessData] = useState({
+    business_name: '',
+    business_tagline: '',
+    business_address: '',
+    business_city: '',
+    business_state: '',
+    business_pincode: '',
+    business_phone: '',
+    business_email: '',
+    gst_number: '',
+    website: ''
   })
   const [isSavingProfile, setIsSavingProfile] = useState(false)
   const [profileMessage, setProfileMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
@@ -699,11 +712,43 @@ export function Settings() {
           animate={{ opacity: 1, y: 0 }}
           className="space-y-6"
         >
+          {/* Profile Sub-tabs */}
+          <div className="flex space-x-1 bg-gray-100 rounded-xl p-1">
+            <button
+              onClick={() => setProfileSubTab('personal')}
+              className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
+                profileSubTab === 'personal'
+                  ? 'bg-white text-brand-primary shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <div className="flex items-center justify-center space-x-2">
+                <User className="w-4 h-4" />
+                <span>Personal Details</span>
+              </div>
+            </button>
+            <button
+              onClick={() => setProfileSubTab('business')}
+              className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
+                profileSubTab === 'business'
+                  ? 'bg-white text-brand-primary shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <div className="flex items-center justify-center space-x-2">
+                <Building className="w-4 h-4" />
+                <span>Business Details</span>
+              </div>
+            </button>
+          </div>
+
+          {/* Personal Details Tab */}
+          {profileSubTab === 'personal' && (
           <Card className="shadow-xl">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <User className="w-5 h-5 text-brand-primary" />
-                <span>Profile Information</span>
+                <span>Personal Information</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -863,6 +908,178 @@ export function Settings() {
               )}
             </CardContent>
           </Card>
+          )}
+
+          {/* Business Details Tab */}
+          {profileSubTab === 'business' && (
+          <Card className="shadow-xl">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Building className="w-5 h-5 text-brand-primary" />
+                <span>Business Information</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Business Name <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      value={businessData.business_name}
+                      onChange={(e) => setBusinessData({ ...businessData, business_name: e.target.value })}
+                      placeholder="Enter your business name"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Business Tagline</label>
+                    <Input
+                      value={businessData.business_tagline}
+                      onChange={(e) => setBusinessData({ ...businessData, business_tagline: e.target.value })}
+                      placeholder="Your business tagline"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Business Address <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    value={businessData.business_address}
+                    onChange={(e) => setBusinessData({ ...businessData, business_address: e.target.value })}
+                    placeholder="Street address"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      City <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      value={businessData.business_city}
+                      onChange={(e) => setBusinessData({ ...businessData, business_city: e.target.value })}
+                      placeholder="City"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      State <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      value={businessData.business_state}
+                      onChange={(e) => setBusinessData({ ...businessData, business_state: e.target.value })}
+                      placeholder="State"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Pincode <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      value={businessData.business_pincode}
+                      onChange={(e) => setBusinessData({ ...businessData, business_pincode: e.target.value })}
+                      placeholder="Pincode"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Business Phone <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                      <Input
+                        className="pl-10"
+                        type="tel"
+                        value={businessData.business_phone}
+                        onChange={(e) => setBusinessData({ ...businessData, business_phone: e.target.value })}
+                        placeholder="+91 1234567890"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Business Email <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                      <Input
+                        className="pl-10"
+                        type="email"
+                        value={businessData.business_email}
+                        onChange={(e) => setBusinessData({ ...businessData, business_email: e.target.value })}
+                        placeholder="info@business.com"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">GST Number</label>
+                    <Input
+                      value={businessData.gst_number}
+                      onChange={(e) => setBusinessData({ ...businessData, gst_number: e.target.value })}
+                      placeholder="22AAAAA0000A1Z5"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Website</label>
+                    <div className="relative">
+                      <Globe className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                      <Input
+                        className="pl-10"
+                        type="url"
+                        value={businessData.website}
+                        onChange={(e) => setBusinessData({ ...businessData, website: e.target.value })}
+                        placeholder="https://www.business.com"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {profileMessage && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`p-4 rounded-lg flex items-center space-x-2 ${
+                      profileMessage.type === 'success'
+                        ? 'bg-green-50 border border-green-200 text-green-700'
+                        : 'bg-red-50 border border-red-200 text-red-700'
+                    }`}
+                  >
+                    {profileMessage.type === 'success' ? (
+                      <Check className="w-5 h-5" />
+                    ) : (
+                      <AlertTriangle className="w-5 h-5" />
+                    )}
+                    <span>{profileMessage.text}</span>
+                  </motion.div>
+                )}
+
+                <div className="flex justify-end pt-6 border-t">
+                  <Button
+                    onClick={() => {
+                      setProfileMessage({ type: 'success', text: 'Business details saved successfully!' })
+                      setTimeout(() => setProfileMessage(null), 3000)
+                    }}
+                    className="min-w-32"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <Save className="w-4 h-4" />
+                      <span>Save Changes</span>
+                    </div>
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          )}
         </motion.div>
       )}
 
