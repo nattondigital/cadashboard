@@ -103,6 +103,9 @@ export function Products() {
     is_active: true
   })
 
+  const [productSearchTerm, setProductSearchTerm] = useState('')
+  const [showProductDropdown, setShowProductDropdown] = useState(false)
+
   useEffect(() => {
     if (activeTab === 'products') {
       fetchProducts()
@@ -113,6 +116,17 @@ export function Products() {
 
   useEffect(() => {
     fetchProducts()
+  }, [])
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      if (!target.closest('.product-search-container')) {
+        setShowProductDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
   const fetchProducts = async () => {
@@ -381,6 +395,43 @@ export function Products() {
       alert(`Failed to update package: ${error.message || 'Please try again.'}`)
     }
   }
+
+  const handleProductSelectForPackage = (product: Product) => {
+    setPackageFormData(prev => ({
+      ...prev,
+      selected_products: [...prev.selected_products, {
+        product_id: product.product_id,
+        product_name: product.product_name,
+        quantity: 1,
+        unit_price: product.product_price
+      }]
+    }))
+    setProductSearchTerm('')
+    setShowProductDropdown(false)
+  }
+
+  const handleRemoveProductFromPackage = (productId: string) => {
+    setPackageFormData(prev => ({
+      ...prev,
+      selected_products: prev.selected_products.filter(p => p.product_id !== productId)
+    }))
+  }
+
+  const handleUpdatePackageProductQuantity = (productId: string, quantity: number) => {
+    setPackageFormData(prev => ({
+      ...prev,
+      selected_products: prev.selected_products.map(p =>
+        p.product_id === productId ? { ...p, quantity } : p
+      )
+    }))
+  }
+
+  const filteredProductsForPackage = products.filter(p =>
+    p.is_active &&
+    !packageFormData.selected_products.some(sp => sp.product_id === p.product_id) &&
+    (p.product_name.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
+     p.product_id.toLowerCase().includes(productSearchTerm.toLowerCase()))
+  )
 
   return (
     <>
@@ -965,66 +1016,77 @@ export function Products() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Select Products *</label>
-                      <div className="space-y-2 border rounded-md p-3 max-h-60 overflow-y-auto bg-gray-50">
-                        {products.filter(p => p.is_active).map(product => {
-                          const isSelected = packageFormData.selected_products.some(p => p.product_id === product.product_id)
-                          const selectedProduct = packageFormData.selected_products.find(p => p.product_id === product.product_id)
-
-                          return (
-                            <div key={product.id} className="flex items-center space-x-3 bg-white p-2 rounded border">
-                              <input
-                                type="checkbox"
-                                checked={isSelected}
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    setPackageFormData(prev => ({
-                                      ...prev,
-                                      selected_products: [...prev.selected_products, {
-                                        product_id: product.product_id,
-                                        product_name: product.product_name,
-                                        quantity: 1,
-                                        unit_price: product.product_price
-                                      }]
-                                    }))
-                                  } else {
-                                    setPackageFormData(prev => ({
-                                      ...prev,
-                                      selected_products: prev.selected_products.filter(p => p.product_id !== product.product_id)
-                                    }))
-                                  }
-                                }}
-                                className="w-4 h-4"
-                              />
-                              <div className="flex-1">
-                                <div className="font-medium text-sm">{product.product_name}</div>
-                                <div className="text-xs text-gray-500">{product.product_id} • ₹{product.product_price.toLocaleString()}</div>
+                      <div className="relative product-search-container">
+                        <Input
+                          value={productSearchTerm}
+                          onChange={(e) => {
+                            setProductSearchTerm(e.target.value)
+                            setShowProductDropdown(true)
+                          }}
+                          onFocus={() => setShowProductDropdown(true)}
+                          placeholder="Search and add products"
+                        />
+                        {showProductDropdown && filteredProductsForPackage.length > 0 && (
+                          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                            {filteredProductsForPackage.map((product) => (
+                              <div
+                                key={product.id}
+                                className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                                onClick={() => handleProductSelectForPackage(product)}
+                              >
+                                <div className="font-medium">{product.product_name}</div>
+                                <div className="text-sm text-gray-500">
+                                  {product.product_id} • ₹{product.product_price.toLocaleString()}
+                                </div>
                               </div>
-                              {isSelected && (
-                                <Input
-                                  type="number"
-                                  min="1"
-                                  value={selectedProduct?.quantity || 1}
-                                  onChange={(e) => {
-                                    const qty = parseInt(e.target.value) || 1
-                                    setPackageFormData(prev => ({
-                                      ...prev,
-                                      selected_products: prev.selected_products.map(p =>
-                                        p.product_id === product.product_id ? { ...p, quantity: qty } : p
-                                      )
-                                    }))
-                                  }}
-                                  className="w-20 h-8 text-sm"
-                                  placeholder="Qty"
-                                />
-                              )}
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {packageFormData.selected_products.length > 0 && (
+                        <div className="mt-3 space-y-2">
+                          {packageFormData.selected_products.map((item) => (
+                            <div key={item.product_id} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg border border-gray-200">
+                              <div className="flex-1">
+                                <div className="font-medium">{item.product_name}</div>
+                                <div className="text-xs text-gray-500">{item.product_id}</div>
+                              </div>
+                              <div className="flex items-center space-x-3">
+                                <div className="flex items-center space-x-2">
+                                  <label className="text-sm text-gray-600">Qty:</label>
+                                  <Input
+                                    type="number"
+                                    min="1"
+                                    value={item.quantity}
+                                    onChange={(e) => handleUpdatePackageProductQuantity(item.product_id, parseInt(e.target.value) || 1)}
+                                    className="w-20 h-8 text-sm"
+                                  />
+                                </div>
+                                <div className="text-sm font-medium text-gray-700 w-24 text-right">
+                                  ₹{(item.unit_price * item.quantity).toLocaleString()}
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleRemoveProductFromPackage(item.product_id)}
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                >
+                                  <X className="w-4 h-4" />
+                                </Button>
+                              </div>
                             </div>
-                          )
-                        })}
-                      </div>
-                      <div className="mt-2 text-sm text-gray-600">
-                        Selected: {packageFormData.selected_products.length} product(s) •
-                        Total: ₹{packageFormData.selected_products.reduce((sum, p) => sum + (p.unit_price * p.quantity), 0).toLocaleString()}
-                      </div>
+                          ))}
+                          <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+                            <span className="text-sm font-medium text-gray-700">
+                              Total ({packageFormData.selected_products.length} product{packageFormData.selected_products.length !== 1 ? 's' : ''})
+                            </span>
+                            <span className="text-lg font-bold text-brand-primary">
+                              ₹{packageFormData.selected_products.reduce((sum, p) => sum + (p.unit_price * p.quantity), 0).toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
