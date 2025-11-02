@@ -908,6 +908,7 @@ export function Billing() {
                 loading={loading}
                 contacts={contacts}
                 products={products}
+                packages={packages}
               />
             </motion.div>
           )}
@@ -1934,11 +1935,24 @@ function ReceiptsTable({ data, onView, onEdit, onDelete, loading }: any) {
   )
 }
 
-function FormModal({ title, formData, setFormData, onSave, onCancel, type, loading, contacts, products }: any) {
+function FormModal({ title, formData, setFormData, onSave, onCancel, type, loading, contacts, products, packages }: any) {
   const [contactSearchTerm, setContactSearchTerm] = useState('')
   const [showContactDropdown, setShowContactDropdown] = useState(false)
   const [productSearchTerm, setProductSearchTerm] = useState('')
   const [showProductDropdown, setShowProductDropdown] = useState(false)
+  const [packageSearchTerm, setPackageSearchTerm] = useState('')
+  const [showPackageDropdown, setShowPackageDropdown] = useState(false)
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      if (!target.closest('.package-search-container')) {
+        setShowPackageDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const updateField = (field: string, value: any) => {
     setFormData((prev: any) => ({ ...prev, [field]: value }))
@@ -2143,24 +2157,26 @@ function FormModal({ title, formData, setFormData, onSave, onCancel, type, loadi
                           key={pkg.id}
                           className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
                           onClick={() => {
-                            pkg.products.forEach((product: any) => {
-                              const newItem = {
-                                id: Date.now() + Math.random(),
-                                product_id: product.product_id,
-                                product_name: product.product_name,
-                                quantity: product.quantity,
-                                unit_price: product.unit_price,
-                                total: product.quantity * product.unit_price
-                              }
-                              handleProductSelect(newItem, true)
-                            })
+                            if (Array.isArray(pkg.products)) {
+                              pkg.products.forEach((product: any) => {
+                                const newItem = {
+                                  id: Date.now() + Math.random(),
+                                  product_id: product.product_id,
+                                  product_name: product.product_name,
+                                  quantity: product.quantity || 1,
+                                  unit_price: product.unit_price || 0,
+                                  total: (product.quantity || 1) * (product.unit_price || 0)
+                                }
+                                handleProductSelect(newItem, true)
+                              })
+                            }
                             setPackageSearchTerm('')
                             setShowPackageDropdown(false)
                           }}
                         >
                           <div className="font-medium">{pkg.package_name}</div>
                           <div className="text-sm text-gray-500">
-                            {pkg.package_id} • {pkg.products.length} products • {formatCurrency(pkg.discounted_price || 0)}
+                            {pkg.package_id} • {Array.isArray(pkg.products) ? pkg.products.length : 0} products • {formatCurrency(pkg.discounted_price || 0)}
                           </div>
                         </div>
                       ))}
