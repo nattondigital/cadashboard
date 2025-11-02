@@ -2001,6 +2001,27 @@ function FormModal({ title, formData, setFormData, onSave, onCancel, type, loadi
     calculateTotalsFromItems([...items, newItem])
   }
 
+  const handlePackageSelect = (packageProducts: any[]) => {
+    const items = formData.items || []
+    const newItems = packageProducts.map((product: any, index: number) => ({
+      id: Date.now() + Math.random() + index,
+      product_id: product.product_id,
+      product_name: product.product_name,
+      description: product.description || '',
+      quantity: product.quantity || 1,
+      unit_price: product.unit_price || 0,
+      total: (product.quantity || 1) * (product.unit_price || 0)
+    }))
+
+    const allItems = [...items, ...newItems]
+    setFormData((prev: any) => ({
+      ...prev,
+      items: allItems
+    }))
+
+    calculateTotalsFromItems(allItems)
+  }
+
   const handleRemoveItem = (itemId: number) => {
     const items = (formData.items || []).filter((item: any) => item.id !== itemId)
     setFormData((prev: any) => ({
@@ -2157,18 +2178,8 @@ function FormModal({ title, formData, setFormData, onSave, onCancel, type, loadi
                           key={pkg.id}
                           className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
                           onClick={() => {
-                            if (Array.isArray(pkg.products)) {
-                              pkg.products.forEach((product: any) => {
-                                const newItem = {
-                                  id: Date.now() + Math.random(),
-                                  product_id: product.product_id,
-                                  product_name: product.product_name,
-                                  quantity: product.quantity || 1,
-                                  unit_price: product.unit_price || 0,
-                                  total: (product.quantity || 1) * (product.unit_price || 0)
-                                }
-                                handleProductSelect(newItem, true)
-                              })
+                            if (Array.isArray(pkg.products) && pkg.products.length > 0) {
+                              handlePackageSelect(pkg.products)
                             }
                             setPackageSearchTerm('')
                             setShowPackageDropdown(false)
