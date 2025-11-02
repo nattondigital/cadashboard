@@ -633,6 +633,7 @@ export function Billing() {
       invoiceId: invoice.id,
       customerName: invoice.customer_name,
       customerEmail: invoice.customer_email,
+      customerPhone: invoice.customer_phone || '',
       description: `Payment for ${invoice.title}`,
       amountPaid: invoice.balance_due,
       paymentDate: new Date().toISOString().split('T')[0],
@@ -641,6 +642,7 @@ export function Billing() {
       status: 'Completed',
       notes: `Receipt for Invoice ${invoice.invoice_id}`
     })
+    setViewState('add')
     setShowCreateModal(true)
   }
 
