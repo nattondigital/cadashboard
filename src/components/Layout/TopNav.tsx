@@ -1,6 +1,7 @@
 import React from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Search, Plus, UserPlus, BookOpen, Send, User, LogOut, Settings, Phone, Menu, X } from 'lucide-react'
+import { Search, Plus, UserPlus, BookOpen, Send, User, LogOut, Phone, Menu, X } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import {
@@ -29,12 +30,27 @@ interface TopNavProps {
 }
 
 export function TopNav({ sidebarCollapsed, onToggleSidebar, mobileMenuOpen, onToggleMobileMenu }: TopNavProps) {
-  const { userMobile, logout } = useAuth()
+  const navigate = useNavigate()
+  const { userProfile, logout } = useAuth()
 
   const handleLogout = async () => {
     if (confirm('Are you sure you want to logout?')) {
       await logout()
     }
+  }
+
+  const handleMyProfile = () => {
+    navigate('/settings?tab=profile')
+  }
+
+  const getInitials = (name: string) => {
+    if (!name) return 'AD'
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2)
   }
 
   return (
@@ -108,7 +124,7 @@ export function TopNav({ sidebarCollapsed, onToggleSidebar, mobileMenuOpen, onTo
             <Button variant="ghost" className="relative h-9 w-9 rounded-full">
               <Avatar className="h-9 w-9">
                 <AvatarFallback className="bg-brand-primary text-white">
-                  AD
+                  {userProfile ? getInitials(userProfile.full_name) : 'AD'}
                 </AvatarFallback>
               </Avatar>
             </Button>
@@ -116,23 +132,19 @@ export function TopNav({ sidebarCollapsed, onToggleSidebar, mobileMenuOpen, onTo
           <DropdownMenuContent className="w-56" align="end">
             <DropdownMenuLabel>
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium">Admin User</p>
-                {userMobile && (
+                <p className="text-sm font-medium">{userProfile?.full_name || 'Admin User'}</p>
+                {userProfile?.phone && (
                   <p className="text-xs text-gray-500 flex items-center">
                     <Phone className="w-3 h-3 mr-1" />
-                    {userMobile}
+                    {userProfile.phone}
                   </p>
                 )}
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleMyProfile}>
               <User className="mr-2 h-4 w-4" />
               My Profile
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Settings className="mr-2 h-4 w-4" />
-              Switch Role
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="text-red-600" onClick={handleLogout}>

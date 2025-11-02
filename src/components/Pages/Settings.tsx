@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Save, User, Bell, Shield, Palette, Globe, Database, Pause, Key, Mail, Phone, MapPin, Building, CreditCard, Smartphone, Monitor, Moon, Sun, Volume2, VolumeX, Eye, EyeOff, Copy, RefreshCw, Trash2, Plus, CreditCard as Edit, Zap, Link, Settings as SettingsIcon, Lock, Unlock, Play, Check, X, AlertTriangle, Info, Download, Upload, Calendar, GitBranch, FolderOpen, Layers } from 'lucide-react'
 import { PageHeader } from '@/components/Common/PageHeader'
@@ -88,6 +89,7 @@ const statusColors: Record<string, string> = {
 }
 
 export function Settings() {
+  const [searchParams, setSearchParams] = useSearchParams()
   const { userProfile, refreshProfile } = useAuth()
   const [activeTab, setActiveTab] = useState<'profile' | 'notifications' | 'integrations' | 'api' | 'system' | 'webhooks' | 'appearance' | 'calendar' | 'pipelines' | 'media-folders' | 'custom-fields'>('profile')
   const [showApiKey, setShowApiKey] = useState<Record<string, boolean>>({})
@@ -152,6 +154,13 @@ export function Settings() {
     url: '',
     payload_fields: {}
   })
+
+  useEffect(() => {
+    const tab = searchParams.get('tab')
+    if (tab && ['profile', 'notifications', 'integrations', 'api', 'system', 'webhooks', 'appearance', 'calendar', 'pipelines', 'media-folders', 'custom-fields'].includes(tab)) {
+      setActiveTab(tab as any)
+    }
+  }, [searchParams])
 
   useEffect(() => {
     if (activeTab === 'webhooks') {
@@ -665,7 +674,10 @@ export function Settings() {
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => {
+                  setActiveTab(tab.id as any)
+                  setSearchParams({ tab: tab.id })
+                }}
                 className={`flex items-center space-x-2 px-4 py-2 rounded-md font-medium transition-all ${
                   activeTab === tab.id
                     ? 'bg-white text-brand-primary shadow-sm'
