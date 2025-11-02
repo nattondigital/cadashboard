@@ -67,6 +67,18 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    if (!invoice.customer_email || !invoice.customer_name || !invoice.total_amount) {
+      return new Response(
+        JSON.stringify({
+          error: "Invoice is missing required fields (customer_email, customer_name, or total_amount)"
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
     let gatewayType = gateway_override;
     if (!gatewayType) {
       const { data: defaultGateway } = await supabase
@@ -129,26 +141,40 @@ Deno.serve(async (req: Request) => {
       const expiryDate = new Date();
       expiryDate.setDate(expiryDate.getDate() + 30);
 
+      const cleanPhone = invoice.customer_phone
+        ? invoice.customer_phone.replace(/[\s\-\+]/g, '').replace(/^91/, '')
+        : "9999999999";
+
       const cashfreePayload = {
-        link_id: `INV-${invoice.invoice_id}`,
+        link_id: `INV${invoice.invoice_id}${Date.now()}`,
         link_amount: parseFloat(invoice.total_amount),
         link_currency: invoice.currency || "INR",
-        link_purpose: invoice.title,
+        link_purpose: invoice.title || "Invoice Payment",
+        link_expiry_time: expiryDate.toISOString(),
         customer_details: {
           customer_name: invoice.customer_name,
           customer_email: invoice.customer_email,
-          customer_phone: invoice.customer_phone || "",
+          customer_phone: cleanPhone,
         },
         link_notify: {
-          send_sms: false,
           send_email: true,
+          send_sms: false,
         },
-        link_expiry_time: expiryDate.toISOString(),
         link_notes: {
           invoice_id: invoice.invoice_id,
           invoice_uuid: invoice.id,
         },
+        link_auto_reminders: true,
       };
+
+      console.log("Cashfree Request:", {
+        url: cashfreeUrl,
+        payload: cashfreePayload,
+        headers: {
+          "x-api-version": gatewayConfig.api_version || "2023-08-01",
+          "x-client-id": gatewayConfig.app_id,
+        }
+      });
 
       const cashfreeResponse = await fetch(cashfreeUrl, {
         method: "POST",
@@ -163,7 +189,11 @@ Deno.serve(async (req: Request) => {
 
       if (!cashfreeResponse.ok) {
         const errorData = await cashfreeResponse.json();
-        console.error("Cashfree API error:", errorData);
+        console.error("Cashfree API error:", {
+          status: cashfreeResponse.status,
+          statusText: cashfreeResponse.statusText,
+          error: errorData
+        });
 
         let userMessage = "Failed to create Cashfree payment link";
         if (errorData.type === "feature_not_enabled") {
@@ -186,6 +216,7 @@ Deno.serve(async (req: Request) => {
       }
 
       const cashfreeData: CashfreeResponse = await cashfreeResponse.json();
+      console.log("Cashfree Response:", cashfreeData);
       paymentLinkUrl = cashfreeData.link_url;
       paymentLinkId = cashfreeData.cf_link_id;
       paymentLinkStatus = cashfreeData.link_status;
