@@ -506,7 +506,7 @@ export function Leads() {
 
         if (!stagesError && stagesData) {
           const formattedStages = stagesData.map(stage => ({
-            id: stage.name,
+            id: stage.stage_id,
             label: stage.name,
             color: stage.color
           }))
