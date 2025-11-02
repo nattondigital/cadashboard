@@ -190,9 +190,6 @@ export function Billing() {
           }])
           break
         case 'invoices':
-          console.log('Creating invoice with formData:', formData)
-          console.log('estimateId to update:', formData.estimateId)
-
           await supabase.from('invoices').insert([{
             customer_name: formData.customerName,
             customer_email: formData.customerEmail,
@@ -215,20 +212,14 @@ export function Billing() {
           }])
 
           if (formData.estimateId) {
-            console.log('Updating estimate status to Invoiced for ID:', formData.estimateId)
-            const { data: updateData, error: updateError } = await supabase
+            const { error: updateError } = await supabase
               .from('estimates')
               .update({ status: 'Invoiced' })
               .eq('id', formData.estimateId)
-              .select()
 
             if (updateError) {
               console.error('Error updating estimate status:', updateError)
-            } else {
-              console.log('Successfully updated estimate:', updateData)
             }
-          } else {
-            console.log('No estimateId found in formData')
           }
           break
         case 'subscriptions':
