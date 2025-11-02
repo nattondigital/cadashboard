@@ -292,6 +292,8 @@ export function Leads() {
         .order('created_at', { ascending: false })
 
       if (error) throw error
+      console.log('📊 Fetched leads:', data?.length || 0)
+      console.log('🔍 Leads data:', data)
       setLeads(data || [])
     } catch (error) {
       console.error('Error fetching leads:', error)
@@ -485,6 +487,8 @@ export function Leads() {
         .eq('is_active', true)
         .order('display_order')
 
+      console.log('🔧 Fetched pipelines:', pipelinesData)
+
       if (pipelinesError) throw pipelinesError
 
       setPipelines(pipelinesData || [])
@@ -524,6 +528,8 @@ export function Leads() {
         setStageColumns(firstPipelineStages)
       }
 
+      console.log('✅ Setting default pipeline:', defaultPipelineId)
+      console.log('📋 Pipeline name:', pipelinesData?.find(p => p.id === defaultPipelineId)?.name)
       setSelectedPipelineId(defaultPipelineId)
       setPipelineFilter(defaultPipelineId)
       setFormData(prev => ({ ...prev, pipeline_id: defaultPipelineId }))
@@ -1136,6 +1142,14 @@ export function Leads() {
     return matchesSearch && matchesPipeline && matchesSource && matchesInterest && matchesStage
   })
 
+  // Debug logging
+  console.log('🎯 Filter state:', {
+    totalLeads: leads.length,
+    pipelineFilter,
+    filteredCount: filteredLeads.length,
+    leadsWithPipeline: leads.filter(l => l.pipeline_id === pipelineFilter).length
+  })
+
   const getLeadsByStage = (stage: string) => {
     return filteredLeads.filter(lead => lead.stage === stage)
   }
@@ -1144,6 +1158,8 @@ export function Leads() {
   const hotLeads = filteredLeads.filter(l => l.interest === 'Hot').length
   const demoBookedLeads = filteredLeads.filter(l => l.stage === 'Demo Booked').length
   const wonLeads = filteredLeads.filter(l => l.stage === 'Won').length
+
+  console.log('📈 KPIs:', { totalLeads, hotLeads, demoBookedLeads, wonLeads })
 
   const handleBulkImportClick = () => {
     setView('bulk-import')
