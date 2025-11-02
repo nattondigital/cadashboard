@@ -54,9 +54,10 @@ export function InvoicePDF({ invoice, onClose }: InvoicePDFProps) {
   const invoiceDate = new Date(invoice.issue_date)
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-white rounded-lg shadow-2xl w-full max-w-5xl my-8">
-        <div className="flex items-center justify-between px-6 py-4 border-b sticky top-0 bg-white z-10 rounded-t-lg print:hidden">
+    <div className="fixed inset-0 bg-black/50 z-50 overflow-y-auto">
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg shadow-2xl w-full max-w-5xl my-8">
+          <div className="flex items-center justify-between px-6 py-4 border-b sticky top-0 bg-white z-10 rounded-t-lg print:hidden">
           <h2 className="text-xl font-semibold text-gray-900">Invoice Preview</h2>
           <div className="flex gap-2">
             <Button variant="outline" onClick={handlePrint}>
@@ -272,6 +273,7 @@ export function InvoicePDF({ invoice, onClose }: InvoicePDFProps) {
               </div>
             </div>
           </Card>
+        </div>
         </div>
       </div>
     </div>
