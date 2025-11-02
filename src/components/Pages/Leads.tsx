@@ -514,6 +514,7 @@ export function Leads() {
 
           if (pipeline.is_default) {
             defaultPipelineId = pipeline.id
+            console.log('🎨 Setting stages for default pipeline:', formattedStages)
             setStageColumns(formattedStages)
           }
         }
@@ -1151,7 +1152,9 @@ export function Leads() {
   })
 
   const getLeadsByStage = (stage: string) => {
-    return filteredLeads.filter(lead => lead.stage === stage)
+    const leadsInStage = filteredLeads.filter(lead => lead.stage === stage)
+    console.log(`🔹 Stage "${stage}": ${leadsInStage.length} leads`, leadsInStage.map(l => l.lead_id))
+    return leadsInStage
   }
 
   const totalLeads = filteredLeads.length
