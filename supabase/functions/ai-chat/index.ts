@@ -304,7 +304,119 @@ Deno.serve(async (req: Request) => {
       })
     }
 
-    const enhancedSystemPrompt = `${agent.system_prompt}\n\nYou have access to CRM tools. When a user asks you to perform actions like creating expenses, tasks, or retrieving data, use the available tools to execute those actions. Always use tools when appropriate instead of just describing what you would do.`
+    if (permissions['Support Tickets']?.can_view) {
+      tools.push({
+        type: 'function',
+        function: {
+          name: 'get_support_tickets',
+          description: 'Get support tickets from the CRM. Can search by ticket ID, reporter name, or filter by status.',
+          parameters: {
+            type: 'object',
+            properties: {
+              ticket_id: { type: 'string', description: 'Specific ticket ID to retrieve (e.g., TKT-2025-061)' },
+              reporter_name: { type: 'string', description: 'Search by reporter/contact name' },
+              status: { type: 'string', enum: ['Open', 'In Progress', 'Resolved', 'Closed'], description: 'Filter by ticket status' },
+              limit: { type: 'number', description: 'Number of tickets to retrieve (default 10)' }
+            }
+          }
+        }
+      })
+    }
+
+    if (permissions['Expenses']?.can_view) {
+      tools.push({
+        type: 'function',
+        function: {
+          name: 'get_expenses',
+          description: 'Get expenses from the CRM with optional filtering',
+          parameters: {
+            type: 'object',
+            properties: {
+              date_filter: { type: 'string', description: 'Filter by date: "today", "this_week", "this_month", "last_month"' },
+              category: { type: 'string', description: 'Filter by category' },
+              limit: { type: 'number', description: 'Number of expenses to retrieve' }
+            }
+          }
+        }
+      })
+    }
+
+    if (permissions['Tasks']?.can_view) {
+      tools.push({
+        type: 'function',
+        function: {
+          name: 'get_tasks',
+          description: 'Get tasks from the CRM',
+          parameters: {
+            type: 'object',
+            properties: {
+              status: { type: 'string', enum: ['Pending', 'In Progress', 'Completed'], description: 'Filter by task status' },
+              priority: { type: 'string', enum: ['Low', 'Medium', 'High'], description: 'Filter by priority' },
+              limit: { type: 'number', description: 'Number of tasks to retrieve' }
+            }
+          }
+        }
+      })
+    }
+
+    if (permissions['Leads']?.can_view) {
+      tools.push({
+        type: 'function',
+        function: {
+          name: 'get_leads',
+          description: 'Get leads from the CRM',
+          parameters: {
+            type: 'object',
+            properties: {
+              stage: { type: 'string', description: 'Filter by lead stage' },
+              limit: { type: 'number', description: 'Number of leads to retrieve' }
+            }
+          }
+        }
+      })
+    }
+
+    if (permissions['Appointments']?.can_view) {
+      tools.push({
+        type: 'function',
+        function: {
+          name: 'get_appointments',
+          description: 'Get appointments from the CRM',
+          parameters: {
+            type: 'object',
+            properties: {
+              date_filter: { type: 'string', enum: ['today', 'upcoming', 'past', 'this_month', 'all'], description: 'Filter by date' },
+              appointment_id: { type: 'string', description: 'Specific appointment ID' },
+              limit: { type: 'number', description: 'Number of appointments to retrieve' }
+            }
+          }
+        }
+      })
+    }
+
+    if (permissions['Contacts']?.can_view) {
+      tools.push({
+        type: 'function',
+        function: {
+          name: 'get_contacts',
+          description: 'Get contacts from the CRM',
+          parameters: {
+            type: 'object',
+            properties: {
+              search: { type: 'string', description: 'Search by name, email, or phone' },
+              limit: { type: 'number', description: 'Number of contacts to retrieve' }
+            }
+          }
+        }
+      })
+    }
+
+    const enhancedSystemPrompt = `${agent.system_prompt}\n\nYou have access to CRM tools. When a user asks you to perform actions like creating expenses, tasks, or retrieving data, use the available tools to execute those actions immediately. DO NOT ask for confirmation or additional details if you have enough information to proceed. For example:
+- If a user provides a ticket ID like "TKT-2025-061", immediately use get_support_tickets with that ticket_id
+- If a user says "create an expense of 2800 for mumbai flight", immediately use create_expense with the provided details
+- Only ask clarifying questions if critical required information is truly missing
+
+ALWAYS use tools when appropriate instead of just describing what you would do or asking unnecessary questions.`
 
     const messages = [
       { role: 'system', content: enhancedSystemPrompt },
@@ -449,6 +561,174 @@ Deno.serve(async (req: Request) => {
                 toolResults.push(`❌ Failed to create appointment: ${appointmentError.message}`)
               } else {
                 toolResults.push(`✅ Appointment created: ${functionArgs.title} (${appointmentId})`)
+              }
+            } else if (functionName === 'get_support_tickets') {
+              let ticketsQuery = supabase
+                .from('support_tickets')
+                .select('*')
+                .order('created_at', { ascending: false })
+
+              if (functionArgs.ticket_id) {
+                ticketsQuery = ticketsQuery.eq('ticket_id', functionArgs.ticket_id)
+              } else if (functionArgs.reporter_name) {
+                ticketsQuery = ticketsQuery.ilike('reporter_name', `%${functionArgs.reporter_name}%`)
+              }
+
+              if (functionArgs.status) {
+                ticketsQuery = ticketsQuery.eq('status', functionArgs.status)
+              }
+
+              ticketsQuery = ticketsQuery.limit(functionArgs.limit || 10)
+
+              const { data: tickets, error: ticketsError } = await ticketsQuery
+
+              if (ticketsError) {
+                toolResults.push(`❌ Failed to fetch tickets: ${ticketsError.message}`)
+              } else if (tickets && tickets.length > 0) {
+                const ticketSummary = tickets.map(t =>
+                  `• ${t.ticket_id}: ${t.subject} (Status: ${t.status}, Priority: ${t.priority}, Reporter: ${t.reporter_name})`
+                ).join('\n')
+                toolResults.push(`✅ Found ${tickets.length} ticket(s):\n${ticketSummary}`)
+              } else {
+                toolResults.push(`No tickets found matching the criteria`)
+              }
+            } else if (functionName === 'get_expenses') {
+              let expensesQuery = supabase
+                .from('expenses')
+                .select('*')
+                .order('expense_date', { ascending: false })
+
+              if (functionArgs.date_filter) {
+                const today = new Date().toISOString().split('T')[0]
+                if (functionArgs.date_filter === 'today') {
+                  expensesQuery = expensesQuery.eq('expense_date', today)
+                }
+              }
+
+              if (functionArgs.category) {
+                expensesQuery = expensesQuery.eq('category', functionArgs.category)
+              }
+
+              expensesQuery = expensesQuery.limit(functionArgs.limit || 10)
+
+              const { data: expenses, error: expensesError } = await expensesQuery
+
+              if (expensesError) {
+                toolResults.push(`❌ Failed to fetch expenses: ${expensesError.message}`)
+              } else if (expenses && expenses.length > 0) {
+                const total = expenses.reduce((sum, e) => sum + parseFloat(e.amount), 0)
+                const expenseSummary = expenses.map(e =>
+                  `• ₹${e.amount} - ${e.description} (${e.category}) on ${e.expense_date}`
+                ).join('\n')
+                toolResults.push(`✅ Found ${expenses.length} expense(s) totaling ₹${total.toFixed(2)}:\n${expenseSummary}`)
+              } else {
+                toolResults.push(`No expenses found`)
+              }
+            } else if (functionName === 'get_tasks') {
+              let tasksQuery = supabase
+                .from('tasks')
+                .select('*')
+                .order('created_at', { ascending: false })
+
+              if (functionArgs.status) {
+                tasksQuery = tasksQuery.eq('status', functionArgs.status)
+              }
+
+              if (functionArgs.priority) {
+                tasksQuery = tasksQuery.eq('priority', functionArgs.priority)
+              }
+
+              tasksQuery = tasksQuery.limit(functionArgs.limit || 10)
+
+              const { data: tasks, error: tasksError } = await tasksQuery
+
+              if (tasksError) {
+                toolResults.push(`❌ Failed to fetch tasks: ${tasksError.message}`)
+              } else if (tasks && tasks.length > 0) {
+                const taskSummary = tasks.map(t =>
+                  `• ${t.title} (${t.status}, ${t.priority} priority)${t.due_date ? ` - Due: ${t.due_date}` : ''}`
+                ).join('\n')
+                toolResults.push(`✅ Found ${tasks.length} task(s):\n${taskSummary}`)
+              } else {
+                toolResults.push(`No tasks found`)
+              }
+            } else if (functionName === 'get_leads') {
+              let leadsQuery = supabase
+                .from('leads')
+                .select('*')
+                .order('created_at', { ascending: false })
+
+              if (functionArgs.stage) {
+                leadsQuery = leadsQuery.eq('stage', functionArgs.stage)
+              }
+
+              leadsQuery = leadsQuery.limit(functionArgs.limit || 10)
+
+              const { data: leads, error: leadsError } = await leadsQuery
+
+              if (leadsError) {
+                toolResults.push(`❌ Failed to fetch leads: ${leadsError.message}`)
+              } else if (leads && leads.length > 0) {
+                const leadSummary = leads.map(l =>
+                  `• ${l.name} (${l.phone}) - ${l.interest} interest`
+                ).join('\n')
+                toolResults.push(`✅ Found ${leads.length} lead(s):\n${leadSummary}`)
+              } else {
+                toolResults.push(`No leads found`)
+              }
+            } else if (functionName === 'get_appointments') {
+              let appointmentsQuery = supabase
+                .from('appointments')
+                .select('*')
+                .order('appointment_date', { ascending: true })
+
+              if (functionArgs.appointment_id) {
+                appointmentsQuery = appointmentsQuery.eq('appointment_id', functionArgs.appointment_id)
+              } else if (functionArgs.date_filter === 'today') {
+                const today = new Date().toISOString().split('T')[0]
+                appointmentsQuery = appointmentsQuery.eq('appointment_date', today)
+              } else if (functionArgs.date_filter === 'upcoming') {
+                const today = new Date().toISOString().split('T')[0]
+                appointmentsQuery = appointmentsQuery.gte('appointment_date', today)
+              }
+
+              appointmentsQuery = appointmentsQuery.limit(functionArgs.limit || 10)
+
+              const { data: appointments, error: appointmentsError } = await appointmentsQuery
+
+              if (appointmentsError) {
+                toolResults.push(`❌ Failed to fetch appointments: ${appointmentsError.message}`)
+              } else if (appointments && appointments.length > 0) {
+                const appointmentSummary = appointments.map(a =>
+                  `• ${a.title} on ${a.appointment_date} at ${a.appointment_time} (${a.status})`
+                ).join('\n')
+                toolResults.push(`✅ Found ${appointments.length} appointment(s):\n${appointmentSummary}`)
+              } else {
+                toolResults.push(`No appointments found`)
+              }
+            } else if (functionName === 'get_contacts') {
+              let contactsQuery = supabase
+                .from('contacts_master')
+                .select('*')
+                .order('created_at', { ascending: false })
+
+              if (functionArgs.search) {
+                contactsQuery = contactsQuery.or(`name.ilike.%${functionArgs.search}%,email.ilike.%${functionArgs.search}%,phone.ilike.%${functionArgs.search}%`)
+              }
+
+              contactsQuery = contactsQuery.limit(functionArgs.limit || 10)
+
+              const { data: contacts, error: contactsError } = await contactsQuery
+
+              if (contactsError) {
+                toolResults.push(`❌ Failed to fetch contacts: ${contactsError.message}`)
+              } else if (contacts && contacts.length > 0) {
+                const contactSummary = contacts.map(c =>
+                  `• ${c.name} (${c.phone})${c.email ? ` - ${c.email}` : ''}`
+                ).join('\n')
+                toolResults.push(`✅ Found ${contacts.length} contact(s):\n${contactSummary}`)
+              } else {
+                toolResults.push(`No contacts found`)
               }
             }
           }

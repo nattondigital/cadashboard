@@ -929,7 +929,16 @@ export function AIAgentChat() {
       const tools = await getAvailableTools()
 
       const systemPrompt = agent.system_prompt || 'You are a helpful AI assistant with access to CRM functions.'
-      let enhancedSystemPrompt = `${systemPrompt}\n\nYou have access to CRM tools. When a user asks you to perform actions like creating expenses, tasks, or retrieving data, use the available tools to execute those actions. Always use tools when appropriate instead of just describing what you would do.\n\nIMPORTANT: If you ask the user for additional information (like a category, date, etc.) and they provide it in their next message, use that information to complete the original action. For example, if you asked "What is the category?" and they reply "travel", use "travel" as the category parameter for the create_expense function.\n\nWhen users ask about expenses with time periods (like "this month", "today", "last month"), use the get_expenses tool with the date_filter parameter. When they ask for category-wise totals or breakdowns, set group_by_category to true. Examples:\n- "expenses this month" → get_expenses with date_filter="this_month"\n- "category wise expenses" → get_expenses with group_by_category=true\n- "travel expenses this month" → get_expenses with date_filter="this_month" and category="Travel"`
+      let enhancedSystemPrompt = `${systemPrompt}\n\nYou have access to CRM tools. When a user asks you to perform actions like creating expenses, tasks, or retrieving data, use the available tools to execute those actions immediately. DO NOT ask for confirmation or additional details if you have enough information to proceed. For example:
+- If a user provides a ticket ID like "TKT-2025-061", immediately use get_support_tickets with that ticket_id
+- If a user says "create an expense of 2800 for mumbai flight", immediately use create_expense with the provided details
+- Only ask clarifying questions if critical required information is truly missing
+
+ALWAYS use tools when appropriate instead of just describing what you would do or asking unnecessary questions.
+
+IMPORTANT: If you ask the user for additional information (like a category, date, etc.) and they provide it in their next message, use that information to complete the original action. For example, if you asked "What is the category?" and they reply "travel", use "travel" as the category parameter for the create_expense function.
+
+When users ask about expenses with time periods (like "this month", "today", "last month"), use the get_expenses tool with the date_filter parameter. When they ask for category-wise totals or breakdowns, set group_by_category to true. Examples:\n- "expenses this month" → get_expenses with date_filter="this_month"\n- "category wise expenses" → get_expenses with group_by_category=true\n- "travel expenses this month" → get_expenses with date_filter="this_month" and category="Travel"`
 
       if (imageUrl) {
         enhancedSystemPrompt += `\n\nIMPORTANT: The user has uploaded an image. When they ask you to create, generate, or modify an image, you MUST use the generate_image tool and pass the uploaded image URL as the reference_image_url parameter. The uploaded image is available at: ${imageUrl}`
