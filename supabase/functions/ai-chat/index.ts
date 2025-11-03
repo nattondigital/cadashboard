@@ -559,7 +559,7 @@ Deno.serve(async (req: Request) => {
               .from('support_tickets')
               .select(`
                 *,
-                contact:contacts_master!contact_id(name, phone, email),
+                contact:contacts_master!contact_id(full_name, phone, email),
                 assigned_user:admin_users!assigned_to(full_name, email)
               `)
               .order('created_at', { ascending: false })
@@ -584,7 +584,7 @@ Deno.serve(async (req: Request) => {
               const ticketSummary = tickets.map(t => {
                 const contact = t.contact as any
                 const assignedUser = t.assigned_user as any
-                const contactName = contact?.name || 'Unknown'
+                const contactName = contact?.full_name || 'Unknown'
                 const assignedName = assignedUser?.full_name || 'Unassigned'
 
                 let summary = `• Ticket: ${t.ticket_id}\n  Subject: ${t.subject}\n  Status: ${t.status}\n  Priority: ${t.priority}\n  Contact: ${contactName}`

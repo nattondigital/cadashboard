@@ -151,7 +151,11 @@ Deno.serve(async (req: Request) => {
 
     let query = supabase
       .from('support_tickets')
-      .select('*')
+      .select(`
+        *,
+        contact:contacts_master!contact_id(full_name, phone, email),
+        assigned_user:admin_users!assigned_to(full_name, email)
+      `)
 
     if (filters.ticket_id) {
       query = query.eq('ticket_id', filters.ticket_id)
@@ -199,11 +203,20 @@ Deno.serve(async (req: Request) => {
       )
     }
 
+    const enhancedTickets = (tickets || []).map(ticket => ({
+      ...ticket,
+      contact_name: ticket.contact?.full_name || 'Unknown',
+      contact_phone: ticket.contact?.phone || null,
+      contact_email: ticket.contact?.email || null,
+      assigned_to_name: ticket.assigned_user?.full_name || 'Unassigned',
+      assigned_to_email: ticket.assigned_user?.email || null,
+    }))
+
     return new Response(
       JSON.stringify({
         success: true,
-        count: tickets?.length || 0,
-        data: tickets || [],
+        count: enhancedTickets.length,
+        data: enhancedTickets,
       }),
       {
         status: 200,
