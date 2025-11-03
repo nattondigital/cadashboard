@@ -18,8 +18,8 @@ async function main() {
   console.log('🧪 Starting Tasks MCP Server Test...\n');
 
   if (!AGENT_ID) {
-    console.log('⚠️  Warning: AGENT_ID not set in .env file');
-    console.log('   Some operations may fail due to permission checks\n');
+    console.log('ℹ️  Info: AGENT_ID not set in .env file');
+    console.log('   Server will automatically use the first active agent from database\n');
   }
 
   const client = new Client(
@@ -67,13 +67,12 @@ async function main() {
     });
     console.log('');
 
-    console.log('🛠️  Test 4: Execute get_tasks Tool');
+    console.log('🛠️  Test 4: Execute get_tasks Tool (auto-resolving agent)');
     console.log('─'.repeat(50));
     const getTasksResult = await client.callTool({
       name: 'get_tasks',
       arguments: {
-        agent_id: AGENT_ID,
-        agent_name: AGENT_NAME,
+        // agent_id and agent_name will be auto-resolved from database
         status: 'To Do',
         limit: 5,
       },
@@ -118,16 +117,15 @@ async function main() {
     console.log('Prompt preview (first 300 chars):');
     console.log(summaryText.substring(0, 300) + '...\n');
 
-    if (AGENT_ID) {
-      console.log('🎯 Test 7: Create a Test Task');
-      console.log('─'.repeat(50));
+    console.log('🎯 Test 7: Create a Test Task (auto-resolving agent)');
+    console.log('─'.repeat(50));
+    try {
       const createResult = await client.callTool({
         name: 'create_task',
         arguments: {
-          agent_id: AGENT_ID,
-          agent_name: AGENT_NAME,
+          // agent_id and agent_name will be auto-resolved from database
           title: `[TEST] MCP Test Task - ${new Date().toISOString()}`,
-          description: 'This is a test task created by the MCP test client',
+          description: 'This is a test task created by the MCP test client with auto agent resolution',
           status: 'To Do',
           priority: 'Low',
           due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -141,11 +139,13 @@ async function main() {
         console.log(`Task ID: ${createData.data.task.id}`);
       } else {
         console.log(`Error: ${createData.error?.message}`);
+        if (createData.error?.code === 'MISSING_AGENT_ID') {
+          console.log(`Hint: ${createData.error?.hint}`);
+        }
       }
       console.log('');
-    } else {
-      console.log('⏭️  Test 7: Skipped (no AGENT_ID configured)');
-      console.log('   Set AGENT_ID in .env to test create operations\n');
+    } catch (error: any) {
+      console.log(`❌ Failed: ${error.message}\n`);
     }
 
     console.log('✨ All tests completed successfully!');
@@ -154,19 +154,11 @@ async function main() {
     console.log(`  - Tools: ${tools.tools.length}`);
     console.log(`  - Prompts: ${prompts.prompts.length}`);
 
-    if (AGENT_ID) {
-      console.log('\n💡 Next Steps:');
-      console.log('  1. Check ai_agent_logs table for operation logs');
-      console.log('  2. Review created test task in tasks table');
-      console.log('  3. Try different filters with get_tasks tool');
-      console.log('  4. Explore other prompts for context-aware assistance');
-    } else {
-      console.log('\n💡 To enable full testing:');
-      console.log('  1. Create an AI agent in your CRM');
-      console.log('  2. Configure Tasks module permissions');
-      console.log('  3. Add AGENT_ID to .env file');
-      console.log('  4. Run this test again');
-    }
+    console.log('\n💡 How automatic agent resolution works:');
+    console.log('  ✓ MCP server finds active AI agents from database automatically');
+    console.log('  ✓ No need to manually configure AGENT_ID in .env file');
+    console.log('  ✓ Just create an active AI agent in your CRM and it works!');
+    console.log('  ✓ Can still override with agent_id in tool arguments if needed');
   } catch (error: any) {
     console.error('\n❌ Test failed:', error.message);
     if (error.stack) {

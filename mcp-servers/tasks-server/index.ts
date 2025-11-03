@@ -16,7 +16,7 @@ import {
   GetPromptRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import dotenv from 'dotenv';
-import { initializeSupabase } from '../shared/supabase-client.js';
+import { initializeSupabase, getActiveAgent } from '../shared/supabase-client.js';
 import { createLogger } from '../shared/logger.js';
 import { resources, readResource } from './resources.js';
 import { tools, callTool } from './tools.js';
@@ -28,13 +28,11 @@ const logger = createLogger('TasksServer');
 
 const SERVER_NAME = process.env.MCP_SERVER_NAME || 'crm-tasks-server';
 const SERVER_VERSION = process.env.MCP_SERVER_VERSION || '1.0.0';
-const AGENT_ID = process.env.AGENT_ID || '';
 
 async function main() {
   logger.info('Starting Tasks MCP Server', {
     name: SERVER_NAME,
     version: SERVER_VERSION,
-    agentId: AGENT_ID || 'Not set (will use dynamic agent ID)',
   });
 
   try {
@@ -43,6 +41,14 @@ async function main() {
   } catch (error: any) {
     logger.error('Failed to initialize Supabase', { error: error.message });
     process.exit(1);
+  }
+
+  // Test agent resolution
+  const activeAgent = await getActiveAgent();
+  if (activeAgent) {
+    logger.info('Active agent found', { id: activeAgent.id, name: activeAgent.name });
+  } else {
+    logger.warn('No active agents found - operations will require agent_id in arguments');
   }
 
   const server = new Server(
@@ -78,27 +84,38 @@ async function main() {
     const { name, arguments: args } = request.params;
     logger.debug('Handling call tool request', { name, args });
 
-    const agentId = (args as any).agent_id || AGENT_ID;
+    // Try to get agent_id from arguments first, then from database
+    let agentId = (args as any).agent_id;
+    let agentName = (args as any).agent_name || 'Unknown Agent';
+
     if (!agentId) {
-      const error = 'agent_id is required either in arguments or AGENT_ID environment variable';
-      logger.error(error);
-      return {
-        content: [
-          {
-            type: 'text',
-            text: JSON.stringify({
-              success: false,
-              error: {
-                code: 'MISSING_AGENT_ID',
-                message: error,
-              },
-            }),
-          },
-        ],
-      };
+      logger.debug('No agent_id in arguments, fetching from database');
+      const activeAgent = await getActiveAgent();
+      if (activeAgent) {
+        agentId = activeAgent.id;
+        agentName = activeAgent.name;
+        logger.debug('Using active agent from database', { agentId, agentName });
+      } else {
+        const error = 'No agent_id provided and no active agents found in database';
+        logger.error(error);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({
+                success: false,
+                error: {
+                  code: 'MISSING_AGENT_ID',
+                  message: error,
+                  hint: 'Create an active AI agent in the CRM or provide agent_id in tool arguments',
+                },
+              }),
+            },
+          ],
+        };
+      }
     }
 
-    const agentName = (args as any).agent_name || 'Unknown Agent';
     const result = await callTool(name, args, agentId, agentName);
 
     return {
