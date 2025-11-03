@@ -531,10 +531,14 @@ export function AIAgentChat() {
         type: 'function',
         function: {
           name: 'get_tasks',
-          description: 'Get list of tasks from the CRM',
+          description: 'Get list of tasks from the CRM. Can retrieve a specific task by task_id or filter by status/priority.',
           parameters: {
             type: 'object',
             properties: {
+              task_id: {
+                type: 'string',
+                description: 'Get a specific task by its task_id (e.g., TASK-10031)'
+              },
               status: {
                 type: 'string',
                 enum: ['Pending', 'In Progress', 'Completed'],
@@ -819,6 +823,10 @@ export function AIAgentChat() {
             .from('tasks')
             .select('*')
             .order('created_at', { ascending: false })
+
+          if (args.task_id) {
+            tasksQuery = tasksQuery.eq('task_id', args.task_id)
+          }
 
           if (args.status) {
             tasksQuery = tasksQuery.eq('status', args.status)
