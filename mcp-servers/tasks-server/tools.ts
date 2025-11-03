@@ -38,10 +38,14 @@ async function logAction(
 export const tools = [
   {
     name: 'get_tasks',
-    description: 'Retrieve tasks with advanced filtering and search capabilities',
+    description: 'Retrieve tasks with advanced filtering and search capabilities. Use task_id to get a specific task.',
     inputSchema: {
       type: 'object',
       properties: {
+        task_id: {
+          type: 'string',
+          description: 'Get a specific task by its task_id (e.g., TASK-10031)',
+        },
         status: {
           type: 'string',
           description: 'Filter by status',
@@ -227,6 +231,11 @@ export async function callTool(
       await validator.validateOrThrow('Tasks', 'view');
 
       let query = supabase.from('tasks').select('*');
+
+      // If task_id is provided, get that specific task
+      if (args.task_id) {
+        query = query.eq('task_id', args.task_id);
+      }
 
       if (args.status) query = query.eq('status', args.status);
       if (args.priority) query = query.eq('priority', args.priority);
