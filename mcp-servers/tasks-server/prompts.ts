@@ -46,6 +46,17 @@ export const prompts = [
     description: 'Generate an alert message for overdue tasks that need attention',
     arguments: [],
   },
+  {
+    name: 'get_task_by_id',
+    description: 'Instructions for retrieving a specific task by its task_id (e.g., TASK-10031)',
+    arguments: [
+      {
+        name: 'task_id',
+        description: 'The task ID to retrieve (e.g., TASK-10031)',
+        required: true,
+      },
+    ],
+  },
 ];
 
 export async function getPrompt(name: string, args: any = {}): Promise<{ messages: Array<{ role: string; content: { type: string; text: string } }> }> {
@@ -320,6 +331,105 @@ Prioritize tasks based on:
             content: {
               type: 'text',
               text: alert,
+            },
+          },
+        ],
+      };
+    }
+
+    if (name === 'get_task_by_id') {
+      const taskId = args.task_id;
+      if (!taskId) {
+        return {
+          messages: [
+            {
+              role: 'user',
+              content: {
+                type: 'text',
+                text: '# How to Retrieve a Task by ID\n\nTo get details of a specific task, use the `get_tasks` tool with the `task_id` parameter:\n\n```json\n{\n  "task_id": "TASK-10031"\n}\n```\n\nThis will return the complete task details including:\n- Task title and description\n- Status and priority\n- Assigned user and contact information\n- Due dates and progress\n- Supporting documents',
+              },
+            },
+          ],
+        };
+      }
+
+      const { data: tasks } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('task_id', taskId);
+
+      if (!tasks || tasks.length === 0) {
+        return {
+          messages: [
+            {
+              role: 'user',
+              content: {
+                type: 'text',
+                text: `# Task Not Found\n\nTask **${taskId}** was not found in the system.\n\nPlease verify the task ID and try again.`,
+              },
+            },
+          ],
+        };
+      }
+
+      const task = tasks[0];
+      let details = `# Task Details: ${task.task_id}\n\n`;
+      details += `## ${task.title}\n\n`;
+
+      if (task.description) {
+        details += `**Description:** ${task.description}\n\n`;
+      }
+
+      details += `### Status & Priority\n`;
+      details += `- **Status:** ${task.status}\n`;
+      details += `- **Priority:** ${task.priority}\n`;
+      details += `- **Progress:** ${task.progress_percentage}%\n\n`;
+
+      details += `### Assignment\n`;
+      details += `- **Assigned to:** ${task.assigned_to_name || 'Unassigned'}\n`;
+      details += `- **Assigned by:** ${task.assigned_by_name || 'N/A'}\n\n`;
+
+      if (task.contact_name) {
+        details += `### Contact Information\n`;
+        details += `- **Contact:** ${task.contact_name}\n`;
+        if (task.contact_phone) {
+          details += `- **Phone:** ${task.contact_phone}\n`;
+        }
+        details += `\n`;
+      }
+
+      details += `### Dates\n`;
+      if (task.start_date) {
+        details += `- **Start Date:** ${task.start_date}\n`;
+      }
+      if (task.due_date) {
+        details += `- **Due Date:** ${task.due_date}\n`;
+      }
+      if (task.completion_date) {
+        details += `- **Completed:** ${task.completion_date}\n`;
+      }
+      details += `- **Created:** ${task.created_at}\n`;
+      details += `- **Last Updated:** ${task.updated_at}\n\n`;
+
+      if (task.supporting_documents && task.supporting_documents.length > 0) {
+        details += `### Supporting Documents\n`;
+        task.supporting_documents.forEach((doc: string, index: number) => {
+          details += `${index + 1}. ${doc}\n`;
+        });
+        details += `\n`;
+      }
+
+      if (task.category) {
+        details += `**Category:** ${task.category}\n`;
+      }
+
+      return {
+        messages: [
+          {
+            role: 'user',
+            content: {
+              type: 'text',
+              text: details,
             },
           },
         ],

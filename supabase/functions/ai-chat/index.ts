@@ -268,10 +268,11 @@ Deno.serve(async (req: Request) => {
         type: 'function',
         function: {
           name: 'get_tasks',
-          description: 'Get tasks from the CRM',
+          description: 'Get tasks from the CRM. Can retrieve specific task by task_id or filter by status/priority.',
           parameters: {
             type: 'object',
             properties: {
+              task_id: { type: 'string', description: 'Get a specific task by its task_id (e.g., TASK-10031)' },
               status: { type: 'string', enum: ['Pending', 'In Progress', 'Completed'], description: 'Filter by task status' },
               priority: { type: 'string', enum: ['Low', 'Medium', 'High'], description: 'Filter by priority' },
               limit: { type: 'number', description: 'Number of tasks to retrieve' }
@@ -644,6 +645,10 @@ Deno.serve(async (req: Request) => {
               .select('*')
               .order('created_at', { ascending: false })
 
+            if (functionArgs.task_id) {
+              tasksQuery = tasksQuery.eq('task_id', functionArgs.task_id)
+            }
+
             if (functionArgs.status) {
               tasksQuery = tasksQuery.eq('status', functionArgs.status)
             }
@@ -659,10 +664,29 @@ Deno.serve(async (req: Request) => {
             if (tasksError) {
               toolResults.push(`❌ Failed to fetch tasks: ${tasksError.message}`)
             } else if (tasks && tasks.length > 0) {
-              const taskSummary = tasks.map(t =>
-                `• ${t.title} (${t.status}, ${t.priority} priority)${t.due_date ? ` - Due: ${t.due_date}` : ''}`
-              ).join('\n')
-              toolResults.push(`✅ Found ${tasks.length} task(s):\n${taskSummary}`)
+              if (functionArgs.task_id && tasks.length === 1) {
+                const t = tasks[0]
+                let details = `✅ Task Details:\n\n**${t.task_id}: ${t.title}**\n`
+                if (t.description) details += `Description: ${t.description}\n`
+                details += `Status: ${t.status}\n`
+                details += `Priority: ${t.priority}\n`
+                if (t.assigned_to_name) details += `Assigned to: ${t.assigned_to_name}\n`
+                if (t.assigned_by_name) details += `Assigned by: ${t.assigned_by_name}\n`
+                if (t.contact_name) details += `Contact: ${t.contact_name}${t.contact_phone ? ` (${t.contact_phone})` : ''}\n`
+                if (t.due_date) details += `Due date: ${t.due_date}\n`
+                if (t.start_date) details += `Start date: ${t.start_date}\n`
+                details += `Progress: ${t.progress_percentage || 0}%\n`
+                if (t.category) details += `Category: ${t.category}\n`
+                if (t.supporting_documents && t.supporting_documents.length > 0) {
+                  details += `\nSupporting documents:\n${t.supporting_documents.map((doc, i) => `${i + 1}. ${doc}`).join('\n')}`
+                }
+                toolResults.push(details)
+              } else {
+                const taskSummary = tasks.map(t =>
+                  `• ${t.task_id}: ${t.title} (${t.status}, ${t.priority} priority)${t.due_date ? ` - Due: ${t.due_date}` : ''}`
+                ).join('\n')
+                toolResults.push(`✅ Found ${tasks.length} task(s):\n${taskSummary}`)
+              }
             } else {
               toolResults.push(`No tasks found`)
             }
