@@ -609,203 +609,293 @@ async function handleMCPRequest(
 
         switch (name) {
           case 'get_tasks': {
-            if (!taskPerms.can_view) {
-              throw new Error('Agent does not have permission to view tasks')
-            }
+            try {
+              if (!taskPerms.can_view) {
+                await supabase.from('ai_agent_logs').insert({
+                  agent_id: agentId,
+                  agent_name: agentName,
+                  module: 'Tasks',
+                  action: 'get_tasks',
+                  result: 'Denied',
+                  user_context: args.phone_number || null,
+                  details: { reason: 'No permission to view tasks' },
+                })
+                throw new Error('Agent does not have permission to view tasks')
+              }
 
-            let query = supabase
-              .from('tasks')
-              .select('*')
-              .order('created_at', { ascending: false })
+              let query = supabase
+                .from('tasks')
+                .select('*')
+                .order('created_at', { ascending: false })
 
-            if (args.task_id) {
-              query = query.eq('task_id', args.task_id)
-            }
-            if (args.status) {
-              query = query.eq('status', args.status)
-            }
-            if (args.priority) {
-              query = query.eq('priority', args.priority)
-            }
-            if (args.limit) {
-              query = query.limit(args.limit)
-            } else {
-              query = query.limit(100)
-            }
+              if (args.task_id) {
+                query = query.eq('task_id', args.task_id)
+              }
+              if (args.status) {
+                query = query.eq('status', args.status)
+              }
+              if (args.priority) {
+                query = query.eq('priority', args.priority)
+              }
+              if (args.limit) {
+                query = query.limit(args.limit)
+              } else {
+                query = query.limit(100)
+              }
 
-            const { data, error } = await query
+              const { data, error } = await query
 
-            if (error) throw error
+              if (error) {
+                await supabase.from('ai_agent_logs').insert({
+                  agent_id: agentId,
+                  agent_name: agentName,
+                  module: 'Tasks',
+                  action: 'get_tasks',
+                  result: 'Error',
+                  user_context: args.phone_number || null,
+                  details: { error: error.message },
+                })
+                throw error
+              }
 
-            // Log action
-            await supabase.from('ai_agent_logs').insert({
-              agent_id: agentId,
-              agent_name: agentName,
-              module: 'Tasks',
-              action: 'get_tasks',
-              result: 'Success',
-              user_context: args.phone_number || null,
-              details: { filters: args, result_count: data?.length || 0 },
-            })
+              await supabase.from('ai_agent_logs').insert({
+                agent_id: agentId,
+                agent_name: agentName,
+                module: 'Tasks',
+                action: 'get_tasks',
+                result: 'Success',
+                user_context: args.phone_number || null,
+                details: { filters: args, result_count: data?.length || 0 },
+              })
 
-            response.result = {
-              content: [
-                {
-                  type: 'text',
-                  text: JSON.stringify(data, null, 2),
-                },
-              ],
+              response.result = {
+                content: [
+                  {
+                    type: 'text',
+                    text: JSON.stringify(data, null, 2),
+                  },
+                ],
+              }
+            } catch (error) {
+              throw error
             }
             break
           }
 
           case 'create_task': {
-            if (!taskPerms.can_create) {
-              throw new Error('Agent does not have permission to create tasks')
-            }
-
-            // Combine due_date and due_time into a single timestamp
-            let dueDateTimestamp = null
-            if (args.due_date) {
-              if (args.due_time) {
-                // Combine date and time: "2025-11-06" + "15:00" = "2025-11-06T15:00:00"
-                dueDateTimestamp = `${args.due_date}T${args.due_time}:00`
-              } else {
-                // Just date, set to start of day
-                dueDateTimestamp = `${args.due_date}T00:00:00`
+            try {
+              if (!taskPerms.can_create) {
+                await supabase.from('ai_agent_logs').insert({
+                  agent_id: agentId,
+                  agent_name: agentName,
+                  module: 'Tasks',
+                  action: 'create_task',
+                  result: 'Denied',
+                  user_context: args.phone_number || null,
+                  details: { reason: 'No permission to create tasks' },
+                })
+                throw new Error('Agent does not have permission to create tasks')
               }
-            }
 
-            // If assigned_to_name is provided but not assigned_to UUID, look it up
-            let assignedToUuid = args.assigned_to || null
-            if (args.assigned_to_name && !assignedToUuid) {
-              const { data: userData } = await supabase
-                .from('admin_users')
-                .select('id')
-                .ilike('full_name', `%${args.assigned_to_name}%`)
-                .limit(1)
-                .maybeSingle()
-
-              if (userData) {
-                assignedToUuid = userData.id
+              // Combine due_date and due_time into a single timestamp
+              let dueDateTimestamp = null
+              if (args.due_date) {
+                if (args.due_time) {
+                  dueDateTimestamp = `${args.due_date}T${args.due_time}:00`
+                } else {
+                  dueDateTimestamp = `${args.due_date}T00:00:00`
+                }
               }
-            }
 
-            const taskData = {
-              title: args.title,
-              description: args.description || null,
-              priority: args.priority || 'Medium',
-              status: args.status || 'To Do',
-              assigned_to: assignedToUuid,
-              contact_id: args.contact_id || null,
-              due_date: dueDateTimestamp,
-              supporting_documents: args.supporting_docs || null,
-            }
+              // If assigned_to_name is provided but not assigned_to UUID, look it up
+              let assignedToUuid = args.assigned_to || null
+              if (args.assigned_to_name && !assignedToUuid) {
+                const { data: userData } = await supabase
+                  .from('admin_users')
+                  .select('id')
+                  .ilike('full_name', `%${args.assigned_to_name}%`)
+                  .limit(1)
+                  .maybeSingle()
 
-            const { data, error } = await supabase
-              .from('tasks')
-              .insert(taskData)
-              .select()
-              .single()
+                if (userData) {
+                  assignedToUuid = userData.id
+                }
+              }
 
-            if (error) throw error
+              const taskData = {
+                title: args.title,
+                description: args.description || null,
+                priority: args.priority || 'Medium',
+                status: args.status || 'To Do',
+                assigned_to: assignedToUuid,
+                contact_id: args.contact_id || null,
+                due_date: dueDateTimestamp,
+                supporting_documents: args.supporting_docs || null,
+              }
 
-            // Log action
-            await supabase.from('ai_agent_logs').insert({
-              agent_id: agentId,
-              agent_name: agentName,
-              module: 'Tasks',
-              action: 'create_task',
-              result: 'Success',
-              user_context: args.phone_number || null,
-              details: { task_id: data.task_id, title: args.title },
-            })
+              const { data, error } = await supabase
+                .from('tasks')
+                .insert(taskData)
+                .select()
+                .single()
 
-            response.result = {
-              content: [
-                {
-                  type: 'text',
-                  text: JSON.stringify({
-                    success: true,
-                    message: 'Task created successfully',
-                    task: data
-                  }, null, 2),
-                },
-              ],
+              if (error) {
+                await supabase.from('ai_agent_logs').insert({
+                  agent_id: agentId,
+                  agent_name: agentName,
+                  module: 'Tasks',
+                  action: 'create_task',
+                  result: 'Error',
+                  user_context: args.phone_number || null,
+                  details: { error: error.message, task_data: args },
+                })
+                throw error
+              }
+
+              await supabase.from('ai_agent_logs').insert({
+                agent_id: agentId,
+                agent_name: agentName,
+                module: 'Tasks',
+                action: 'create_task',
+                result: 'Success',
+                user_context: args.phone_number || null,
+                details: { task_id: data.task_id, title: args.title },
+              })
+
+              response.result = {
+                content: [
+                  {
+                    type: 'text',
+                    text: JSON.stringify({
+                      success: true,
+                      message: 'Task created successfully',
+                      task: data
+                    }, null, 2),
+                  },
+                ],
+              }
+            } catch (error) {
+              throw error
             }
             break
           }
 
           case 'update_task': {
-            if (!taskPerms.can_edit) {
-              throw new Error('Agent does not have permission to edit tasks')
-            }
+            try {
+              if (!taskPerms.can_edit) {
+                await supabase.from('ai_agent_logs').insert({
+                  agent_id: agentId,
+                  agent_name: agentName,
+                  module: 'Tasks',
+                  action: 'update_task',
+                  result: 'Denied',
+                  user_context: args.phone_number || null,
+                  details: { reason: 'No permission to edit tasks' },
+                })
+                throw new Error('Agent does not have permission to edit tasks')
+              }
 
-            const { task_id, ...updates } = args
-            delete updates.agent_id
-            delete updates.phone_number
+              const { task_id, ...updates } = args
+              delete updates.agent_id
+              delete updates.phone_number
 
-            const { data, error } = await supabase
-              .from('tasks')
-              .update(updates)
-              .eq('task_id', task_id)
-              .select()
-              .single()
+              const { data, error } = await supabase
+                .from('tasks')
+                .update(updates)
+                .eq('task_id', task_id)
+                .select()
+                .single()
 
-            if (error) throw error
+              if (error) {
+                await supabase.from('ai_agent_logs').insert({
+                  agent_id: agentId,
+                  agent_name: agentName,
+                  module: 'Tasks',
+                  action: 'update_task',
+                  result: 'Error',
+                  user_context: args.phone_number || null,
+                  details: { error: error.message, task_id, updates },
+                })
+                throw error
+              }
 
-            // Log action
-            await supabase.from('ai_agent_logs').insert({
-              agent_id: agentId,
-              agent_name: agentName,
-              module: 'Tasks',
-              action: 'update_task',
-              result: 'Success',
-              user_context: args.phone_number || null,
-              details: { task_id, updates },
-            })
+              await supabase.from('ai_agent_logs').insert({
+                agent_id: agentId,
+                agent_name: agentName,
+                module: 'Tasks',
+                action: 'update_task',
+                result: 'Success',
+                user_context: args.phone_number || null,
+                details: { task_id, updates },
+              })
 
-            response.result = {
-              content: [
-                {
-                  type: 'text',
-                  text: JSON.stringify({ success: true, message: 'Task updated successfully', task: data }),
-                },
-              ],
+              response.result = {
+                content: [
+                  {
+                    type: 'text',
+                    text: JSON.stringify({ success: true, message: 'Task updated successfully', task: data }),
+                  },
+                ],
+              }
+            } catch (error) {
+              throw error
             }
             break
           }
 
           case 'delete_task': {
-            if (!taskPerms.can_delete) {
-              throw new Error('Agent does not have permission to delete tasks')
-            }
+            try {
+              if (!taskPerms.can_delete) {
+                await supabase.from('ai_agent_logs').insert({
+                  agent_id: agentId,
+                  agent_name: agentName,
+                  module: 'Tasks',
+                  action: 'delete_task',
+                  result: 'Denied',
+                  user_context: args.phone_number || null,
+                  details: { reason: 'No permission to delete tasks' },
+                })
+                throw new Error('Agent does not have permission to delete tasks')
+              }
 
-            const { error } = await supabase
-              .from('tasks')
-              .delete()
-              .eq('task_id', args.task_id)
+              const { error } = await supabase
+                .from('tasks')
+                .delete()
+                .eq('task_id', args.task_id)
 
-            if (error) throw error
+              if (error) {
+                await supabase.from('ai_agent_logs').insert({
+                  agent_id: agentId,
+                  agent_name: agentName,
+                  module: 'Tasks',
+                  action: 'delete_task',
+                  result: 'Error',
+                  user_context: args.phone_number || null,
+                  details: { error: error.message, task_id: args.task_id },
+                })
+                throw error
+              }
 
-            // Log action
-            await supabase.from('ai_agent_logs').insert({
-              agent_id: agentId,
-              agent_name: agentName,
-              module: 'Tasks',
-              action: 'delete_task',
-              result: 'Success',
-              user_context: args.phone_number || null,
-              details: { task_id: args.task_id },
-            })
+              await supabase.from('ai_agent_logs').insert({
+                agent_id: agentId,
+                agent_name: agentName,
+                module: 'Tasks',
+                action: 'delete_task',
+                result: 'Success',
+                user_context: args.phone_number || null,
+                details: { task_id: args.task_id },
+              })
 
-            response.result = {
-              content: [
-                {
-                  type: 'text',
-                  text: JSON.stringify({ success: true, message: 'Task deleted successfully', task_id: args.task_id }),
-                },
-              ],
+              response.result = {
+                content: [
+                  {
+                    type: 'text',
+                    text: JSON.stringify({ success: true, message: 'Task deleted successfully', task_id: args.task_id }),
+                  },
+                ],
+              }
+            } catch (error) {
+              throw error
             }
             break
           }

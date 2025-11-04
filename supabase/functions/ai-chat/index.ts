@@ -489,18 +489,12 @@ Deno.serve(async (req: Request) => {
           phone_number: payload.phone_number,
           role: 'user',
           message: payload.message,
-          user_context: 'External',
-          module: 'Chat',
-          action: 'User Message'
         },
         {
           agent_id: payload.agent_id,
           phone_number: payload.phone_number,
           role: 'assistant',
           message: aiResponse,
-          user_context: 'External',
-          module: 'Chat',
-          action: 'AI Response'
         }
       ])
 
