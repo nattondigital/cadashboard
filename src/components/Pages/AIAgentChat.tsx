@@ -196,6 +196,8 @@ export function AIAgentChat() {
 
     const tools: any[] = []
 
+    // Check which modules are handled by MCP
+    let mcpHandledModules: string[] = []
     if (agent?.use_mcp && id) {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
       const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -203,6 +205,12 @@ export function AIAgentChat() {
       try {
         const mcpTools = await getMCPTools(id, supabaseUrl, supabaseAnonKey)
         tools.push(...mcpTools)
+
+        // Track which modules are handled by MCP
+        const mcpConfig = agent.mcp_config as any
+        if (mcpConfig?.use_for_modules) {
+          mcpHandledModules = mcpConfig.use_for_modules
+        }
       } catch (error) {
         console.error('Error fetching MCP tools:', error)
       }
@@ -240,7 +248,8 @@ export function AIAgentChat() {
       })
     }
 
-    if (permissions['Tasks']?.can_create) {
+    // Only add native task tools if Tasks module is NOT handled by MCP
+    if (permissions['Tasks']?.can_create && !mcpHandledModules.includes('Tasks')) {
       tools.push({
         type: 'function',
         function: {
@@ -542,7 +551,7 @@ export function AIAgentChat() {
       })
     }
 
-    if (permissions['Tasks']?.can_view) {
+    if (permissions['Tasks']?.can_view && !mcpHandledModules.includes('Tasks')) {
       tools.push({
         type: 'function',
         function: {
