@@ -524,8 +524,15 @@ async function handleMCPRequest(
 }
 
 Deno.serve(async (req: Request) => {
+  // Log incoming request details for debugging
+  console.log('=== MCP Server Request ===')
+  console.log('Method:', req.method)
+  console.log('URL:', req.url)
+  console.log('Headers:', Object.fromEntries(req.headers.entries()))
+
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
+    console.log('OPTIONS request - returning CORS headers')
     return new Response(null, {
       status: 200,
       headers: corsHeaders,
@@ -542,9 +549,11 @@ Deno.serve(async (req: Request) => {
     if (!sessionId) {
       sessionId = generateSessionId()
     }
+    console.log('Session ID:', sessionId)
 
     // GET request - establish SSE stream (Streamable HTTP)
     if (req.method === 'GET') {
+      console.log('GET request - establishing SSE stream')
       const stream = new ReadableStream({
         start(controller) {
           const encoder = new TextEncoder()
@@ -597,15 +606,20 @@ Deno.serve(async (req: Request) => {
 
     // POST request - handle MCP messages
     if (req.method === 'POST') {
+      console.log('POST request - handling MCP messages')
       const contentType = req.headers.get('Content-Type') || ''
       const acceptHeader = req.headers.get('Accept') || ''
       const supportsStreaming = acceptHeader.includes('text/event-stream')
+      console.log('Content-Type:', contentType)
+      console.log('Accept:', acceptHeader)
+      console.log('Supports Streaming:', supportsStreaming)
 
       // Parse request
       const messages: MCPMessage[] = []
 
       if (contentType.includes('application/json')) {
         const body = await req.json()
+        console.log('Raw body:', JSON.stringify(body))
         // Handle both single message and batch
         if (Array.isArray(body)) {
           messages.push(...body)
@@ -613,10 +627,11 @@ Deno.serve(async (req: Request) => {
           messages.push(body)
         }
       } else {
+        console.error('Unsupported Content-Type:', contentType)
         throw new Error('Unsupported Content-Type. Expected application/json')
       }
 
-      console.log('MCP Messages:', JSON.stringify(messages, null, 2))
+      console.log('Parsed MCP Messages:', JSON.stringify(messages, null, 2))
 
       // If client supports streaming, return SSE stream
       if (supportsStreaming) {
@@ -693,7 +708,11 @@ Deno.serve(async (req: Request) => {
     })
 
   } catch (error) {
-    console.error('MCP Server Error:', error)
+    console.error('=== MCP Server Error ===')
+    console.error('Error:', error)
+    console.error('Error type:', typeof error)
+    console.error('Error message:', error instanceof Error ? error.message : String(error))
+    console.error('Stack:', error instanceof Error ? error.stack : 'No stack')
 
     const errorResponse: MCPMessage = {
       jsonrpc: '2.0',
