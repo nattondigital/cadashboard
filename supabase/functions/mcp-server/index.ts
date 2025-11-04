@@ -19,7 +19,6 @@ interface MCPMessage {
   }
 }
 
-// Session storage (in-memory for demo, use Supabase for production)
 const sessions = new Map<string, { agentId?: string; initialized: boolean }>()
 
 function generateSessionId(): string {
@@ -45,11 +44,9 @@ async function handleMCPRequest(
   try {
     switch (method) {
       case 'initialize': {
-        // Extract agent_id from client info if provided
         const clientInfo = params?.clientInfo
         const agentId = clientInfo?.agentId || params?.agentId
 
-        // Store session with agent_id
         sessions.set(sessionId, {
           initialized: true,
           agentId: agentId
@@ -581,7 +578,6 @@ async function handleMCPRequest(
           throw new Error('agent_id is required in arguments')
         }
 
-        // Fetch agent details
         const { data: agent, error: agentError } = await supabase
           .from('ai_agents')
           .select('name')
@@ -594,7 +590,6 @@ async function handleMCPRequest(
 
         const agentName = agent.name
 
-        // Check agent permissions
         const { data: permissions, error: permError } = await supabase
           .from('ai_agent_permissions')
           .select('permissions')
@@ -697,7 +692,6 @@ async function handleMCPRequest(
                 throw new Error('Agent does not have permission to create tasks')
               }
 
-              // Combine due_date and due_time into a single timestamp
               let dueDateTimestamp = null
               if (args.due_date) {
                 if (args.due_time) {
@@ -707,7 +701,6 @@ async function handleMCPRequest(
                 }
               }
 
-              // If assigned_to_name is provided but not assigned_to UUID, look it up
               let assignedToUuid = args.assigned_to || null
               if (args.assigned_to_name && !assignedToUuid) {
                 const { data: userData } = await supabase
