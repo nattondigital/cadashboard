@@ -1069,6 +1069,13 @@ When users ask about expenses with time periods (like "this month", "today", "la
           }
         }
 
+        // Build tool response messages - one for each tool call
+        const toolResponseMessages = message.tool_calls.map((toolCall: any, index: number) => ({
+          role: 'tool',
+          tool_call_id: toolCall.id,
+          content: toolResults[index] || 'No response'
+        }))
+
         const finalResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
           headers: {
@@ -1087,10 +1094,7 @@ When users ask about expenses with time periods (like "this month", "today", "la
                 content: messageContent
               },
               message,
-              {
-                role: 'tool',
-                content: toolResults.join('\n')
-              }
+              ...toolResponseMessages
             ]
           })
         })
