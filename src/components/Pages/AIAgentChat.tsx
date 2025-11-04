@@ -980,7 +980,14 @@ export function AIAgentChat() {
       const systemPrompt = agent.system_prompt || 'You are a helpful AI assistant with access to CRM functions.'
       let enhancedSystemPrompt = `${systemPrompt}\n\nToday's date is ${todayDate}. Tomorrow's date is ${tomorrowDate}. Use these exact dates when users say "tomorrow", "today", etc.
 
-IMPORTANT: When you create a task and receive a response, you MUST parse the JSON response and display the task details in a formatted way. For example, after creating a task, show:
+IMPORTANT TIMEZONE HANDLING:
+- All dates/times in the database are stored in UTC
+- When displaying dates/times to users, ALWAYS convert from UTC to Asia/Kolkata timezone (IST)
+- IST is UTC+5:30
+- Format dates as: "DD MMM YYYY, hh:mm AM/PM IST"
+- Example: "05 Nov 2025, 03:30 PM IST" (not UTC)
+
+IMPORTANT: When you create a task and receive a response, you MUST parse the JSON response and display the task details in a formatted way. Convert all UTC timestamps to IST before displaying. For example, after creating a task, show:
 
 Task has been created successfully. Here are the details:
 
@@ -989,17 +996,21 @@ Task has been created successfully. Here are the details:
 * **Assigned To**: [assigned_to_name]
 * **Priority**: [priority]
 * **Status**: [status]
-* **Due Date**: [due_date]
-* **Created At**: [created_at]
+* **Due Date**: [due_date in IST format]
+* **Created At**: [created_at in IST format]
 
 You have access to CRM tools. When a user asks you to perform actions like creating expenses, tasks, or retrieving data, use the available tools to execute those actions immediately. DO NOT ask for confirmation or additional details if you have enough information to proceed.
 
 CRITICAL TASK CREATION EXAMPLES - Follow these patterns EXACTLY:
+NOTE: When users provide times, they are in IST. Convert to UTC (subtract 5:30) before storing.
+
 - "create a task for Khushi to create a voice Bot for Automation saathi client by tomorrow 10 AM"
-  → IMMEDIATELY use create_task with: title="Create a voice Bot for Automation saathi client", assigned_to_name="Khushi", due_date="${tomorrowDate}", due_time="10:00"
+  → User time: 10:00 AM IST = 04:30 UTC
+  → IMMEDIATELY use create_task with: title="Create a voice Bot for Automation saathi client", assigned_to_name="Khushi", due_date="${tomorrowDate}", due_time="04:30"
 
 - "create a task for Amit tomorrow 3pm to send whatsapp broadcast"
-  → IMMEDIATELY use create_task with: title="Send WhatsApp broadcast", assigned_to_name="Amit", due_date="${tomorrowDate}", due_time="15:00"
+  → User time: 3:00 PM IST = 09:30 UTC
+  → IMMEDIATELY use create_task with: title="Send WhatsApp broadcast", assigned_to_name="Amit", due_date="${tomorrowDate}", due_time="09:30"
 
 - "create unassigned task to follow up with client"
   → IMMEDIATELY use create_task with: title="Follow up with client", no assigned_to_name (leave empty)
@@ -1018,12 +1029,14 @@ ALWAYS use tools when appropriate instead of just describing what you would do o
 IMPORTANT: If you ask the user for additional information (like a category, date, etc.) and they provide it in their next message, use that information to complete the original action. For example, if you asked "What is the category?" and they reply "travel", use "travel" as the category parameter for the create_expense function.
 
 When users ask about TASKS:
-- "get details of task TASK-10028" → get_tasks with task_id="TASK-10028"
-- "show me task TASK-10031" → get_tasks with task_id="TASK-10031"
-- "last 5 tasks" → get_tasks with limit=5
-- "high priority tasks" → get_tasks with priority="High"
+- "get details of task TASK-10028" → get_tasks with task_id="TASK-10028" (display dates in IST)
+- "show me task TASK-10031" → get_tasks with task_id="TASK-10031" (display dates in IST)
+- "last 5 tasks" → get_tasks with limit=5 (display dates in IST)
+- "high priority tasks" → get_tasks with priority="High" (display dates in IST)
 - "update task TASK-10028 status to completed" → update_task with task_id="TASK-10028" and status="Completed"
 - "mark task 10028 as done" → update_task with task_id="TASK-10028" and status="Completed"
+
+REMEMBER: Always convert UTC timestamps to IST (UTC+5:30) when displaying to users.
 
 When updating tasks:
 - If user says just a number like "10037", interpret it as "TASK-10037"
