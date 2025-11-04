@@ -909,6 +909,41 @@ export function AIAgentChat() {
 
           return { success: true, data: contacts, count: contacts.length }
 
+        case 'update_task':
+          if (id && await shouldUseMCP(id, 'update_task')) {
+            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+            const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+            const mcpResult = await executeMCPTool(id, 'update_task', args, supabaseUrl, supabaseAnonKey)
+            return { ...mcpResult, usedMCP: true }
+          }
+
+          const { task_id: updateTaskId, ...taskUpdates } = args
+          const { data: updatedTask, error: updateError } = await supabase
+            .from('tasks')
+            .update(taskUpdates)
+            .eq('task_id', updateTaskId)
+            .select()
+            .single()
+
+          if (updateError) throw updateError
+          return { success: true, message: `Task ${updateTaskId} updated successfully`, data: updatedTask }
+
+        case 'delete_task':
+          if (id && await shouldUseMCP(id, 'delete_task')) {
+            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+            const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+            const mcpResult = await executeMCPTool(id, 'delete_task', args, supabaseUrl, supabaseAnonKey)
+            return { ...mcpResult, usedMCP: true }
+          }
+
+          const { error: deleteError } = await supabase
+            .from('tasks')
+            .delete()
+            .eq('task_id', args.task_id)
+
+          if (deleteError) throw deleteError
+          return { success: true, message: `Task ${args.task_id} deleted successfully` }
+
         case 'get_tasks':
           if (id && await shouldUseMCP(id, 'get_tasks')) {
             const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
