@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Bot, Send, ArrowLeft, Paperclip, User, Loader2, X } from 'lucide-react'
+import { Bot, Send, ArrowLeft, Paperclip, User, Loader2, X, Zap } from 'lucide-react'
 import { PageHeader } from '@/components/Common/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { formatDateTime } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
+import { getMCPTools, executeMCPTool, shouldUseMCP } from '@/lib/mcp-tool-executor'
 
 interface Message {
   id: string
@@ -19,6 +20,7 @@ interface Message {
   action?: string
   module?: string
   result?: string
+  usedMCP?: boolean
 }
 
 interface Agent {
@@ -27,6 +29,8 @@ interface Agent {
   model: string
   status: string
   system_prompt?: string
+  use_mcp?: boolean
+  mcp_config?: any
 }
 
 export function AIAgentChat() {
@@ -71,7 +75,7 @@ export function AIAgentChat() {
     try {
       const { data, error } = await supabase
         .from('ai_agents')
-        .select('id, name, model, status, system_prompt')
+        .select('id, name, model, status, system_prompt, use_mcp, mcp_config')
         .eq('id', id)
         .single()
 
@@ -191,6 +195,18 @@ export function AIAgentChat() {
     const permissions = permData?.permissions || {}
 
     const tools: any[] = []
+
+    if (agent?.use_mcp && id) {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+      try {
+        const mcpTools = await getMCPTools(id, supabaseUrl, supabaseAnonKey)
+        tools.push(...mcpTools)
+      } catch (error) {
+        console.error('Error fetching MCP tools:', error)
+      }
+    }
 
     if (permissions['Expenses']?.can_create) {
       tools.push({
@@ -580,6 +596,13 @@ export function AIAgentChat() {
           return { success: true, message: `Expense created: ${args.description} for ₹${args.amount} (Category: ${args.category || 'Other'})` }
 
         case 'create_task':
+          if (id && await shouldUseMCP(id, 'create_task')) {
+            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+            const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+            const mcpResult = await executeMCPTool(id, 'create_task', args, supabaseUrl, supabaseAnonKey)
+            return { ...mcpResult, usedMCP: true }
+          }
+
           const { error: taskError } = await supabase
             .from('tasks')
             .insert({
@@ -819,6 +842,13 @@ export function AIAgentChat() {
           return { success: true, data: contacts, count: contacts.length }
 
         case 'get_tasks':
+          if (id && await shouldUseMCP(id, 'get_tasks')) {
+            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+            const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+            const mcpResult = await executeMCPTool(id, 'get_tasks', args, supabaseUrl, supabaseAnonKey)
+            return { ...mcpResult, usedMCP: true }
+          }
+
           let tasksQuery = supabase
             .from('tasks')
             .select('*')
@@ -1015,7 +1045,8 @@ When users ask about expenses with time periods (like "this month", "today", "la
           const result = await executeFunction(functionName, functionArgs, agent.model)
 
           if (result.success) {
-            toolResults.push(`✅ ${result.message}`)
+            const mcpIndicator = result.usedMCP ? ' 🔌 (via MCP)' : ''
+            toolResults.push(`✅ ${result.message}${mcpIndicator}`)
             if (result.image_url) {
               generatedImageUrl = result.image_url
               toolResults.push(`\n![Generated Image](${result.image_url})`)
@@ -1024,7 +1055,8 @@ When users ask about expenses with time periods (like "this month", "today", "la
               toolResults.push(`\nData: ${JSON.stringify(result.data, null, 2)}`)
             }
           } else {
-            toolResults.push(`❌ ${result.message}`)
+            const mcpIndicator = result.usedMCP ? ' 🔌 (via MCP)' : ''
+            toolResults.push(`❌ ${result.message}${mcpIndicator}`)
           }
         }
 
@@ -1268,9 +1300,17 @@ When users ask about expenses with time periods (like "this month", "today", "la
                 ))}
               </select>
             </div>
-            <Badge className={agent?.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
-              {agent?.status}
-            </Badge>
+            <div className="flex items-center gap-2">
+              {agent?.use_mcp && (
+                <Badge className="bg-blue-100 text-blue-800 flex items-center gap-1">
+                  <Zap className="w-3 h-3" />
+                  MCP Enabled
+                </Badge>
+              )}
+              <Badge className={agent?.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
+                {agent?.status}
+              </Badge>
+            </div>
           </div>
         </div>
       </div>
