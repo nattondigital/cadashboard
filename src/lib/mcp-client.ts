@@ -155,6 +155,15 @@ export function createMCPClient(config: MCPClientConfig): MCPClient {
 }
 
 export function convertMCPToolToOpenRouterFunction(mcpTool: MCPTool): any {
+  // Filter out agent_id from properties and required fields
+  // since it's automatically injected by the MCP client
+  const properties = { ...mcpTool.inputSchema.properties }
+  delete properties.agent_id
+
+  const required = (mcpTool.inputSchema.required || []).filter(
+    (field: string) => field !== 'agent_id'
+  )
+
   return {
     type: 'function',
     function: {
@@ -162,8 +171,8 @@ export function convertMCPToolToOpenRouterFunction(mcpTool: MCPTool): any {
       description: mcpTool.description,
       parameters: {
         type: mcpTool.inputSchema.type || 'object',
-        properties: mcpTool.inputSchema.properties || {},
-        required: mcpTool.inputSchema.required || [],
+        properties,
+        required,
       },
     },
   }
