@@ -387,11 +387,15 @@ Deno.serve(async (req: Request) => {
     if (tools.length > 0) {
       requestBody.tools = tools
       requestBody.tool_choice = 'auto'
+      console.log(`Sending ${tools.length} tools to OpenRouter:`, JSON.stringify(tools, null, 2))
+    } else {
+      console.log('WARNING: No tools available to send to OpenRouter!')
     }
 
     let aiResponse: string
 
     try {
+      console.log('Sending request to OpenRouter with model:', agent.model)
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -408,6 +412,12 @@ Deno.serve(async (req: Request) => {
 
       const data = await response.json()
       const assistantMessage = data.choices[0].message
+
+      console.log('OpenRouter response:', JSON.stringify({
+        hasToolCalls: !!assistantMessage.tool_calls,
+        toolCallsCount: assistantMessage.tool_calls?.length || 0,
+        content: assistantMessage.content?.substring(0, 200)
+      }))
 
       if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
         const toolResults: string[] = []
