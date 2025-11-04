@@ -81,7 +81,7 @@ async function handleMCPRequest(
             {
               uri: 'tasks://pending',
               name: 'Pending Tasks',
-              description: 'Tasks with status \"To Do\" or \"In Progress\"',
+              description: 'Tasks with status "To Do" or "In Progress"',
               mimeType: 'application/json',
             },
             {
@@ -93,7 +93,7 @@ async function handleMCPRequest(
             {
               uri: 'tasks://high-priority',
               name: 'High Priority Tasks',
-              description: 'Tasks with priority \"High\" or \"Urgent\"',
+              description: 'Tasks with priority "High" or "Urgent"',
               mimeType: 'application/json',
             },
           ],
@@ -234,7 +234,7 @@ async function handleMCPRequest(
             ],
           }
         } else if (name === 'task_creation_guide') {
-          const guide = `# Task Creation Guide\n\n## Best Practices\n\n1. **Clear Title**: Use descriptive, action-oriented titles\n   - Good: \"Review Q1 financial report\"\n   - Bad: \"Financial stuff\"\n\n2. **Detailed Description**: Include context, requirements, and success criteria\n\n3. **Priority Setting**:\n   - Urgent: Must be done today\n   - High: Important, should be done this week\n   - Medium: Regular priority\n   - Low: Nice to have\n\n4. **Due Dates**: Set realistic deadlines considering complexity\n\n5. **Assignment**: Assign to the most appropriate team member\n\n6. **Status Updates**: Keep tasks current\n   - To Do: Not started\n   - In Progress: Actively working\n   - Completed: Finished\n   - Cancelled: No longer needed\n\n## Example Task\n\n**Title:** Review and approve Q1 marketing budget\n**Description:** Review the proposed Q1 marketing budget, verify alignment with strategic goals, and approve or request revisions. Include feedback on specific line items.\n**Priority:** High\n**Due Date:** Next Friday\n**Assigned To:** Marketing Director`
+          const guide = `# Task Creation Guide\n\n## Best Practices\n\n1. **Clear Title**: Use descriptive, action-oriented titles\n   - Good: "Review Q1 financial report"\n   - Bad: "Financial stuff"\n\n2. **Detailed Description**: Include context, requirements, and success criteria\n\n3. **Priority Setting**:\n   - Urgent: Must be done today\n   - High: Important, should be done this week\n   - Medium: Regular priority\n   - Low: Nice to have\n\n4. **Due Dates**: Set realistic deadlines considering complexity\n\n5. **Assignment**: Assign to the most appropriate team member\n\n6. **Status Updates**: Keep tasks current\n   - To Do: Not started\n   - In Progress: Actively working\n   - Completed: Finished\n   - Cancelled: No longer needed\n\n## Example Task\n\n**Title:** Review and approve Q1 marketing budget\n**Description:** Review the proposed Q1 marketing budget, verify alignment with strategic goals, and approve or request revisions. Include feedback on specific line items.\n**Priority:** High\n**Due Date:** Next Friday\n**Assigned To:** Marketing Director`
 
           response.result = {
             messages: [
@@ -328,7 +328,7 @@ async function handleMCPRequest(
                   role: 'user',
                   content: {
                     type: 'text',
-                    text: '# How to Retrieve a Task by ID\n\nTo get details of a specific task, use the `get_tasks` tool with the `task_id` parameter:\n\n```json\n{\n  \"task_id\": \"TASK-10031\"\n}\n```\n\nThis will return the complete task details including:\n- Task title and description\n- Status and priority\n- Assigned user and contact information\n- Due dates and progress\n- Supporting documents',
+                    text: '# How to Retrieve a Task by ID\n\nTo get details of a specific task, use the `get_tasks` tool with the `task_id` parameter:\n\n```json\n{\n  "task_id": "TASK-10031"\n}\n```\n\nThis will return the complete task details including:\n- Task title and description\n- Status and priority\n- Assigned user and contact information\n- Due dates and progress\n- Supporting documents',
                   },
                 },
               ],
@@ -486,7 +486,7 @@ async function handleMCPRequest(
                   },
                   assigned_to_name: {
                     type: 'string',
-                    description: 'Name of assigned team member (e.g., \"Amit\", \"Prince\")',
+                    description: 'Name of assigned team member (e.g., "Amit", "Prince")',
                   },
                   contact_id: {
                     type: 'string',
@@ -799,6 +799,7 @@ async function handleMCPRequest(
               delete updates.agent_id
               delete updates.phone_number
 
+              // Handle due_date and due_time combination
               if (args.due_date || due_time) {
                 let dueDateTimestamp = null
                 if (args.due_date) {
@@ -982,3 +983,4 @@ Deno.serve(async (req: Request) => {
     )
   }
 })
+
