@@ -2,47 +2,48 @@
 
 ## Issues Fixed
 
-The 403 error you received was caused by three issues in the `ai-chat` edge function:
+The 403 error was caused by two issues in the `ai-chat` edge function:
 
 1. ✅ **Wrong field check**: Changed from `agent.is_active` to `agent.status !== 'Active'`
-2. ✅ **Missing api_key column**: Added `api_key` column to `ai_agents` table
-3. ✅ **Permissions structure**: Fixed to properly read from `ai_agent_permissions` table
+2. ✅ **Permissions structure**: Fixed to properly read from `ai_agent_permissions` table
+3. ✅ **API Key source**: Now uses centralized OpenRouter key from `integrations` table
 
 ## Changes Made
 
-### 1. Database Migration
-```sql
-ALTER TABLE ai_agents ADD COLUMN IF NOT EXISTS api_key text;
-```
-
-### 2. Function Updates
+### 1. Function Updates
 - Fixed status check to use `agent.status` instead of `agent.is_active`
-- Added API key validation with helpful error message
+- Fetch OpenRouter API key from `integrations` table (centralized)
 - Fixed permissions loading from `ai_agent_permissions` table
 - Proper handling of JSONB permissions structure
 
-## Required Configuration
+### 2. No Database Migration Needed
+- OpenRouter API key is already configured in `integrations` table ✓
+- No need to add per-agent API keys
+- Centralized configuration in Settings > Integrations
 
-### Step 1: Add API Key to Your Agent
+## Verify Configuration
 
-Your agent needs an OpenRouter or OpenAI API key to make LLM calls:
+Check your OpenRouter integration is configured:
 
 ```sql
-UPDATE ai_agents
-SET api_key = 'sk-or-v1-your-actual-openrouter-key-here'
-WHERE id = 'bcae762b-1db8-4e83-9487-0d12ba09b924';
+SELECT
+  integration_type,
+  name,
+  status,
+  config->>'apiKey' as api_key_present
+FROM integrations
+WHERE integration_type = 'openrouter';
 ```
 
-**Get an API key from:**
-- **OpenRouter** (Recommended): https://openrouter.ai/keys
-  - Provides access to multiple LLM providers
-  - Your agent uses: `openai/gpt-4o-mini`
-- **OpenAI**: https://platform.openai.com/api-keys
-  - Direct OpenAI API access
+**Expected output:**
+- `integration_type`: "openrouter"
+- `name`: "OpenRouter"
+- `status`: "Connected"
+- `api_key_present`: "sk-or-v1-..." (your key)
 
-### Step 2: Deploy Updated Function
+## Deploy Updated Function
 
-The migration has already been applied. Now deploy the updated function:
+Deploy the updated ai-chat function:
 
 ```bash
 supabase functions deploy ai-chat
@@ -55,36 +56,9 @@ Or use the Supabase Dashboard:
 4. Replace code with content from: `supabase/functions/ai-chat/index.ts`
 5. Click **Deploy**
 
-## Verify Configuration
-
-Check your agent is properly configured:
-
-```sql
-SELECT
-  name,
-  status,
-  use_mcp,
-  model,
-  CASE
-    WHEN api_key IS NOT NULL THEN '✓ API Key Configured'
-    ELSE '✗ API Key Missing'
-  END as api_key_status,
-  mcp_config
-FROM ai_agents
-WHERE id = 'bcae762b-1db8-4e83-9487-0d12ba09b924';
-```
-
-**Expected output:**
-- `name`: "TASK AGENT"
-- `status`: "Active"
-- `use_mcp`: true
-- `model`: "openai/gpt-4o-mini"
-- `api_key_status`: "✓ API Key Configured"
-- `mcp_config`: `{"enabled": true, "server_url": "...", "use_for_modules": ["Tasks"]}`
-
 ## Test the Agent
 
-Once configured, test from n8n or with curl:
+Once deployed, test from n8n or with curl:
 
 ```bash
 curl -X POST https://lddridmkphmckbjjlfxi.supabase.co/functions/v1/ai-chat \
@@ -106,6 +80,12 @@ curl -X POST https://lddridmkphmckbjjlfxi.supabase.co/functions/v1/ai-chat \
 ## Agent Configuration Summary
 
 Your **TASK AGENT** currently has:
+
+### Status
+- Name: "TASK AGENT"
+- Status: "Active" ✓
+- Model: "openai/gpt-4o-mini"
+- MCP: Enabled for Tasks module
 
 ### Permissions (12 modules configured)
 
@@ -142,26 +122,26 @@ Your **TASK AGENT** currently has:
 
 | Code | Error | Solution |
 |------|-------|----------|
-| 403 | "Agent is not active" | Set `status = 'Active'` |
-| 400 | "Agent API key not configured" | Add `api_key` to agent |
+| 403 | "Agent is not active" | Set `status = 'Active'` in ai_agents |
+| 400 | "OpenRouter API key not configured" | Configure in Settings > Integrations |
 | 404 | "Agent not found" | Check `agent_id` is correct |
 | 500 | Function error | Check Supabase function logs |
 
 ## Troubleshooting
 
-### Error: "Agent API key not configured"
+### Error: "OpenRouter API key not configured"
+
+The API key should already be in the integrations table. Verify:
 
 ```sql
--- Add your OpenRouter API key
-UPDATE ai_agents
-SET api_key = 'sk-or-v1-your-key-here'
-WHERE id = 'bcae762b-1db8-4e83-9487-0d12ba09b924';
+SELECT status, config FROM integrations WHERE integration_type = 'openrouter';
 ```
+
+If missing, add it via the Settings > Integrations page in your app.
 
 ### Error: "Agent is not active"
 
 ```sql
--- Activate the agent
 UPDATE ai_agents
 SET status = 'Active'
 WHERE id = 'bcae762b-1db8-4e83-9487-0d12ba09b924';
@@ -178,18 +158,26 @@ https://supabase.com/dashboard/project/lddridmkphmckbjjlfxi/functions/ai-chat/lo
 
 ## Setup Checklist
 
-- [x] Migration applied (api_key column added)
-- [ ] OpenRouter API key added to agent
+- [x] OpenRouter integration configured ✓
+- [x] Function updated to use centralized API key
 - [ ] ai-chat function deployed
-- [ ] Agent status verified as "Active"
+- [x] Agent status verified as "Active"
 - [ ] Test request successful
 - [ ] Logs show "MCP mode" for tasks
+
+## Advantages of Centralized API Key
+
+✅ **Single configuration point** - Update once, affects all agents
+✅ **Better cost tracking** - All API usage under one key
+✅ **Easier management** - Configure via Settings UI
+✅ **No duplication** - One API key for entire system
+✅ **Consistent configuration** - All agents use same integration
 
 ## Next Steps
 
 Once working:
 
-1. **Monitor API usage** - Track costs per agent via OpenRouter dashboard
+1. **Monitor API usage** - Track costs via OpenRouter dashboard
 2. **Test MCP mode** - Compare response quality for Tasks
 3. **Extend MCP server** - Add more modules (Contacts, Leads, etc.)
 4. **Set up error handling** - Proper error responses in n8n workflows

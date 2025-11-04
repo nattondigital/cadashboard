@@ -247,9 +247,20 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    if (!agent.api_key) {
+    // Fetch OpenRouter API key from integrations table
+    const { data: openrouterIntegration } = await supabase
+      .from('integrations')
+      .select('config')
+      .eq('integration_type', 'openrouter')
+      .maybeSingle()
+
+    const apiKey = openrouterIntegration?.config?.apiKey
+
+    if (!apiKey) {
       return new Response(
-        JSON.stringify({ error: 'Agent API key not configured. Please add an OpenRouter or OpenAI API key to this agent.' }),
+        JSON.stringify({
+          error: 'OpenRouter API key not configured. Please configure it in Settings > Integrations.'
+        }),
         {
           status: 400,
           headers: {
@@ -574,7 +585,7 @@ Deno.serve(async (req: Request) => {
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${agent.api_key}`,
+          'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(requestBody),
@@ -1005,7 +1016,7 @@ Deno.serve(async (req: Request) => {
         const finalResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${agent.api_key}`,
+            'Authorization': `Bearer ${apiKey}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
