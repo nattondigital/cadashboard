@@ -600,6 +600,49 @@ export function AIAgentChat() {
       })
     }
 
+    // Add MCP resource and prompt tools if MCP is enabled
+    if (agent?.use_mcp && id) {
+      tools.push({
+        type: 'function',
+        function: {
+          name: 'read_mcp_resource',
+          description: 'Read data from an MCP resource (e.g., task statistics, pending tasks, overdue tasks)',
+          parameters: {
+            type: 'object',
+            properties: {
+              uri: {
+                type: 'string',
+                description: 'The resource URI to read (e.g., "tasks://statistics", "tasks://overdue", "tasks://pending")',
+              },
+            },
+            required: ['uri'],
+          },
+        },
+      })
+
+      tools.push({
+        type: 'function',
+        function: {
+          name: 'get_mcp_prompt',
+          description: 'Get a pre-built prompt template (e.g., task summary, task creation guide, prioritization tips)',
+          parameters: {
+            type: 'object',
+            properties: {
+              name: {
+                type: 'string',
+                description: 'The prompt name (e.g., "task_summary", "task_creation_guide", "overdue_alert")',
+              },
+              arguments: {
+                type: 'object',
+                description: 'Optional arguments for the prompt',
+              },
+            },
+            required: ['name'],
+          },
+        },
+      })
+    }
+
     return tools
   }
 
@@ -955,6 +998,69 @@ export function AIAgentChat() {
             return { success: false, message: 'Failed to extract image URL from response', response: imageContent }
           }
 
+        case 'read_mcp_resource':
+          if (id && agent?.use_mcp) {
+            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+            const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+            try {
+              const { createMCPClient } = await import('@/lib/mcp-client')
+              const client = createMCPClient({
+                serverUrl: `${supabaseUrl}/functions/v1/mcp-server`,
+                authToken: supabaseAnonKey,
+                agentId: id
+              })
+
+              await client.initialize()
+              const result = await client.readResource(args.uri)
+
+              if (result?.contents && result.contents[0]?.text) {
+                return {
+                  success: true,
+                  message: `Retrieved resource: ${args.uri}`,
+                  data: JSON.parse(result.contents[0].text),
+                  usedMCP: true
+                }
+              } else {
+                return { success: false, error: 'No data returned from resource', usedMCP: true }
+              }
+            } catch (error: any) {
+              return { success: false, error: error.message, usedMCP: true }
+            }
+          }
+          return { success: false, error: 'MCP is not enabled for this agent' }
+
+        case 'get_mcp_prompt':
+          if (id && agent?.use_mcp) {
+            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+            const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+            try {
+              const { createMCPClient } = await import('@/lib/mcp-client')
+              const client = createMCPClient({
+                serverUrl: `${supabaseUrl}/functions/v1/mcp-server`,
+                authToken: supabaseAnonKey,
+                agentId: id
+              })
+
+              await client.initialize()
+              const result = await client.getPrompt(args.name, args.arguments || {})
+
+              if (result?.messages && result.messages[0]?.content?.text) {
+                return {
+                  success: true,
+                  message: result.messages[0].content.text,
+                  usedMCP: true
+                }
+              } else {
+                return { success: false, error: 'No prompt data returned', usedMCP: true }
+              }
+            } catch (error: any) {
+              return { success: false, error: error.message, usedMCP: true }
+            }
+          }
+          return { success: false, error: 'MCP is not enabled for this agent' }
+
         default:
           return { success: false, message: `Unknown function: ${functionName}` }
       }
@@ -991,10 +1097,51 @@ export function AIAgentChat() {
 
       const tools = await getAvailableTools()
 
+      // Fetch MCP resources and prompts info if MCP is enabled
+      let mcpResourcesInfo = ''
+      let mcpPromptsInfo = ''
+      if (agent.use_mcp && id) {
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+        const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+        try {
+          const { createMCPClient } = await import('@/lib/mcp-client')
+          const client = createMCPClient({
+            serverUrl: `${supabaseUrl}/functions/v1/mcp-server`,
+            authToken: supabaseAnonKey,
+            agentId: id
+          })
+
+          await client.initialize()
+
+          // Get resources
+          const resources = await client.listResources()
+          if (resources && resources.length > 0) {
+            mcpResourcesInfo = `\n\n## Available MCP Resources\nYou have access to the following task data resources:\n`
+            resources.forEach((r: any) => {
+              mcpResourcesInfo += `- **${r.uri}**: ${r.description}\n`
+            })
+            mcpResourcesInfo += `\nTo access these resources, you can ask questions like "show me task statistics" or "what are the overdue tasks".`
+          }
+
+          // Get prompts
+          const prompts = await client.listPrompts()
+          if (prompts && prompts.length > 0) {
+            mcpPromptsInfo = `\n\n## Available MCP Prompts\nYou can use these pre-built templates:\n`
+            prompts.forEach((p: any) => {
+              mcpPromptsInfo += `- **${p.name}**: ${p.description}\n`
+            })
+            mcpPromptsInfo += `\nUsers can ask for things like "give me a task summary" or "show me task creation best practices".`
+          }
+        } catch (error) {
+          console.error('Error fetching MCP resources/prompts:', error)
+        }
+      }
+
       const todayDate = new Date().toISOString().split('T')[0]
       const tomorrowDate = new Date(Date.now() + 86400000).toISOString().split('T')[0]
       const systemPrompt = agent.system_prompt || 'You are a helpful AI assistant with access to CRM functions.'
-      let enhancedSystemPrompt = `${systemPrompt}\n\nToday's date is ${todayDate}. Tomorrow's date is ${tomorrowDate}. Use these exact dates when users say "tomorrow", "today", etc.
+      let enhancedSystemPrompt = `${systemPrompt}\n\nToday's date is ${todayDate}. Tomorrow's date is ${tomorrowDate}. Use these exact dates when users say "tomorrow", "today", etc.${mcpResourcesInfo}${mcpPromptsInfo}
 
 IMPORTANT TIMEZONE HANDLING:
 - All dates/times in the database are stored in UTC
