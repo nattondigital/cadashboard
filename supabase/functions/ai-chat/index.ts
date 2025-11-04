@@ -282,7 +282,7 @@ Deno.serve(async (req: Request) => {
     const conversationMessages: any[] = []
     if (existingMemory && existingMemory.length > 0) {
       existingMemory.reverse().forEach(msg => {
-        conversationMessages.push({ role: msg.role, content: msg.content })
+        conversationMessages.push({ role: msg.role, content: msg.message })
       })
     }
 
@@ -1057,13 +1057,19 @@ Deno.serve(async (req: Request) => {
           agent_id: payload.agent_id,
           phone_number: payload.phone_number,
           role: 'user',
-          content: payload.message
+          message: payload.message,
+          user_context: 'External',
+          module: 'Chat',
+          action: 'User Message'
         },
         {
           agent_id: payload.agent_id,
           phone_number: payload.phone_number,
           role: 'assistant',
-          content: aiResponse
+          message: aiResponse,
+          user_context: 'External',
+          module: 'Chat',
+          action: 'AI Response'
         }
       ])
 
