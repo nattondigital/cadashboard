@@ -102,19 +102,38 @@ export async function executeMCPTool(
 
     const result = await client.callTool(toolName, args)
 
-    if (result.success) {
-      return {
-        success: true,
-        message: result.message || 'Operation completed successfully',
-        data: result.data,
-        usedMCP: true
-      }
-    } else {
+    // MCP server returns data directly (arrays, objects, or strings)
+    // For get_tasks: returns array of tasks
+    // For create/update/delete: returns success message string
+
+    // Check if result is an error structure
+    if (result && typeof result === 'object' && 'error' in result) {
       return {
         success: false,
-        error: result.error || 'Operation failed',
+        error: result.error,
         usedMCP: true
       }
+    }
+
+    // Determine success message based on tool type
+    let successMessage = 'Operation completed successfully'
+    if (typeof result === 'string') {
+      successMessage = result
+    } else if (Array.isArray(result)) {
+      if (result.length === 0) {
+        successMessage = 'No results found'
+      } else if (result.length === 1) {
+        successMessage = 'Retrieved 1 item'
+      } else {
+        successMessage = `Retrieved ${result.length} items`
+      }
+    }
+
+    return {
+      success: true,
+      message: successMessage,
+      data: result,
+      usedMCP: true
     }
   } catch (error: any) {
     console.error('MCP tool execution error:', error)
