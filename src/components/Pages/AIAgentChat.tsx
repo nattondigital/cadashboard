@@ -975,8 +975,11 @@ export function AIAgentChat() {
 
       const tools = await getAvailableTools()
 
+      const todayDate = new Date().toISOString().split('T')[0]
       const systemPrompt = agent.system_prompt || 'You are a helpful AI assistant with access to CRM functions.'
-      let enhancedSystemPrompt = `${systemPrompt}\n\nYou have access to CRM tools. When a user asks you to perform actions like creating expenses, tasks, or retrieving data, use the available tools to execute those actions immediately. DO NOT ask for confirmation or additional details if you have enough information to proceed. For example:
+      let enhancedSystemPrompt = `${systemPrompt}\n\nToday's date is ${todayDate}. Use this to calculate dates when users say "tomorrow", "next week", etc.
+
+You have access to CRM tools. When a user asks you to perform actions like creating expenses, tasks, or retrieving data, use the available tools to execute those actions immediately. DO NOT ask for confirmation or additional details if you have enough information to proceed. For example:
 - If a user provides a ticket ID like "TKT-2025-061", immediately use get_support_tickets with that ticket_id
 - If a user provides a task ID like "TASK-10028", immediately use get_tasks with task_id="TASK-10028"
 - If a user says "create an expense of 2800 for mumbai flight", immediately use create_expense with the provided details
@@ -991,6 +994,13 @@ When users ask about TASKS:
 - "show me task TASK-10031" → get_tasks with task_id="TASK-10031"
 - "last 5 tasks" → get_tasks with limit=5
 - "high priority tasks" → get_tasks with priority="High"
+- "update task TASK-10028 status to completed" → update_task with task_id="TASK-10028" and status="Completed"
+- "mark task 10028 as done" → update_task with task_id="TASK-10028" and status="Completed"
+
+When updating tasks:
+- If user says just a number like "10037", interpret it as "TASK-10037"
+- Status values: "To Do", "In Progress", "Completed", "Cancelled"
+- Priority values: "Low", "Medium", "High", "Urgent"
 
 When users ask about expenses with time periods (like "this month", "today", "last month"), use the get_expenses tool with the date_filter parameter. When they ask for category-wise totals or breakdowns, set group_by_category to true. Examples:\n- "expenses this month" → get_expenses with date_filter="this_month"\n- "category wise expenses" → get_expenses with group_by_category=true\n- "travel expenses this month" → get_expenses with date_filter="this_month" and category="Travel"`
 
