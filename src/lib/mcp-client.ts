@@ -81,6 +81,13 @@ class MCPClient {
       jsonrpc: '2.0',
       id: this.getNextRequestId(),
       method: 'initialize',
+      params: {
+        clientInfo: {
+          name: 'ai-agent-client',
+          version: '1.0.0',
+          agentId: this.agentId,
+        },
+      },
     }
 
     const response = await this.sendRequest(message)
@@ -147,6 +154,72 @@ class MCPClient {
 
   setAgentId(agentId: string) {
     this.agentId = agentId
+  }
+
+  async listResources(): Promise<any[]> {
+    const message: MCPMessage = {
+      jsonrpc: '2.0',
+      id: this.getNextRequestId(),
+      method: 'resources/list',
+    }
+
+    const response = await this.sendRequest(message)
+
+    if (response.error) {
+      throw new Error(response.error.message)
+    }
+
+    return response.result?.resources || []
+  }
+
+  async readResource(uri: string): Promise<any> {
+    const message: MCPMessage = {
+      jsonrpc: '2.0',
+      id: this.getNextRequestId(),
+      method: 'resources/read',
+      params: { uri },
+    }
+
+    const response = await this.sendRequest(message)
+
+    if (response.error) {
+      throw new Error(response.error.message)
+    }
+
+    return response.result
+  }
+
+  async listPrompts(): Promise<any[]> {
+    const message: MCPMessage = {
+      jsonrpc: '2.0',
+      id: this.getNextRequestId(),
+      method: 'prompts/list',
+    }
+
+    const response = await this.sendRequest(message)
+
+    if (response.error) {
+      throw new Error(response.error.message)
+    }
+
+    return response.result?.prompts || []
+  }
+
+  async getPrompt(name: string, args?: any): Promise<any> {
+    const message: MCPMessage = {
+      jsonrpc: '2.0',
+      id: this.getNextRequestId(),
+      method: 'prompts/get',
+      params: { name, arguments: args || {} },
+    }
+
+    const response = await this.sendRequest(message)
+
+    if (response.error) {
+      throw new Error(response.error.message)
+    }
+
+    return response.result
   }
 }
 

@@ -45,8 +45,17 @@ async function handleMCPRequest(
   try {
     switch (method) {
       case 'initialize': {
-        // Store session
-        sessions.set(sessionId, { initialized: true })
+        // Extract agent_id from client info if provided
+        const clientInfo = params?.clientInfo
+        const agentId = clientInfo?.agentId || params?.agentId
+
+        // Store session with agent_id
+        sessions.set(sessionId, {
+          initialized: true,
+          agentId: agentId
+        })
+
+        console.log('MCP session initialized', { sessionId, agentId })
 
         response.result = {
           protocolVersion: '2024-11-05',
@@ -375,11 +384,232 @@ async function handleMCPRequest(
         break
       }
 
-      case 'resources/list':
-      case 'resources/read':
-      case 'prompts/list':
+      case 'resources/list': {
+        response.result = {
+          resources: [
+            {
+              uri: 'tasks://all',
+              name: 'All Tasks',
+              description: 'Complete list of all tasks in the system',
+              mimeType: 'application/json',
+            },
+            {
+              uri: 'tasks://pending',
+              name: 'Pending Tasks',
+              description: 'Tasks with status "To Do" or "In Progress"',
+              mimeType: 'application/json',
+            },
+            {
+              uri: 'tasks://overdue',
+              name: 'Overdue Tasks',
+              description: 'Tasks that are past their due date',
+              mimeType: 'application/json',
+            },
+            {
+              uri: 'tasks://high-priority',
+              name: 'High Priority Tasks',
+              description: 'Tasks with priority "High" or "Urgent"',
+              mimeType: 'application/json',
+            },
+            {
+              uri: 'tasks://statistics',
+              name: 'Task Statistics',
+              description: 'Aggregate statistics about tasks',
+              mimeType: 'application/json',
+            },
+          ],
+        }
+        break
+      }
+
+      case 'resources/read': {
+        const { uri } = params
+        const agentId = sessions.get(sessionId)?.agentId
+
+        if (!agentId) {
+          throw new Error('Agent not initialized')
+        }
+
+        // Check view permissions
+        const { data: permissions } = await supabase
+          .from('ai_agent_permissions')
+          .select('permissions')
+          .eq('agent_id', agentId)
+          .maybeSingle()
+
+        const taskPerms = permissions?.permissions?.Tasks || {}
+        if (!taskPerms.can_view) {
+          throw new Error('Agent does not have permission to view tasks')
+        }
+
+        let resourceData: any = null
+
+        if (uri === 'tasks://all') {
+          const { data } = await supabase
+            .from('tasks')
+            .select('*')
+            .order('created_at', { ascending: false })
+          resourceData = { tasks: data || [], count: data?.length || 0 }
+        } else if (uri === 'tasks://pending') {
+          const { data } = await supabase
+            .from('tasks')
+            .select('*')
+            .in('status', ['To Do', 'In Progress'])
+            .order('priority', { ascending: false })
+          resourceData = { tasks: data || [], count: data?.length || 0 }
+        } else if (uri === 'tasks://overdue') {
+          const today = new Date().toISOString().split('T')[0]
+          const { data } = await supabase
+            .from('tasks')
+            .select('*')
+            .lt('due_date', today)
+            .in('status', ['To Do', 'In Progress'])
+            .order('due_date', { ascending: true })
+          resourceData = { tasks: data || [], count: data?.length || 0 }
+        } else if (uri === 'tasks://high-priority') {
+          const { data } = await supabase
+            .from('tasks')
+            .select('*')
+            .in('priority', ['High', 'Urgent'])
+            .in('status', ['To Do', 'In Progress'])
+            .order('priority', { ascending: false })
+          resourceData = { tasks: data || [], count: data?.length || 0 }
+        } else if (uri === 'tasks://statistics') {
+          const { data: allTasks } = await supabase
+            .from('tasks')
+            .select('status, priority, due_date')
+
+          const today = new Date().toISOString().split('T')[0]
+          const statistics = {
+            total: allTasks?.length || 0,
+            by_status: { 'To Do': 0, 'In Progress': 0, 'Completed': 0, 'Cancelled': 0 },
+            by_priority: { 'Low': 0, 'Medium': 0, 'High': 0, 'Urgent': 0 },
+            overdue: 0,
+            due_today: 0,
+          }
+
+          allTasks?.forEach((task: any) => {
+            if (task.status) statistics.by_status[task.status]++
+            if (task.priority) statistics.by_priority[task.priority]++
+            if (task.due_date < today && ['To Do', 'In Progress'].includes(task.status)) {
+              statistics.overdue++
+            }
+            if (task.due_date === today) statistics.due_today++
+          })
+
+          resourceData = statistics
+        } else {
+          throw new Error(`Unknown resource URI: ${uri}`)
+        }
+
+        response.result = {
+          contents: [{
+            uri,
+            mimeType: 'application/json',
+            text: JSON.stringify(resourceData, null, 2),
+          }],
+        }
+        break
+      }
+
+      case 'prompts/list': {
+        response.result = {
+          prompts: [
+            {
+              name: 'task_summary',
+              description: 'Generate a comprehensive summary of current tasks with statistics and insights',
+              arguments: [
+                {
+                  name: 'include_overdue',
+                  description: 'Whether to include overdue tasks in the summary',
+                  required: false,
+                },
+                {
+                  name: 'include_high_priority',
+                  description: 'Whether to include high-priority tasks in the summary',
+                  required: false,
+                },
+              ],
+            },
+            {
+              name: 'task_creation_guide',
+              description: 'Best practices and guidelines for creating well-structured tasks',
+              arguments: [],
+            },
+            {
+              name: 'overdue_alert',
+              description: 'Generate an alert message for overdue tasks that need attention',
+              arguments: [],
+            },
+          ],
+        }
+        break
+      }
+
       case 'prompts/get': {
-        response.result = {}
+        const { name: promptName, arguments: promptArgs = {} } = params
+
+        if (promptName === 'task_summary') {
+          const { data: allTasks } = await supabase.from('tasks').select('*')
+          const today = new Date().toISOString().split('T')[0]
+          const pending = allTasks?.filter((t: any) => ['To Do', 'In Progress'].includes(t.status)) || []
+          const overdue = allTasks?.filter((t: any) => t.due_date < today && ['To Do', 'In Progress'].includes(t.status)) || []
+          const highPriority = allTasks?.filter((t: any) => ['High', 'Urgent'].includes(t.priority) && ['To Do', 'In Progress'].includes(t.status)) || []
+
+          let summary = `# Task Management Summary\n\n`
+          summary += `## Overview\n- **Total Tasks**: ${allTasks?.length || 0}\n- **Pending Tasks**: ${pending.length}\n- **Completed**: ${allTasks?.filter((t: any) => t.status === 'Completed').length || 0}\n\n`
+
+          if (promptArgs.include_overdue !== false && overdue.length > 0) {
+            summary += `## ⚠️ Overdue Tasks (${overdue.length})\n\n`
+            overdue.slice(0, 5).forEach((task: any) => {
+              summary += `- **${task.title}** (Due: ${task.due_date}, Priority: ${task.priority})\n`
+            })
+            summary += `\n`
+          }
+
+          if (promptArgs.include_high_priority !== false && highPriority.length > 0) {
+            summary += `## 🔥 High Priority Tasks (${highPriority.length})\n\n`
+            highPriority.slice(0, 5).forEach((task: any) => {
+              summary += `- **${task.title}** (Priority: ${task.priority}, Due: ${task.due_date || 'Not set'})\n`
+            })
+            summary += `\n`
+          }
+
+          response.result = {
+            messages: [{ role: 'user', content: { type: 'text', text: summary } }],
+          }
+        } else if (promptName === 'task_creation_guide') {
+          const guide = `# Task Creation Best Practices\n\n## Essential Components\n\n1. **Clear Title**: Start with action verb, be specific\n2. **Detailed Description**: Context, requirements, links\n3. **Appropriate Priority**: Urgent/High/Medium/Low\n4. **Realistic Due Date**: Consider complexity\n5. **Clear Assignment**: Right person, right skills\n6. **Supporting Docs**: Attach relevant files\n\n## Tips\n- Break down tasks >8 hours\n- Update status regularly\n- Use comments for communication\n- Review and reprioritize weekly`
+
+          response.result = {
+            messages: [{ role: 'user', content: { type: 'text', text: guide } }],
+          }
+        } else if (promptName === 'overdue_alert') {
+          const today = new Date().toISOString().split('T')[0]
+          const { data: overdueTasks } = await supabase
+            .from('tasks')
+            .select('*')
+            .lt('due_date', today)
+            .in('status', ['To Do', 'In Progress'])
+            .order('due_date', { ascending: true })
+
+          if (!overdueTasks || overdueTasks.length === 0) {
+            response.result = {
+              messages: [{ role: 'user', content: { type: 'text', text: '# All Clear!\n\n✅ No overdue tasks.' } }],
+            }
+          } else {
+            let alert = `# ⚠️ Overdue Tasks Alert\n\n${overdueTasks.length} overdue task(s):\n\n`
+            overdueTasks.forEach((task: any, i: number) => {
+              const daysOverdue = Math.floor((Date.now() - new Date(task.due_date).getTime()) / (1000 * 60 * 60 * 24))
+              alert += `${i + 1}. **${task.title}** - ${daysOverdue} days overdue (Priority: ${task.priority})\n`
+            })
+            response.result = {
+              messages: [{ role: 'user', content: { type: 'text', text: alert } }],
+            }
+          }
+        } else {
+          throw new Error(`Unknown prompt: ${promptName}`)
+        }
         break
       }
 
