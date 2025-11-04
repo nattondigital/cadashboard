@@ -328,15 +328,28 @@ Deno.serve(async (req: Request) => {
       await mcpClient.initialize()
 
       const mcpTools = await mcpClient.listTools()
+      console.log(`Raw MCP tools received: ${mcpTools.length}`, mcpTools.map(t => t.name))
+
       const useForModules = agent.mcp_config.use_for_modules || []
+      console.log(`Filtering for modules:`, useForModules)
 
       const filteredTools = mcpTools.filter(tool => {
-        if (useForModules.length === 0) return true
-        return useForModules.some((module: string) =>
-          tool.name.toLowerCase().includes(module.toLowerCase())
-        )
+        if (useForModules.length === 0) {
+          console.log(`No module filter - including all tools`)
+          return true
+        }
+        const matches = useForModules.some((module: string) => {
+          const toolName = tool.name.toLowerCase()
+          const moduleName = module.toLowerCase().replace(/s$/, '') // Remove trailing 's' from module name
+          // Check if tool name includes module name (e.g., "create_task" includes "task")
+          const isMatch = toolName.includes(moduleName)
+          console.log(`Checking tool "${tool.name}" against module "${module}" (normalized: "${moduleName}"): ${isMatch}`)
+          return isMatch
+        })
+        return matches
       })
 
+      console.log(`Filtered tools: ${filteredTools.length}`, filteredTools.map(t => t.name))
       tools = filteredTools.map(convertMCPToolToOpenRouterFunction)
       console.log(`Loaded ${tools.length} MCP tools for modules: ${useForModules.join(', ')}`)
     } catch (error) {
@@ -357,6 +370,7 @@ Deno.serve(async (req: Request) => {
     }
 
     console.log(`Total MCP tools available: ${tools.length}`)
+    console.log(`Tool names being sent to OpenRouter:`, tools.map((t: any) => t.function?.name))
 
     const enhancedSystemPrompt = `${agent.system_prompt}\n\n**CRITICAL: You MUST use the provided tools to perform actions. NEVER pretend to complete an action without actually calling the tool.**\n\nYou have access to CRM tools. When a user asks you to perform actions like creating expenses, tasks, appointments, or retrieving data:\n\n1. **YOU MUST call the appropriate tool** - Do NOT respond as if you completed the action without calling the tool\n2. Execute actions immediately if you have enough information\n3. DO NOT ask for confirmation or additional details if you have sufficient information\n4. Only ask clarifying questions if critical required information is truly missing\n\nExamples of CORRECT behavior:\n- User: "create a task for tomorrow" → YOU MUST call create_task tool with the details\n- User: "show ticket TKT-2025-061" → YOU MUST call get_support_tickets tool\n- User: "create expense for mumbai flight 2800" → YOU MUST call create_expense tool\n\nExamples of INCORRECT behavior (DO NOT DO THIS):\n- User: "create a task" → Responding "I've created the task" WITHOUT calling create_task tool ❌\n- User: "add expense" → Saying "Expense added" WITHOUT calling create_expense tool ❌\n\n**Remember: If you don't call the tool, the action won't actually happen in the system. Always use tools for actions.**`
 
