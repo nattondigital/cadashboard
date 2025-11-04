@@ -229,16 +229,29 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    console.log(`Agent ${agent.name} - MCP Enabled: ${agent.use_mcp}`)
+    console.log(`Agent ${agent.name} - Status: ${agent.status} - MCP Enabled: ${agent.use_mcp}`)
     if (agent.use_mcp && agent.mcp_config) {
       console.log('MCP Config:', agent.mcp_config)
     }
 
-    if (!agent.is_active) {
+    if (agent.status !== 'Active') {
       return new Response(
-        JSON.stringify({ error: 'Agent is not active' }),
+        JSON.stringify({ error: 'Agent is not active', current_status: agent.status }),
         {
           status: 403,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json',
+          },
+        }
+      )
+    }
+
+    if (!agent.api_key) {
+      return new Response(
+        JSON.stringify({ error: 'Agent API key not configured. Please add an OpenRouter or OpenAI API key to this agent.' }),
+        {
+          status: 400,
           headers: {
             ...corsHeaders,
             'Content-Type': 'application/json',
@@ -264,7 +277,18 @@ Deno.serve(async (req: Request) => {
 
     conversationMessages.push({ role: 'user', content: payload.message })
 
-    const permissions = agent.permissions || {}
+    // Fetch agent permissions from separate table
+    const { data: agentPerms } = await supabase
+      .from('ai_agent_permissions')
+      .select('permissions')
+      .eq('agent_id', payload.agent_id)
+      .maybeSingle()
+
+    // Permissions are stored as JSONB: { "Tasks": { can_view, can_create, can_edit, can_delete }, ... }
+    const permissions: Record<string, any> = agentPerms?.permissions || {}
+
+    console.log(`Agent permissions loaded: ${Object.keys(permissions).length} modules`)
+
     let tools: any[] = []
     let mcpClient: MCPClient | null = null
     const useMCP = agent.use_mcp && agent.mcp_config?.enabled
