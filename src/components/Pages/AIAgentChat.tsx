@@ -1060,20 +1060,26 @@ When users ask about expenses with time periods (like "this month", "today", "la
 
           const result = await executeFunction(functionName, functionArgs, agent.model)
 
+          let toolResultContent = ''
+
           if (result.success) {
             const mcpIndicator = result.usedMCP ? ' 🔌 (via MCP)' : ''
-            toolResults.push(`✅ ${result.message}${mcpIndicator}`)
+            toolResultContent = `✅ ${result.message}${mcpIndicator}`
+
             if (result.image_url) {
               generatedImageUrl = result.image_url
-              toolResults.push(`\n![Generated Image](${result.image_url})`)
+              toolResultContent += `\n![Generated Image](${result.image_url})`
             }
+
             if (result.data) {
-              toolResults.push(`\nData: ${JSON.stringify(result.data, null, 2)}`)
+              toolResultContent += `\n\nData:\n${JSON.stringify(result.data, null, 2)}`
             }
           } else {
             const mcpIndicator = result.usedMCP ? ' 🔌 (via MCP)' : ''
-            toolResults.push(`❌ ${result.message}${mcpIndicator}`)
+            toolResultContent = `❌ ${result.error || result.message}${mcpIndicator}`
           }
+
+          toolResults.push(toolResultContent)
         }
 
         // Build tool response messages - one for each tool call
