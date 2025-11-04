@@ -49,120 +49,81 @@ class MCPClient {
     this.agentId = agentId
   }
 
-  private getNextRequestId(): number {
-    return ++this.requestId
-  }
-
-  private async sendRequest(message: MCPMessage): Promise<MCPMessage> {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'Authorization': `Bearer ${this.authToken}`,
-    }
-
-    if (this.sessionId) {
-      headers['Mcp-Session-Id'] = this.sessionId
+  private async sendRequest(method: string, params?: any): Promise<any> {
+    this.requestId++
+    const message: MCPMessage = {
+      jsonrpc: '2.0',
+      id: this.requestId,
+      method,
+      params
     }
 
     const response = await fetch(this.serverUrl, {
       method: 'POST',
-      headers,
-      body: JSON.stringify(message),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.authToken}`
+      },
+      body: JSON.stringify(message)
     })
 
     if (!response.ok) {
-      throw new Error(`MCP request failed: ${response.statusText}`)
+      throw new Error(`MCP request failed: ${response.status} ${response.statusText}`)
     }
 
-    const sessionIdHeader = response.headers.get('Mcp-Session-Id')
-    if (sessionIdHeader) {
-      this.sessionId = sessionIdHeader
+    const data: MCPMessage = await response.json()
+
+    if (data.error) {
+      throw new Error(`MCP error: ${data.error.message}`)
     }
 
-    return await response.json()
+    return data.result
   }
 
-  async initialize(): Promise<any> {
-    const message: MCPMessage = {
-      jsonrpc: '2.0',
-      id: this.getNextRequestId(),
-      method: 'initialize',
-    }
-
-    const response = await this.sendRequest(message)
-
-    if (response.error) {
-      throw new Error(response.error.message)
-    }
-
-    return response.result
+  async initialize(): Promise<void> {
+    const result = await this.sendRequest('initialize', {
+      clientInfo: {
+        name: 'ai-chat-agent',
+        version: '1.0.0',
+        agentId: this.agentId
+      }
+    })
+    this.sessionId = result.sessionId
   }
 
   async listTools(): Promise<MCPTool[]> {
-    const message: MCPMessage = {
-      jsonrpc: '2.0',
-      id: this.getNextRequestId(),
-      method: 'tools/list',
-    }
-
-    const response = await this.sendRequest(message)
-
-    if (response.error) {
-      throw new Error(response.error.message)
-    }
-
-    return response.result?.tools || []
+    const result = await this.sendRequest('tools/list')
+    return result.tools || []
   }
 
-  async callTool(toolName: string, args: any): Promise<any> {
-    const toolArgs = { ...args, agent_id: this.agentId }
+  async callTool(name: string, args: Record<string, any>): Promise<string> {
+    const result = await this.sendRequest('tools/call', {
+      name,
+      arguments: args
+    })
 
-    const message: MCPMessage = {
-      jsonrpc: '2.0',
-      id: this.getNextRequestId(),
-      method: 'tools/call',
-      params: {
-        name: toolName,
-        arguments: toolArgs,
-      },
+    if (result.content && Array.isArray(result.content)) {
+      return result.content
+        .map((item: any) => item.text || JSON.stringify(item))
+        .join('\n')
     }
 
-    const response = await this.sendRequest(message)
-
-    if (response.error) {
-      throw new Error(response.error.message)
-    }
-
-    if (response.result?.content && Array.isArray(response.result.content)) {
-      const textContent = response.result.content.find((c: any) => c.type === 'text')
-      if (textContent?.text) {
-        return textContent.text
-      }
-    }
-
-    return response.result
+    return result.result || JSON.stringify(result)
   }
 }
 
-function convertMCPToolToOpenRouterFunction(mcpTool: MCPTool): any {
-  const properties = { ...mcpTool.inputSchema.properties }
-  delete properties.agent_id
-
-  const required = (mcpTool.inputSchema.required || []).filter(
-    (field: string) => field !== 'agent_id'
-  )
-
+function convertMCPToolToOpenRouterFunction(mcpTool: MCPTool) {
   return {
     type: 'function',
     function: {
       name: mcpTool.name,
       description: mcpTool.description,
       parameters: {
-        type: mcpTool.inputSchema.type || 'object',
-        properties,
-        required,
-      },
-    },
+        type: mcpTool.inputSchema.type,
+        properties: mcpTool.inputSchema.properties,
+        required: mcpTool.inputSchema.required || []
+      }
+    }
   }
 }
 
@@ -175,31 +136,11 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    if (req.method !== 'POST') {
-      return new Response(
-        JSON.stringify({ error: 'Method not allowed. Use POST.' }),
-        {
-          status: 405,
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json',
-          },
-        }
-      )
-    }
-
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
-
     const payload: ChatPayload = await req.json()
 
     if (!payload.agent_id || !payload.phone_number || !payload.message) {
       return new Response(
-        JSON.stringify({
-          error: 'Missing required fields',
-          required: ['agent_id', 'phone_number', 'message'],
-        }),
+        JSON.stringify({ error: 'Missing required fields', required: ['agent_id', 'phone_number', 'message'] }),
         {
           status: 400,
           headers: {
@@ -209,6 +150,17 @@ Deno.serve(async (req: Request) => {
         }
       )
     }
+
+    console.log('AI Chat Request:', {
+      agent_id: payload.agent_id,
+      phone_number: payload.phone_number,
+      message_length: payload.message.length,
+      user_context: payload.user_context || 'External'
+    })
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const supabase = createClient(supabaseUrl, supabaseKey)
 
     const { data: agent, error: agentError } = await supabase
       .from('ai_agents')
@@ -229,38 +181,9 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    console.log(`Agent ${agent.name} - Status: ${agent.status} - MCP Enabled: ${agent.use_mcp}`)
-    if (agent.use_mcp && agent.mcp_config) {
-      console.log('MCP Config:', agent.mcp_config)
-    }
-
     if (agent.status !== 'Active') {
       return new Response(
-        JSON.stringify({ error: 'Agent is not active', current_status: agent.status }),
-        {
-          status: 403,
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json',
-          },
-        }
-      )
-    }
-
-    // Fetch OpenRouter API key from integrations table
-    const { data: openrouterIntegration } = await supabase
-      .from('integrations')
-      .select('config')
-      .eq('integration_type', 'openrouter')
-      .maybeSingle()
-
-    const apiKey = openrouterIntegration?.config?.apiKey
-
-    if (!apiKey) {
-      return new Response(
-        JSON.stringify({
-          error: 'OpenRouter API key not configured. Please configure it in Settings > Integrations.'
-        }),
+        JSON.stringify({ error: 'Agent is not active' }),
         {
           status: 400,
           headers: {
@@ -271,34 +194,44 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    const { data: existingMemory } = await supabase
-      .from('ai_agent_chat_memory')
-      .select('*')
-      .eq('agent_id', payload.agent_id)
-      .eq('phone_number', payload.phone_number)
-      .order('created_at', { ascending: false })
-      .limit(20)
-
-    const conversationMessages: any[] = []
-    if (existingMemory && existingMemory.length > 0) {
-      existingMemory.reverse().forEach(msg => {
-        conversationMessages.push({ role: msg.role, content: msg.message })
-      })
+    const apiKey = Deno.env.get('OPENROUTER_API_KEY')!
+    if (!apiKey) {
+      throw new Error('OPENROUTER_API_KEY not configured')
     }
 
-    conversationMessages.push({ role: 'user', content: payload.message })
+    const userContext = payload.user_context || 'External'
 
-    // Fetch agent permissions from separate table
-    const { data: agentPerms } = await supabase
+    await supabase
+      .from('ai_agent_chat_memory')
+      .insert({
+        agent_id: payload.agent_id,
+        phone_number: payload.phone_number,
+        role: 'user',
+        message: payload.message,
+        user_context: userContext,
+        action: userContext === 'Internal' ? 'Chat' : 'User Message'
+      })
+
+    const { data: chatHistory } = await supabase
+      .from('ai_agent_chat_memory')
+      .select('role, message')
+      .eq('agent_id', payload.agent_id)
+      .eq('phone_number', payload.phone_number)
+      .order('created_at', { ascending: true })
+      .limit(20)
+
+    const conversationMessages = (chatHistory || []).map(msg => ({
+      role: msg.role,
+      content: msg.message
+    }))
+
+    const { data: permissionsData } = await supabase
       .from('ai_agent_permissions')
       .select('permissions')
       .eq('agent_id', payload.agent_id)
-      .maybeSingle()
+      .single()
 
-    // Permissions are stored as JSONB: { "Tasks": { can_view, can_create, can_edit, can_delete }, ... }
-    const permissions: Record<string, any> = agentPerms?.permissions || {}
-
-    console.log(`Agent permissions loaded: ${Object.keys(permissions).length} modules`)
+    const permissions = permissionsData?.permissions || {}
 
     let tools: any[] = []
     let mcpClient: MCPClient | null = null
@@ -460,32 +393,14 @@ Deno.serve(async (req: Request) => {
         type: 'function',
         function: {
           name: 'get_support_tickets',
-          description: 'Get support tickets from the CRM. Can search by ticket ID, reporter name, or filter by status.',
+          description: 'Get support tickets from the CRM',
           parameters: {
             type: 'object',
             properties: {
-              ticket_id: { type: 'string', description: 'Specific ticket ID to retrieve (e.g., TKT-2025-061)' },
-              reporter_name: { type: 'string', description: 'Search by reporter/contact name' },
+              ticket_id: { type: 'string', description: 'Get a specific ticket by its ticket_id (e.g., TKT-2025-061)' },
               status: { type: 'string', enum: ['Open', 'In Progress', 'Resolved', 'Closed'], description: 'Filter by ticket status' },
-              limit: { type: 'number', description: 'Number of tickets to retrieve (default 10)' }
-            }
-          }
-        }
-      })
-    }
-
-    if (permissions['Expenses']?.can_view) {
-      tools.push({
-        type: 'function',
-        function: {
-          name: 'get_expenses',
-          description: 'Get expenses from the CRM with optional filtering',
-          parameters: {
-            type: 'object',
-            properties: {
-              date_filter: { type: 'string', description: 'Filter by date: "today", "this_week", "this_month", "last_month"' },
-              category: { type: 'string', description: 'Filter by category' },
-              limit: { type: 'number', description: 'Number of expenses to retrieve' }
+              priority: { type: 'string', enum: ['Low', 'Medium', 'High'], description: 'Filter by priority' },
+              limit: { type: 'number', description: 'Number of tickets to retrieve' }
             }
           }
         }
@@ -497,7 +412,7 @@ Deno.serve(async (req: Request) => {
         type: 'function',
         function: {
           name: 'get_tasks',
-          description: 'Get tasks from the CRM. Can retrieve specific task by task_id or filter by status/priority.',
+          description: 'Get tasks from the CRM',
           parameters: {
             type: 'object',
             properties: {
@@ -561,7 +476,6 @@ Deno.serve(async (req: Request) => {
           }
         }
       })
-    }
     }
 
     console.log(`Total tools available: ${tools.length}`)
@@ -764,27 +678,6 @@ Deno.serve(async (req: Request) => {
               toolResults.push(`✅ Support ticket created: ${ticketId} - ${functionArgs.subject}`)
             }
           } else if (functionName === 'create_lead') {
-            const { data: existingContact } = await supabase
-              .from('contacts_master')
-              .select('id')
-              .eq('phone', functionArgs.phone)
-              .maybeSingle()
-
-            let contactId = existingContact?.id
-
-            if (!contactId) {
-              const { data: newContact } = await supabase
-                .from('contacts_master')
-                .insert({
-                  name: functionArgs.name,
-                  phone: functionArgs.phone,
-                  email: functionArgs.email
-                })
-                .select('id')
-                .single()
-              contactId = newContact?.id
-            }
-
             const { error: leadError } = await supabase
               .from('leads')
               .insert({
@@ -794,8 +687,7 @@ Deno.serve(async (req: Request) => {
                 interest: functionArgs.interest,
                 source: functionArgs.source,
                 stage: functionArgs.stage || 'New',
-                notes: functionArgs.notes,
-                contact_id: contactId
+                notes: functionArgs.notes
               })
 
             if (leadError) {
@@ -804,47 +696,62 @@ Deno.serve(async (req: Request) => {
               toolResults.push(`✅ Lead created: ${functionArgs.name} (${functionArgs.phone})`)
             }
           } else if (functionName === 'create_appointment') {
-            const appointmentId = `APT-${Math.floor(Math.random() * 1000000000)}`
+            let contactId = null
+            if (functionArgs.contact_phone) {
+              const { data: contact } = await supabase
+                .from('contacts_master')
+                .select('id')
+                .eq('phone', functionArgs.contact_phone)
+                .maybeSingle()
+
+              if (!contact && functionArgs.contact_name) {
+                const { data: newContact } = await supabase
+                  .from('contacts_master')
+                  .insert({
+                    name: functionArgs.contact_name,
+                    phone: functionArgs.contact_phone,
+                    email: functionArgs.contact_email
+                  })
+                  .select('id')
+                  .single()
+                contactId = newContact?.id
+              } else {
+                contactId = contact?.id
+              }
+            }
+
             const { error: appointmentError } = await supabase
               .from('appointments')
               .insert({
-                appointment_id: appointmentId,
                 title: functionArgs.title,
-                contact_name: functionArgs.contact_name,
-                contact_phone: functionArgs.contact_phone,
-                contact_email: functionArgs.contact_email,
+                contact_id: contactId,
                 appointment_date: functionArgs.appointment_date,
                 appointment_time: functionArgs.appointment_time,
-                duration_minutes: functionArgs.duration_minutes || 60,
+                duration_minutes: functionArgs.duration_minutes || 30,
                 location: functionArgs.location,
                 purpose: functionArgs.purpose,
-                status: 'Scheduled',
-                reminder_sent: false
+                status: 'Scheduled'
               })
 
             if (appointmentError) {
               toolResults.push(`❌ Failed to create appointment: ${appointmentError.message}`)
             } else {
-              toolResults.push(`✅ Appointment created: ${functionArgs.title} (${appointmentId})`)
+              toolResults.push(`✅ Appointment created: ${functionArgs.title} on ${functionArgs.appointment_date} at ${functionArgs.appointment_time}`)
             }
           } else if (functionName === 'get_support_tickets') {
             let ticketsQuery = supabase
               .from('support_tickets')
-              .select(`
-                *,
-                contact:contacts_master!contact_id(full_name, phone, email),
-                assigned_user:admin_users!assigned_to(full_name, email)
-              `)
+              .select('*')
               .order('created_at', { ascending: false })
 
             if (functionArgs.ticket_id) {
               ticketsQuery = ticketsQuery.eq('ticket_id', functionArgs.ticket_id)
-            } else if (functionArgs.reporter_name) {
-              ticketsQuery = ticketsQuery.ilike('reporter_name', `%${functionArgs.reporter_name}%`)
             }
-
             if (functionArgs.status) {
               ticketsQuery = ticketsQuery.eq('status', functionArgs.status)
+            }
+            if (functionArgs.priority) {
+              ticketsQuery = ticketsQuery.eq('priority', functionArgs.priority)
             }
 
             ticketsQuery = ticketsQuery.limit(functionArgs.limit || 10)
@@ -854,62 +761,12 @@ Deno.serve(async (req: Request) => {
             if (ticketsError) {
               toolResults.push(`❌ Failed to fetch tickets: ${ticketsError.message}`)
             } else if (tickets && tickets.length > 0) {
-              const ticketSummary = tickets.map(t => {
-                const contact = t.contact as any
-                const assignedUser = t.assigned_user as any
-                const contactName = contact?.full_name || 'Unknown'
-                const assignedName = assignedUser?.full_name || 'Unassigned'
-
-                let summary = `• Ticket: ${t.ticket_id}\n  Subject: ${t.subject}\n  Status: ${t.status}\n  Priority: ${t.priority}\n  Contact: ${contactName}`
-
-                if (contact?.phone) summary += ` (${contact.phone})`
-                if (contact?.email) summary += ` - ${contact.email}`
-
-                summary += `\n  Assigned to: ${assignedName}`
-
-                if (t.description) summary += `\n  Description: ${t.description}`
-                if (t.created_at) {
-                  const createdDate = new Date(t.created_at).toLocaleDateString()
-                  summary += `\n  Created: ${createdDate}`
-                }
-
-                return summary
-              }).join('\n\n')
-              toolResults.push(`✅ Found ${tickets.length} ticket(s):\n\n${ticketSummary}`)
-            } else {
-              toolResults.push(`No tickets found matching the criteria`)
-            }
-          } else if (functionName === 'get_expenses') {
-            let expensesQuery = supabase
-              .from('expenses')
-              .select('*')
-              .order('expense_date', { ascending: false })
-
-            if (functionArgs.date_filter) {
-              const today = new Date().toISOString().split('T')[0]
-              if (functionArgs.date_filter === 'today') {
-                expensesQuery = expensesQuery.eq('expense_date', today)
-              }
-            }
-
-            if (functionArgs.category) {
-              expensesQuery = expensesQuery.eq('category', functionArgs.category)
-            }
-
-            expensesQuery = expensesQuery.limit(functionArgs.limit || 10)
-
-            const { data: expenses, error: expensesError } = await expensesQuery
-
-            if (expensesError) {
-              toolResults.push(`❌ Failed to fetch expenses: ${expensesError.message}`)
-            } else if (expenses && expenses.length > 0) {
-              const total = expenses.reduce((sum, e) => sum + parseFloat(e.amount), 0)
-              const expenseSummary = expenses.map(e =>
-                `• ₹${e.amount} - ${e.description} (${e.category}) on ${e.expense_date}`
+              const ticketSummary = tickets.map(t =>
+                `• ${t.ticket_id}: ${t.subject} [${t.status}] - Priority: ${t.priority}`
               ).join('\n')
-              toolResults.push(`✅ Found ${expenses.length} expense(s) totaling ₹${total.toFixed(2)}:\n${expenseSummary}`)
+              toolResults.push(`✅ Found ${tickets.length} ticket(s):\n${ticketSummary}`)
             } else {
-              toolResults.push(`No expenses found`)
+              toolResults.push(`No support tickets found`)
             }
           } else if (functionName === 'get_tasks') {
             let tasksQuery = supabase
@@ -920,11 +777,9 @@ Deno.serve(async (req: Request) => {
             if (functionArgs.task_id) {
               tasksQuery = tasksQuery.eq('task_id', functionArgs.task_id)
             }
-
             if (functionArgs.status) {
               tasksQuery = tasksQuery.eq('status', functionArgs.status)
             }
-
             if (functionArgs.priority) {
               tasksQuery = tasksQuery.eq('priority', functionArgs.priority)
             }
@@ -936,29 +791,10 @@ Deno.serve(async (req: Request) => {
             if (tasksError) {
               toolResults.push(`❌ Failed to fetch tasks: ${tasksError.message}`)
             } else if (tasks && tasks.length > 0) {
-              if (functionArgs.task_id && tasks.length === 1) {
-                const t = tasks[0]
-                let details = `✅ Task Details:\n\n**${t.task_id}: ${t.title}**\n`
-                if (t.description) details += `Description: ${t.description}\n`
-                details += `Status: ${t.status}\n`
-                details += `Priority: ${t.priority}\n`
-                if (t.assigned_to_name) details += `Assigned to: ${t.assigned_to_name}\n`
-                if (t.assigned_by_name) details += `Assigned by: ${t.assigned_by_name}\n`
-                if (t.contact_name) details += `Contact: ${t.contact_name}${t.contact_phone ? ` (${t.contact_phone})` : ''}\n`
-                if (t.due_date) details += `Due date: ${t.due_date}\n`
-                if (t.start_date) details += `Start date: ${t.start_date}\n`
-                details += `Progress: ${t.progress_percentage || 0}%\n`
-                if (t.category) details += `Category: ${t.category}\n`
-                if (t.supporting_documents && t.supporting_documents.length > 0) {
-                  details += `\nSupporting documents:\n${t.supporting_documents.map((doc, i) => `${i + 1}. ${doc}`).join('\n')}`
-                }
-                toolResults.push(details)
-              } else {
-                const taskSummary = tasks.map(t =>
-                  `• ${t.task_id}: ${t.title} (${t.status}, ${t.priority} priority)${t.due_date ? ` - Due: ${t.due_date}` : ''}`
-                ).join('\n')
-                toolResults.push(`✅ Found ${tasks.length} task(s):\n${taskSummary}`)
-              }
+              const taskSummary = tasks.map(t =>
+                `• ${t.task_id}: ${t.title} [${t.status}] - Priority: ${t.priority}${t.assigned_to_name ? ` - Assigned to: ${t.assigned_to_name}` : ''}`
+              ).join('\n')
+              toolResults.push(`✅ Found ${tasks.length} task(s):\n${taskSummary}`)
             } else {
               toolResults.push(`No tasks found`)
             }
@@ -980,7 +816,7 @@ Deno.serve(async (req: Request) => {
               toolResults.push(`❌ Failed to fetch leads: ${leadsError.message}`)
             } else if (leads && leads.length > 0) {
               const leadSummary = leads.map(l =>
-                `• ${l.name} (${l.phone}) - ${l.interest} interest`
+                `• ${l.name} (${l.phone}) - ${l.stage}${l.interest ? ` - Interest: ${l.interest}` : ''}`
               ).join('\n')
               toolResults.push(`✅ Found ${leads.length} lead(s):\n${leadSummary}`)
             } else {
@@ -994,12 +830,26 @@ Deno.serve(async (req: Request) => {
 
             if (functionArgs.appointment_id) {
               appointmentsQuery = appointmentsQuery.eq('appointment_id', functionArgs.appointment_id)
-            } else if (functionArgs.date_filter === 'today') {
+            }
+
+            if (functionArgs.date_filter) {
               const today = new Date().toISOString().split('T')[0]
-              appointmentsQuery = appointmentsQuery.eq('appointment_date', today)
-            } else if (functionArgs.date_filter === 'upcoming') {
-              const today = new Date().toISOString().split('T')[0]
-              appointmentsQuery = appointmentsQuery.gte('appointment_date', today)
+              switch (functionArgs.date_filter) {
+                case 'today':
+                  appointmentsQuery = appointmentsQuery.eq('appointment_date', today)
+                  break
+                case 'upcoming':
+                  appointmentsQuery = appointmentsQuery.gte('appointment_date', today)
+                  break
+                case 'past':
+                  appointmentsQuery = appointmentsQuery.lt('appointment_date', today)
+                  break
+                case 'this_month':
+                  const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]
+                  const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0]
+                  appointmentsQuery = appointmentsQuery.gte('appointment_date', startOfMonth).lte('appointment_date', endOfMonth)
+                  break
+              }
             }
 
             appointmentsQuery = appointmentsQuery.limit(functionArgs.limit || 10)
@@ -1010,7 +860,7 @@ Deno.serve(async (req: Request) => {
               toolResults.push(`❌ Failed to fetch appointments: ${appointmentsError.message}`)
             } else if (appointments && appointments.length > 0) {
               const appointmentSummary = appointments.map(a =>
-                `• ${a.title} on ${a.appointment_date} at ${a.appointment_time} (${a.status})`
+                `• ${a.title} - ${a.appointment_date} at ${a.appointment_time} [${a.status}]`
               ).join('\n')
               toolResults.push(`✅ Found ${appointments.length} appointment(s):\n${appointmentSummary}`)
             } else {
@@ -1084,26 +934,19 @@ Deno.serve(async (req: Request) => {
 
     await supabase
       .from('ai_agent_chat_memory')
-      .insert([
-        {
-          agent_id: payload.agent_id,
-          phone_number: payload.phone_number,
-          role: 'user',
-          message: payload.message,
-          user_context: 'External',
-          module: 'Chat',
-          action: 'User Message'
-        },
-        {
-          agent_id: payload.agent_id,
-          phone_number: payload.phone_number,
-          role: 'assistant',
-          message: aiResponse,
-          user_context: 'External',
-          module: 'Chat',
-          action: 'AI Response'
-        }
-      ])
+      .insert({
+        agent_id: payload.agent_id,
+        phone_number: payload.phone_number,
+        role: 'assistant',
+        message: aiResponse,
+        user_context: userContext,
+        action: userContext === 'Internal' ? 'Chat' : 'AI Response'
+      })
+
+    console.log('AI Response generated:', {
+      length: aiResponse.length,
+      preview: aiResponse.substring(0, 100)
+    })
 
     return new Response(
       JSON.stringify({ response: aiResponse }),
@@ -1117,7 +960,7 @@ Deno.serve(async (req: Request) => {
     )
 
   } catch (error: any) {
-    console.error('Error:', error)
+    console.error('Error in ai-chat function:', error)
     return new Response(
       JSON.stringify({ error: error.message || 'Internal server error' }),
       {
