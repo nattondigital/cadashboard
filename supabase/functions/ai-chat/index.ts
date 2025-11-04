@@ -426,7 +426,10 @@ Deno.serve(async (req: Request) => {
           const functionName = toolCall.function.name
           const functionArgs = JSON.parse(toolCall.function.arguments)
 
-          console.log(`Executing MCP tool: ${functionName}`)
+          // Inject agent_id into arguments (required by MCP server)
+          functionArgs.agent_id = payload.agent_id
+
+          console.log(`Executing MCP tool: ${functionName} with args:`, functionArgs)
           try {
             const result = await mcpClient!.callTool(functionName, functionArgs)
             toolResults.push(result)
