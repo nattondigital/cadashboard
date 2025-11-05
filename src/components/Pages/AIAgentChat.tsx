@@ -768,14 +768,7 @@ When users ask about expenses with time periods (like "this month", "today", "la
           body: JSON.stringify({
             model: agent.model,
             messages: [
-              {
-                role: 'system',
-                content: enhancedSystemPrompt
-              },
-              {
-                role: 'user',
-                content: messageContent
-              },
+              ...conversationMessages,
               message,
               ...toolResponseMessages
             ]
