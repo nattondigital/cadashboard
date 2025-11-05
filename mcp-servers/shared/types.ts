@@ -98,3 +98,61 @@ export interface MCPResponse<T = any> {
   data?: T;
   error?: MCPError;
 }
+
+export interface Contact {
+  id: string;
+  contact_id: string | null;
+  full_name: string;
+  email: string | null;
+  phone: string | null;
+  date_of_birth: string | null;
+  gender: string | null;
+  education_level: string | null;
+  profession: string | null;
+  experience: string | null;
+  business_name: string | null;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  pincode: string | null;
+  gst_number: string | null;
+  contact_type: string;
+  status: string;
+  notes: string | null;
+  last_contacted: string | null;
+  tags: string[] | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ContactFilters {
+  contact_type?: string;
+  status?: string;
+  city?: string;
+  state?: string;
+  search?: string;
+  tags?: string[];
+  created_from?: string;
+  created_to?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface ContactStatistics {
+  total: number;
+  by_type: {
+    Customer: number;
+    Lead: number;
+    Vendor: number;
+    individual: number;
+  };
+  by_status: {
+    Active: number;
+    Inactive: number;
+  };
+  by_city: Record<string, number>;
+  by_state: Record<string, number>;
+  recent_contacts: number;
+  with_email: number;
+  with_phone: number;
+}
