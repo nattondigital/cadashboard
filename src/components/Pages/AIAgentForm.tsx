@@ -16,7 +16,10 @@ const AI_MODELS = [
     { value: 'google/gemini-2.5-flash', label: 'google/gemini-2.5-flash ($0.30/M in, $2.50/M out)' },
     { value: 'google/gemini-2.5-pro', label: 'google/gemini-2.5-pro ($1.25/M in, $10/M out)' },
     { value: 'openai/gpt-4o-mini', label: 'openai/gpt-4o-mini' },
-    { value: 'openai/gpt-5-mini', label: 'openai/gpt-5-mini' }
+    { value: 'openai/gpt-5-mini', label: 'openai/gpt-5-mini' },
+    { value: 'openai/gpt-5', label: 'openai/gpt-5 ($1.25/M in, $10/M out)' },
+    { value: 'meta-llama/llama-4-maverick', label: 'meta-llama/llama-4-maverick ($0.15/M in, $0.60/M out)' },
+    { value: 'anthropic/claude-sonnet-4.5', label: 'anthropic/claude-sonnet-4.5 ($3/M in, $15/M out)' }
   ]},
   { category: 'Image Models', models: [
     { value: 'google/gemini-2.5-flash', label: 'google/gemini-2.5-flash ($0.30/M in, $2.50/M out)' }
