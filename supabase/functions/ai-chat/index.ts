@@ -305,9 +305,9 @@ Deno.serve(async (req: Request) => {
     // Map of MCP servers to their endpoints
     const mcpServers: Record<string, string> = {
       'tasks-server': `${supabaseUrl}/functions/v1/mcp-tasks-server`,
-      'contacts-server': `${supabaseUrl}/functions/v1/mcp-server`, // TODO: Create separate servers
-      'leads-server': `${supabaseUrl}/functions/v1/mcp-server`,
-      'appointments-server': `${supabaseUrl}/functions/v1/mcp-server`,
+      'contacts-server': `${supabaseUrl}/functions/v1/mcp-contacts-server`,
+      'leads-server': `${supabaseUrl}/functions/v1/mcp-leads-server`,
+      'appointments-server': `${supabaseUrl}/functions/v1/mcp-appointments-server`,
     }
 
     try {
@@ -466,11 +466,11 @@ Deno.serve(async (req: Request) => {
             if (functionName.includes('task')) {
               targetServerUrl = `${supabaseUrl}/functions/v1/mcp-tasks-server`
             } else if (functionName.includes('contact')) {
-              targetServerUrl = `${supabaseUrl}/functions/v1/mcp-server` // TODO
+              targetServerUrl = `${supabaseUrl}/functions/v1/mcp-contacts-server`
             } else if (functionName.includes('lead')) {
-              targetServerUrl = `${supabaseUrl}/functions/v1/mcp-server` // TODO
+              targetServerUrl = `${supabaseUrl}/functions/v1/mcp-leads-server`
             } else if (functionName.includes('appointment')) {
-              targetServerUrl = `${supabaseUrl}/functions/v1/mcp-server` // TODO
+              targetServerUrl = `${supabaseUrl}/functions/v1/mcp-appointments-server`
             }
 
             console.log(`Routing ${functionName} to ${targetServerUrl}`)
