@@ -156,3 +156,58 @@ export interface ContactStatistics {
   with_email: number;
   with_phone: number;
 }
+
+export interface Lead {
+  id: string;
+  lead_id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  source: string | null;
+  interest: string;
+  stage: string;
+  owner: string;
+  address: string | null;
+  company: string | null;
+  notes: string | null;
+  last_contact: string | null;
+  lead_score: number;
+  created_at: string;
+  updated_at: string;
+  affiliate_id: string | null;
+  contact_id: string | null;
+  pipeline_id: string | null;
+}
+
+export interface LeadFilters {
+  stage?: string;
+  interest?: string;
+  source?: string;
+  owner?: string;
+  pipeline_id?: string;
+  lead_score_min?: number;
+  lead_score_max?: number;
+  search?: string;
+  created_from?: string;
+  created_to?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface LeadStatistics {
+  total: number;
+  by_stage: Record<string, number>;
+  by_interest: {
+    Hot: number;
+    Warm: number;
+    Cold: number;
+  };
+  by_source: Record<string, number>;
+  by_owner: Record<string, number>;
+  average_score: number;
+  high_score_leads: number;
+  recent_leads: number;
+  with_email: number;
+  with_phone: number;
+  contacted_recently: number;
+}

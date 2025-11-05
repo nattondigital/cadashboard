@@ -7,6 +7,7 @@
     "build": "tsc",
     "dev:tasks": "node --loader ts-node/esm tasks-server/index.ts",
     "dev:contacts": "node --loader ts-node/esm contacts-server/index.ts",
+    "dev:leads": "node --loader ts-node/esm leads-server/index.ts",
     "test:client": "node --loader ts-node/esm test-client.ts",
     "clean": "rm -rf dist"
   },
