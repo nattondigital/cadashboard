@@ -18,7 +18,7 @@ const AI_MODELS = [
     { value: 'openai/gpt-4o-mini', label: 'openai/gpt-4o-mini' },
     { value: 'openai/gpt-5-mini', label: 'openai/gpt-5-mini' },
     { value: 'openai/gpt-5', label: 'openai/gpt-5 ($1.25/M in, $10/M out)' },
-    { value: 'meta-llama/llama-4-maverick', label: 'meta-llama/llama-4-maverick ($0.15/M in, $0.60/M out)' },
+    { value: 'deepseek/deepseek-r1-0528', label: 'deepseek/deepseek-r1-0528 ($0.40/M in, $1.75/M out)' },
     { value: 'anthropic/claude-sonnet-4.5', label: 'anthropic/claude-sonnet-4.5 ($3/M in, $15/M out)' }
   ]},
   { category: 'Image Models', models: [
