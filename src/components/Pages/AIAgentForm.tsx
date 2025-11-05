@@ -12,12 +12,14 @@ import { supabase } from '@/lib/supabase'
 
 const AI_MODELS = [
   { category: 'Text Models', models: [
-    'google/gemini-2.5-flash-lite',
-    'openai/gpt-4o-mini',
-    'openai/gpt-5-mini'
+    { value: 'google/gemini-2.5-flash-lite', label: 'google/gemini-2.5-flash-lite' },
+    { value: 'google/gemini-2.5-flash', label: 'google/gemini-2.5-flash ($0.30/M in, $2.50/M out)' },
+    { value: 'google/gemini-2.5-pro', label: 'google/gemini-2.5-pro ($1.25/M in, $10/M out)' },
+    { value: 'openai/gpt-4o-mini', label: 'openai/gpt-4o-mini' },
+    { value: 'openai/gpt-5-mini', label: 'openai/gpt-5-mini' }
   ]},
   { category: 'Image Models', models: [
-    'google/gemini-2.5-flash'
+    { value: 'google/gemini-2.5-flash', label: 'google/gemini-2.5-flash ($0.30/M in, $2.50/M out)' }
   ]}
 ]
 
@@ -203,8 +205,8 @@ export function AIAgentForm() {
                         {category.category}
                       </div>
                       {category.models.map(model => (
-                        <SelectItem key={model} value={model}>
-                          {model}
+                        <SelectItem key={model.value} value={model.value}>
+                          {model.label}
                         </SelectItem>
                       ))}
                     </React.Fragment>
