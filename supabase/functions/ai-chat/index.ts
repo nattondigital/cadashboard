@@ -309,6 +309,7 @@ Deno.serve(async (req: Request) => {
       'leads-server': `${supabaseUrl}/functions/v1/mcp-leads-server`,
       'appointments-server': `${supabaseUrl}/functions/v1/mcp-appointments-server`,
       'expenses-server': `${supabaseUrl}/functions/v1/mcp-expenses-server`,
+      'support-server': `${supabaseUrl}/functions/v1/mcp-support-server`,
     }
 
     try {
@@ -474,6 +475,8 @@ Deno.serve(async (req: Request) => {
               targetServerUrl = `${supabaseUrl}/functions/v1/mcp-appointments-server`
             } else if (functionName.includes('expense')) {
               targetServerUrl = `${supabaseUrl}/functions/v1/mcp-expenses-server`
+            } else if (functionName.includes('support') || functionName.includes('ticket')) {
+              targetServerUrl = `${supabaseUrl}/functions/v1/mcp-support-server`
             }
 
             console.log(`Routing ${functionName} to ${targetServerUrl}`)
