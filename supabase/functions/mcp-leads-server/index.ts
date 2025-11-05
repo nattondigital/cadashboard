@@ -409,6 +409,76 @@ async function handleMCPRequest(
                 required: ['lead_id'],
               },
             },
+            {
+              name: 'get_custom_fields',
+              description: 'Get custom fields for a specific pipeline. Use this to see what custom fields exist for a lead\'s pipeline before updating custom field values.',
+              inputSchema: {
+                type: 'object',
+                properties: {
+                  agent_id: {
+                    type: 'string',
+                    description: 'AI Agent ID for permission checking',
+                  },
+                  phone_number: {
+                    type: 'string',
+                    description: 'User phone number for logging',
+                  },
+                  pipeline_id: {
+                    type: 'string',
+                    description: 'Pipeline ID to get custom fields for',
+                  },
+                },
+                required: ['pipeline_id'],
+              },
+            },
+            {
+              name: 'get_lead_custom_values',
+              description: 'Get custom field values for a specific lead',
+              inputSchema: {
+                type: 'object',
+                properties: {
+                  agent_id: {
+                    type: 'string',
+                    description: 'AI Agent ID for permission checking',
+                  },
+                  phone_number: {
+                    type: 'string',
+                    description: 'User phone number for logging',
+                  },
+                  lead_id: {
+                    type: 'string',
+                    description: 'Lead ID to get custom field values for',
+                  },
+                },
+                required: ['lead_id'],
+              },
+            },
+            {
+              name: 'update_lead_custom_values',
+              description: 'Update custom field values for a lead. Use get_custom_fields first to see available fields and their types.',
+              inputSchema: {
+                type: 'object',
+                properties: {
+                  agent_id: {
+                    type: 'string',
+                    description: 'AI Agent ID for permission checking',
+                  },
+                  phone_number: {
+                    type: 'string',
+                    description: 'User phone number for logging',
+                  },
+                  lead_id: {
+                    type: 'string',
+                    description: 'Lead ID to update custom values for',
+                  },
+                  custom_values: {
+                    type: 'object',
+                    description: 'Object with field_key as keys and field values as values. Example: {"custom_1234_status": "Active", "custom_5678_notes": "Important client"}',
+                  },
+                },
+                required: ['lead_id', 'custom_values'],
+              },
+            },
           ],
         }
         break
@@ -888,6 +958,321 @@ async function handleMCPRequest(
                 {
                   type: 'text',
                   text: JSON.stringify({ success: true, message: 'Lead deleted successfully', lead_id: args.lead_id }, null, 2),
+                },
+              ],
+            }
+            break
+          }
+
+          case 'get_custom_fields': {
+            if (!enabledTools.includes('get_custom_fields')) {
+              await supabase.from('ai_agent_logs').insert({
+                agent_id: agentId,
+                agent_name: agentName,
+                module: 'Leads',
+                action: 'get_custom_fields',
+                result: 'Denied',
+                user_context: args.phone_number || null,
+                details: { reason: 'No permission to view custom fields' },
+              })
+              throw new Error('Agent does not have permission to view custom fields')
+            }
+
+            if (!args.pipeline_id) {
+              throw new Error('pipeline_id is required')
+            }
+
+            // Get custom tabs for the pipeline
+            const { data: tabs, error: tabsError } = await supabase
+              .from('custom_lead_tabs')
+              .select('id, tab_id, tab_name, tab_order')
+              .eq('pipeline_id', args.pipeline_id)
+              .eq('is_active', true)
+              .order('tab_order')
+
+            if (tabsError) {
+              await supabase.from('ai_agent_logs').insert({
+                agent_id: agentId,
+                agent_name: agentName,
+                module: 'Leads',
+                action: 'get_custom_fields',
+                result: 'Error',
+                user_context: args.phone_number || null,
+                details: { error: tabsError.message, pipeline_id: args.pipeline_id },
+              })
+              throw tabsError
+            }
+
+            // Get custom fields for all tabs
+            const tabIds = tabs?.map((t: any) => t.id) || []
+            let fields = []
+
+            if (tabIds.length > 0) {
+              const { data: fieldsData, error: fieldsError } = await supabase
+                .from('custom_fields')
+                .select('*')
+                .in('custom_tab_id', tabIds)
+                .eq('is_active', true)
+                .order('display_order')
+
+              if (fieldsError) {
+                await supabase.from('ai_agent_logs').insert({
+                  agent_id: agentId,
+                  agent_name: agentName,
+                  module: 'Leads',
+                  action: 'get_custom_fields',
+                  result: 'Error',
+                  user_context: args.phone_number || null,
+                  details: { error: fieldsError.message, pipeline_id: args.pipeline_id },
+                })
+                throw fieldsError
+              }
+
+              fields = fieldsData || []
+            }
+
+            await supabase.from('ai_agent_logs').insert({
+              agent_id: agentId,
+              agent_name: agentName,
+              module: 'Leads',
+              action: 'get_custom_fields',
+              result: 'Success',
+              user_context: args.phone_number || null,
+              details: { pipeline_id: args.pipeline_id, tabs_count: tabs?.length || 0, fields_count: fields.length },
+            })
+
+            response.result = {
+              content: [
+                {
+                  type: 'text',
+                  text: JSON.stringify({
+                    success: true,
+                    pipeline_id: args.pipeline_id,
+                    tabs,
+                    fields,
+                    tabs_count: tabs?.length || 0,
+                    fields_count: fields.length
+                  }, null, 2),
+                },
+              ],
+            }
+            break
+          }
+
+          case 'get_lead_custom_values': {
+            if (!enabledTools.includes('get_lead_custom_values')) {
+              await supabase.from('ai_agent_logs').insert({
+                agent_id: agentId,
+                agent_name: agentName,
+                module: 'Leads',
+                action: 'get_lead_custom_values',
+                result: 'Denied',
+                user_context: args.phone_number || null,
+                details: { reason: 'No permission to view lead custom values' },
+              })
+              throw new Error('Agent does not have permission to view lead custom values')
+            }
+
+            if (!args.lead_id) {
+              throw new Error('lead_id is required')
+            }
+
+            // Get lead to get its UUID
+            const { data: lead, error: leadError } = await supabase
+              .from('leads')
+              .select('id, lead_id, name, pipeline_id')
+              .eq('lead_id', args.lead_id)
+              .maybeSingle()
+
+            if (leadError || !lead) {
+              throw new Error(`Lead ${args.lead_id} not found`)
+            }
+
+            // Get custom field values
+            const { data: values, error: valuesError } = await supabase
+              .from('custom_field_values')
+              .select(`
+                id,
+                field_value,
+                custom_field_id,
+                custom_fields!inner (
+                  field_key,
+                  field_name,
+                  field_type,
+                  dropdown_options
+                )
+              `)
+              .eq('lead_id', lead.id)
+
+            if (valuesError) {
+              await supabase.from('ai_agent_logs').insert({
+                agent_id: agentId,
+                agent_name: agentName,
+                module: 'Leads',
+                action: 'get_lead_custom_values',
+                result: 'Error',
+                user_context: args.phone_number || null,
+                details: { error: valuesError.message, lead_id: args.lead_id },
+              })
+              throw valuesError
+            }
+
+            await supabase.from('ai_agent_logs').insert({
+              agent_id: agentId,
+              agent_name: agentName,
+              module: 'Leads',
+              action: 'get_lead_custom_values',
+              result: 'Success',
+              user_context: args.phone_number || null,
+              details: { lead_id: args.lead_id, values_count: values?.length || 0 },
+            })
+
+            response.result = {
+              content: [
+                {
+                  type: 'text',
+                  text: JSON.stringify({
+                    success: true,
+                    lead_id: args.lead_id,
+                    lead_name: lead.name,
+                    pipeline_id: lead.pipeline_id,
+                    custom_values: values || [],
+                    count: values?.length || 0
+                  }, null, 2),
+                },
+              ],
+            }
+            break
+          }
+
+          case 'update_lead_custom_values': {
+            if (!enabledTools.includes('update_lead_custom_values')) {
+              await supabase.from('ai_agent_logs').insert({
+                agent_id: agentId,
+                agent_name: agentName,
+                module: 'Leads',
+                action: 'update_lead_custom_values',
+                result: 'Denied',
+                user_context: args.phone_number || null,
+                details: { reason: 'No permission to update lead custom values' },
+              })
+              throw new Error('Agent does not have permission to update lead custom values')
+            }
+
+            if (!args.lead_id || !args.custom_values) {
+              throw new Error('lead_id and custom_values are required')
+            }
+
+            // Get lead to get its UUID
+            const { data: lead, error: leadError } = await supabase
+              .from('leads')
+              .select('id, lead_id, name, pipeline_id')
+              .eq('lead_id', args.lead_id)
+              .maybeSingle()
+
+            if (leadError || !lead) {
+              throw new Error(`Lead ${args.lead_id} not found`)
+            }
+
+            const customValues = args.custom_values
+            const fieldKeys = Object.keys(customValues)
+
+            if (fieldKeys.length === 0) {
+              throw new Error('No custom field values provided')
+            }
+
+            // Get custom fields to validate
+            const { data: fields, error: fieldsError } = await supabase
+              .from('custom_fields')
+              .select('id, field_key, field_name, field_type, dropdown_options, is_required')
+              .in('field_key', fieldKeys)
+
+            if (fieldsError) {
+              throw new Error(`Failed to fetch custom fields: ${fieldsError.message}`)
+            }
+
+            if (!fields || fields.length === 0) {
+              throw new Error(`No valid custom fields found for the provided field keys: ${fieldKeys.join(', ')}`)
+            }
+
+            // Validate field keys
+            const validFieldKeys = fields.map((f: any) => f.field_key)
+            const invalidKeys = fieldKeys.filter(k => !validFieldKeys.includes(k))
+
+            if (invalidKeys.length > 0) {
+              throw new Error(`Invalid field keys: ${invalidKeys.join(', ')}. Valid keys: ${validFieldKeys.join(', ')}`)
+            }
+
+            // Upsert custom field values
+            const updates = []
+            for (const field of fields) {
+              const value = customValues[field.field_key]
+
+              // Validate dropdown values
+              if (field.field_type === 'dropdown_single' && field.dropdown_options) {
+                const options = field.dropdown_options as string[]
+                if (value && !options.includes(value)) {
+                  throw new Error(`Invalid value "${value}" for field "${field.field_name}". Valid options: ${options.join(', ')}`)
+                }
+              }
+
+              if (field.field_type === 'dropdown_multiple' && field.dropdown_options) {
+                const options = field.dropdown_options as string[]
+                const values = Array.isArray(value) ? value : (value ? [value] : [])
+                const invalidValues = values.filter(v => !options.includes(v))
+                if (invalidValues.length > 0) {
+                  throw new Error(`Invalid values for field "${field.field_name}": ${invalidValues.join(', ')}. Valid options: ${options.join(', ')}`)
+                }
+              }
+
+              updates.push({
+                custom_field_id: field.id,
+                lead_id: lead.id,
+                field_value: typeof value === 'object' ? JSON.stringify(value) : String(value)
+              })
+            }
+
+            // Upsert values
+            const { error: upsertError } = await supabase
+              .from('custom_field_values')
+              .upsert(updates, {
+                onConflict: 'custom_field_id,lead_id'
+              })
+
+            if (upsertError) {
+              await supabase.from('ai_agent_logs').insert({
+                agent_id: agentId,
+                agent_name: agentName,
+                module: 'Leads',
+                action: 'update_lead_custom_values',
+                result: 'Error',
+                user_context: args.phone_number || null,
+                details: { error: upsertError.message, lead_id: args.lead_id },
+              })
+              throw upsertError
+            }
+
+            await supabase.from('ai_agent_logs').insert({
+              agent_id: agentId,
+              agent_name: agentName,
+              module: 'Leads',
+              action: 'update_lead_custom_values',
+              result: 'Success',
+              user_context: args.phone_number || null,
+              details: { lead_id: args.lead_id, fields_updated: updates.length },
+            })
+
+            response.result = {
+              content: [
+                {
+                  type: 'text',
+                  text: JSON.stringify({
+                    success: true,
+                    message: 'Custom field values updated successfully',
+                    lead_id: args.lead_id,
+                    lead_name: lead.name,
+                    fields_updated: updates.length
+                  }, null, 2),
                 },
               ],
             }
