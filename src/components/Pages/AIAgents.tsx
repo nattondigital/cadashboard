@@ -16,6 +16,7 @@ import { supabase } from '@/lib/supabase'
 interface AIAgent {
   id: string
   name: string
+  agent_type: string
   model: string
   system_prompt: string
   status: string
@@ -240,9 +241,19 @@ export function AIAgents() {
                             <h3 className="text-lg font-semibold text-gray-900 truncate mb-1">
                               {agent.name}
                             </h3>
-                            <Badge className={statusColors[agent.status]}>
-                              {agent.status}
-                            </Badge>
+                            <div className="flex gap-2 flex-wrap">
+                              <Badge className={statusColors[agent.status]}>
+                                {agent.status}
+                              </Badge>
+                              <Badge
+                                className={agent.agent_type === 'FRONTEND'
+                                  ? 'bg-purple-100 text-purple-800'
+                                  : 'bg-blue-100 text-blue-800'
+                                }
+                              >
+                                {agent.agent_type === 'FRONTEND' ? 'FRONTEND' : 'BACKEND'}
+                              </Badge>
+                            </div>
                           </div>
                         </div>
 

@@ -36,6 +36,7 @@ export function AIAgentForm() {
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
+    agent_type: 'BACKEND',
     model: '',
     system_prompt: '',
     status: 'Active',
@@ -64,6 +65,7 @@ export function AIAgentForm() {
       const mcpServerUrl = data.mcp_config?.server_url || ''
       setFormData({
         name: data.name,
+        agent_type: data.agent_type || 'BACKEND',
         model: data.model,
         system_prompt: data.system_prompt,
         status: data.status,
@@ -117,6 +119,7 @@ export function AIAgentForm() {
           .from('ai_agents')
           .update({
             name: formData.name,
+            agent_type: formData.agent_type,
             model: formData.model,
             system_prompt: formData.system_prompt,
             status: formData.status,
@@ -133,6 +136,7 @@ export function AIAgentForm() {
           .from('ai_agents')
           .insert({
             name: formData.name,
+            agent_type: formData.agent_type,
             model: formData.model,
             system_prompt: formData.system_prompt,
             status: formData.status,
@@ -191,6 +195,37 @@ export function AIAgentForm() {
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Agent Type *
+              </label>
+              <Select value={formData.agent_type} onValueChange={(value) => setFormData(prev => ({ ...prev, agent_type: value }))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="BACKEND">
+                    <div>
+                      <div className="font-semibold">BACKEND - Internal AI Employee</div>
+                      <div className="text-xs text-gray-500">For staff: CRM operations, no conversation memory</div>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="FRONTEND">
+                    <div>
+                      <div className="font-semibold">FRONTEND - Customer-Facing AI Employee</div>
+                      <div className="text-xs text-gray-500">For clients: Chat support with conversation history</div>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-gray-500 mt-1">
+                {formData.agent_type === 'BACKEND'
+                  ? 'BACKEND agents execute CRM tasks without conversation context for better performance'
+                  : 'FRONTEND agents maintain conversation history (last 20 messages) for personalized customer interactions'
+                }
+              </p>
             </div>
 
             <div>

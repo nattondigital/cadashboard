@@ -232,7 +232,7 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    console.log(`Agent ${agent.name} - Status: ${agent.status} - MCP Architecture: Enabled`)
+    console.log(`Agent ${agent.name} - Type: ${agent.agent_type || 'BACKEND'} - Status: ${agent.status} - MCP Architecture: Enabled`)
 
     if (agent.status !== 'Active') {
       return new Response(
@@ -270,19 +270,33 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    const { data: existingMemory } = await supabase
-      .from('ai_agent_chat_memory')
-      .select('*')
-      .eq('agent_id', payload.agent_id)
-      .eq('phone_number', payload.phone_number)
-      .order('created_at', { ascending: false })
-      .limit(20)
+    // Conditionally load chat memory based on agent type
+    // FRONTEND agents: Load last 20 messages for conversation context
+    // BACKEND agents: No memory - fresh context for each request
+    const agentType = agent.agent_type || 'BACKEND'
 
     const conversationMessages: any[] = []
-    if (existingMemory && existingMemory.length > 0) {
-      existingMemory.reverse().forEach(msg => {
-        conversationMessages.push({ role: msg.role, content: msg.message })
-      })
+
+    if (agentType === 'FRONTEND') {
+      console.log('FRONTEND agent: Loading last 20 chat messages for context')
+      const { data: existingMemory } = await supabase
+        .from('ai_agent_chat_memory')
+        .select('*')
+        .eq('agent_id', payload.agent_id)
+        .eq('phone_number', payload.phone_number)
+        .order('created_at', { ascending: false })
+        .limit(20)
+
+      if (existingMemory && existingMemory.length > 0) {
+        existingMemory.reverse().forEach(msg => {
+          conversationMessages.push({ role: msg.role, content: msg.message })
+        })
+        console.log(`Loaded ${existingMemory.length} previous messages`)
+      } else {
+        console.log('No previous chat history found')
+      }
+    } else {
+      console.log('BACKEND agent: Skipping chat memory - fresh context')
     }
 
     conversationMessages.push({ role: 'user', content: payload.message })
@@ -392,7 +406,12 @@ Deno.serve(async (req: Request) => {
     const systemPromptData = await systemPromptResponse.json()
     const baseSystemPrompt = systemPromptData.system_prompt || agent.system_prompt || 'You are a helpful AI assistant.'
 
-    const enhancedSystemPrompt = `${baseSystemPrompt}\n\n**CURRENT DATE & TIME CONTEXT (Asia/Kolkata IST - UTC+5:30):**\n- Today's date: ${todayDate}\n- Tomorrow's date: ${tomorrowDate}\n- Current time: ${currentTime} IST\n- Next Sunday: ${sundayDate}\n- Current day: ${istDate.toLocaleDateString('en-US', { weekday: 'long' })}\n\n## Date/Time Handling:\n\n**IMPORTANT:** When users provide times, they are in IST. You MUST convert to UTC (subtract 5:30) before passing to tools.\n\nExamples:\n- User says "tomorrow 10 AM" → due_date: "${tomorrowDate}", due_time: "04:30" (10:00 AM IST = 04:30 UTC)\n- User says "today 3 PM" → due_date: "${todayDate}", due_time: "09:30" (3:00 PM IST = 09:30 UTC)\n- User says "this Sunday 12 PM" → due_date: "${sundayDate}", due_time: "06:30" (12:00 PM IST = 06:30 UTC)\n\n**Common time conversions (IST to UTC):**\n- 12:00 AM IST = 18:30 UTC (previous day)\n- 6:00 AM IST = 00:30 UTC\n- 12:00 PM IST = 06:30 UTC\n- 6:00 PM IST = 12:30 UTC\n- 11:59 PM IST = 18:29 UTC`
+    // Add agent type specific context
+    const agentTypeContext = agentType === 'FRONTEND'
+      ? `\n\n**AGENT TYPE: FRONTEND (Customer-Facing)**\nYou are interacting with customers/clients. You have access to the conversation history with this user. Provide personalized, conversational assistance. Remember context from previous messages. Focus on:\n- Answering product queries\n- Booking appointments\n- Providing customer support\n- Building rapport with the customer\n- Maintaining conversational continuity`
+      : `\n\n**AGENT TYPE: BACKEND (Internal CRM Assistant)**\nYou are assisting internal staff members with CRM operations. Each request is independent - no conversation history. Focus on:\n- Executing tasks accurately\n- Creating/updating records\n- Processing data operations efficiently\n- Being precise and actionable\n- Completing requests based on current instruction only`
+
+    const enhancedSystemPrompt = `${baseSystemPrompt}${agentTypeContext}\n\n**CURRENT DATE & TIME CONTEXT (Asia/Kolkata IST - UTC+5:30):**\n- Today's date: ${todayDate}\n- Tomorrow's date: ${tomorrowDate}\n- Current time: ${currentTime} IST\n- Next Sunday: ${sundayDate}\n- Current day: ${istDate.toLocaleDateString('en-US', { weekday: 'long' })}\n\n## Date/Time Handling:\n\n**IMPORTANT:** When users provide times, they are in IST. You MUST convert to UTC (subtract 5:30) before passing to tools.\n\nExamples:\n- User says "tomorrow 10 AM" → due_date: "${tomorrowDate}", due_time: "04:30" (10:00 AM IST = 04:30 UTC)\n- User says "today 3 PM" → due_date: "${todayDate}", due_time: "09:30" (3:00 PM IST = 09:30 UTC)\n- User says "this Sunday 12 PM" → due_date: "${sundayDate}", due_time: "06:30" (12:00 PM IST = 06:30 UTC)\n\n**Common time conversions (IST to UTC):**\n- 12:00 AM IST = 18:30 UTC (previous day)\n- 6:00 AM IST = 00:30 UTC\n- 12:00 PM IST = 06:30 UTC\n- 6:00 PM IST = 12:30 UTC\n- 11:59 PM IST = 18:29 UTC`
 
     const messages = [
       { role: 'system', content: enhancedSystemPrompt },
