@@ -302,7 +302,7 @@ Deno.serve(async (req: Request) => {
 
     console.log('Using MCP server ONLY mode for agent:', agent.name)
     try {
-      const mcpServerUrl = agent.mcp_config.server_url || `${supabaseUrl}/functions/v1/mcp-server`
+      const mcpServerUrl = `${supabaseUrl}/functions/v1/mcp-server`
       const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!
 
       mcpClient = new MCPClient(mcpServerUrl, anonKey, payload.agent_id, payload.phone_number)
@@ -311,27 +311,30 @@ Deno.serve(async (req: Request) => {
       const mcpTools = await mcpClient.listTools()
       console.log(`Raw MCP tools received: ${mcpTools.length}`, mcpTools.map(t => t.name))
 
-      const useForModules = agent.mcp_config.use_for_modules || []
-      console.log(`Filtering for modules:`, useForModules)
-
-      const filteredTools = mcpTools.filter(tool => {
-        if (useForModules.length === 0) {
-          console.log(`No module filter - including all tools`)
-          return true
+      // Get enabled tools from permissions (MCP-only architecture)
+      const enabledTools: string[] = []
+      Object.entries(permissions).forEach(([serverKey, serverConfig]: [string, any]) => {
+        if (serverConfig?.enabled && serverConfig?.tools) {
+          enabledTools.push(...serverConfig.tools)
         }
-        const matches = useForModules.some((module: string) => {
-          const toolName = tool.name.toLowerCase()
-          const moduleName = module.toLowerCase().replace(/s$/, '')
-          const isMatch = toolName.includes(moduleName)
-          console.log(`Checking tool "${tool.name}" against module "${module}" (normalized: "${moduleName}"): ${isMatch}`)
-          return isMatch
-        })
-        return matches
+      })
+
+      console.log(`Enabled tools from permissions:`, enabledTools)
+
+      // Filter MCP tools based on permissions
+      const filteredTools = mcpTools.filter(tool => {
+        if (enabledTools.length === 0) {
+          console.log(`No tools enabled in permissions - agent has no access`)
+          return false
+        }
+        const isEnabled = enabledTools.includes(tool.name)
+        console.log(`Tool "${tool.name}" enabled: ${isEnabled}`)
+        return isEnabled
       })
 
       console.log(`Filtered tools: ${filteredTools.length}`, filteredTools.map(t => t.name))
       tools = filteredTools.map(convertMCPToolToOpenRouterFunction)
-      console.log(`Loaded ${tools.length} MCP tools for modules: ${useForModules.join(', ')}`)
+      console.log(`Loaded ${tools.length} MCP tools`)
     } catch (error) {
       console.error('Failed to initialize MCP client:', error)
       return new Response(

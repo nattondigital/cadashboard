@@ -649,12 +649,15 @@ async function handleMCPRequest(
           throw new Error('Agent not found or no permissions set')
         }
 
-        const taskPerms = permissions.permissions?.Tasks || {}
+        // Get tool permissions from MCP-only architecture
+        const allPermissions = permissions.permissions || {}
+        const tasksServerPerms = allPermissions['tasks-server'] || { enabled: false, tools: [] }
+        const enabledTools = tasksServerPerms.tools || []
 
         switch (name) {
           case 'get_tasks': {
             try {
-              if (!taskPerms.can_view) {
+              if (!enabledTools.includes('get_tasks')) {
                 await supabase.from('ai_agent_logs').insert({
                   agent_id: agentId,
                   agent_name: agentName,
@@ -728,7 +731,7 @@ async function handleMCPRequest(
 
           case 'create_task': {
             try {
-              if (!taskPerms.can_create) {
+              if (!enabledTools.includes('create_task')) {
                 await supabase.from('ai_agent_logs').insert({
                   agent_id: agentId,
                   agent_name: agentName,
@@ -824,7 +827,7 @@ async function handleMCPRequest(
 
           case 'update_task': {
             try {
-              if (!taskPerms.can_edit) {
+              if (!enabledTools.includes('update_task')) {
                 await supabase.from('ai_agent_logs').insert({
                   agent_id: agentId,
                   agent_name: agentName,
@@ -899,7 +902,7 @@ async function handleMCPRequest(
 
           case 'delete_task': {
             try {
-              if (!taskPerms.can_delete) {
+              if (!enabledTools.includes('delete_task')) {
                 await supabase.from('ai_agent_logs').insert({
                   agent_id: agentId,
                   agent_name: agentName,
