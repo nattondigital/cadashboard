@@ -42,10 +42,15 @@ const MCP_SERVERS = {
     name: 'Leads Server',
     description: 'Track and manage sales leads',
     tools: [
+      { id: 'get_pipelines', name: 'Get Pipelines', description: 'View available pipelines' },
+      { id: 'get_pipeline_stages', name: 'Get Pipeline Stages', description: 'View stages for a pipeline' },
       { id: 'get_leads', name: 'Get Leads', description: 'View and search leads' },
       { id: 'create_lead', name: 'Create Lead', description: 'Add new leads' },
       { id: 'update_lead', name: 'Update Lead', description: 'Modify lead information' },
       { id: 'delete_lead', name: 'Delete Lead', description: 'Remove leads' },
+      { id: 'get_custom_fields', name: 'Get Custom Fields', description: 'View custom fields for a pipeline' },
+      { id: 'get_lead_custom_values', name: 'Get Lead Custom Values', description: 'View custom field values for a lead' },
+      { id: 'update_lead_custom_values', name: 'Update Lead Custom Values', description: 'Update custom field values for a lead' },
     ],
   },
   'appointments-server': {
