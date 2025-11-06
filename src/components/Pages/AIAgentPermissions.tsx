@@ -85,6 +85,17 @@ const MCP_SERVERS = {
       { id: 'delete_expense', name: 'Delete Expense', description: 'Remove expense records' },
     ],
   },
+  'products-server': {
+    name: 'Products Server',
+    description: 'Manage products, services, and pricing',
+    tools: [
+      { id: 'get_products', name: 'Get Products', description: 'View and search products' },
+      { id: 'get_product_summary', name: 'Get Product Summary', description: 'Get aggregated product statistics' },
+      { id: 'create_product', name: 'Create Product', description: 'Add new products' },
+      { id: 'update_product', name: 'Update Product', description: 'Modify product details' },
+      { id: 'delete_product', name: 'Delete Product', description: 'Remove products' },
+    ],
+  },
 }
 
 export function AIAgentPermissions() {

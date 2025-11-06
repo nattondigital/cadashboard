@@ -83,6 +83,17 @@ const MCP_SERVER_DESCRIPTIONS = {
       'delete_expense': 'Remove expense records',
     }
   },
+  'products-server': {
+    name: 'Products',
+    description: 'product and service catalog management',
+    tools: {
+      'get_products': 'View and search products with filtering by type, category, and pricing model',
+      'get_product_summary': 'Get aggregated product statistics, sales figures, and revenue data',
+      'create_product': 'Add new products with pricing, features, and availability details',
+      'update_product': 'Modify product details, pricing, and availability',
+      'delete_product': 'Remove products from catalog',
+    }
+  },
 }
 
 function generateSystemPrompt(permissions: MCPPermissions): string {
