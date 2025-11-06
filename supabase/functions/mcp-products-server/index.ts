@@ -312,17 +312,9 @@ async function handleMCPRequest(
                     enum: ['One-Time', 'Recurring', 'Mixed'],
                     description: 'Pricing structure (required)',
                   },
-                  course_price: {
+                  product_price: {
                     type: 'number',
-                    description: 'One-time price for courses/services',
-                  },
-                  onboarding_fee: {
-                    type: 'number',
-                    description: 'One-time setup fee for services',
-                  },
-                  retainer_fee: {
-                    type: 'number',
-                    description: 'Monthly recurring fee for services',
+                    description: 'Product price (required for pricing)',
                   },
                   currency: {
                     type: 'string',
@@ -381,9 +373,7 @@ async function handleMCPRequest(
                     type: 'string',
                     enum: ['One-Time', 'Recurring', 'Mixed'],
                   },
-                  course_price: { type: 'number' },
-                  onboarding_fee: { type: 'number' },
-                  retainer_fee: { type: 'number' },
+                  product_price: { type: 'number' },
                   currency: { type: 'string' },
                   features: { type: 'array' },
                   duration: { type: 'string' },
@@ -663,9 +653,7 @@ async function handleMCPRequest(
             }
 
             if (args.description) productData.description = args.description
-            if (args.course_price !== undefined) productData.course_price = args.course_price
-            if (args.onboarding_fee !== undefined) productData.onboarding_fee = args.onboarding_fee
-            if (args.retainer_fee !== undefined) productData.retainer_fee = args.retainer_fee
+            if (args.product_price !== undefined) productData.product_price = args.product_price
             if (args.currency) productData.currency = args.currency
             if (args.features) productData.features = JSON.stringify(args.features)
             if (args.duration) productData.duration = args.duration
