@@ -27,6 +27,12 @@ const AI_MODELS = [
   ]}
 ]
 
+const AUDIO_MODELS = [
+  { value: 'google/gemini-2.5-flash-lite', label: 'google/gemini-2.5-flash-lite (FREE - Recommended)' },
+  { value: 'google/gemini-2.5-flash', label: 'google/gemini-2.5-flash ($0.30/M in, $2.50/M out)' },
+  { value: 'openai/gpt-4o-mini', label: 'openai/gpt-4o-mini' },
+]
+
 const CHANNELS = ['Web', 'WhatsApp', 'Email', 'Voice', 'SMS', 'Telegram']
 
 export function AIAgentForm() {
@@ -39,6 +45,7 @@ export function AIAgentForm() {
     name: '',
     agent_type: 'BACKEND',
     model: '',
+    audio_model: 'google/gemini-2.5-flash-lite',
     system_prompt: '',
     status: 'Active',
     channels: [] as string[]
@@ -65,6 +72,7 @@ export function AIAgentForm() {
         name: data.name,
         agent_type: data.agent_type || 'BACKEND',
         model: data.model,
+        audio_model: data.audio_model || 'google/gemini-2.5-flash-lite',
         system_prompt: data.system_prompt,
         status: data.status,
         channels: data.channels || []
@@ -108,6 +116,7 @@ export function AIAgentForm() {
             name: formData.name,
             agent_type: formData.agent_type,
             model: formData.model,
+            audio_model: formData.audio_model,
             system_prompt: formData.system_prompt,
             status: formData.status,
             channels: formData.channels,
@@ -123,6 +132,7 @@ export function AIAgentForm() {
             name: formData.name,
             agent_type: formData.agent_type,
             model: formData.model,
+            audio_model: formData.audio_model,
             system_prompt: formData.system_prompt,
             status: formData.status,
             channels: formData.channels,
@@ -234,6 +244,30 @@ export function AIAgentForm() {
                   ))}
                 </SelectContent>
               </Select>
+              <p className="text-xs text-gray-500 mt-1">
+                Used for CRM operations and complex AI tasks
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Audio Model (for voice transcription)
+              </label>
+              <Select value={formData.audio_model} onValueChange={(value) => setFormData(prev => ({ ...prev, audio_model: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select audio model" />
+                </SelectTrigger>
+                <SelectContent>
+                  {AUDIO_MODELS.map(model => (
+                    <SelectItem key={model.value} value={model.value}>
+                      {model.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-gray-500 mt-1">
+                Used only for speech-to-text transcription. Main model handles CRM operations.
+              </p>
             </div>
 
             <div>

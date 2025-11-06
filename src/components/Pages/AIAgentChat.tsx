@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Bot, Send, ArrowLeft, Paperclip, User, Loader2, X, Zap } from 'lucide-react'
+import { Bot, Send, ArrowLeft, Paperclip, User, Loader2, X, Zap, Mic } from 'lucide-react'
 import { PageHeader } from '@/components/Common/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -46,8 +46,14 @@ export function AIAgentChat() {
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [selectedPhoneNumber, setSelectedPhoneNumber] = useState<string>('')
   const [availablePhoneNumbers, setAvailablePhoneNumbers] = useState<string[]>([])
+  const [isRecording, setIsRecording] = useState(false)
+  const [recordingDuration, setRecordingDuration] = useState(0)
+  const [isTranscribing, setIsTranscribing] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const recordingTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const recognitionRef = useRef<any>(null)
 
   useEffect(() => {
     if (id) {
@@ -800,6 +806,198 @@ When users ask about expenses with time periods (like "this month", "today", "la
     }
   }
 
+  const handleMicrophoneClick = async () => {
+    if (isRecording) {
+      stopRecording()
+    } else {
+      await startRecording()
+    }
+  }
+
+  const startRecording = async () => {
+    try {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+
+      if (SpeechRecognition) {
+        startBrowserSTT()
+      } else {
+        await startAudioRecording()
+      }
+    } catch (error) {
+      console.error('Error starting recording:', error)
+      alert('Failed to access microphone. Please check permissions.')
+    }
+  }
+
+  const startBrowserSTT = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    const recognition = new SpeechRecognition()
+    recognitionRef.current = recognition
+
+    recognition.continuous = true
+    recognition.interimResults = true
+    recognition.lang = 'en-US'
+
+    let finalTranscript = ''
+
+    recognition.onresult = (event: any) => {
+      let interimTranscript = ''
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript + ' '
+        } else {
+          interimTranscript += transcript
+        }
+      }
+
+      setInputMessage(finalTranscript + interimTranscript)
+    }
+
+    recognition.onerror = async (event: any) => {
+      console.error('Speech recognition error:', event.error)
+      setIsRecording(false)
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current)
+      }
+
+      if (event.error === 'not-allowed') {
+        alert('Microphone permission denied. Please allow microphone access.')
+      } else if (event.error === 'no-speech') {
+        alert('No speech detected. Please try again.')
+      } else {
+        await startAudioRecording()
+      }
+    }
+
+    recognition.onend = () => {
+      setIsRecording(false)
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current)
+      }
+    }
+
+    recognition.start()
+    setIsRecording(true)
+
+    let duration = 0
+    recordingTimerRef.current = setInterval(() => {
+      duration++
+      setRecordingDuration(duration)
+    }, 1000)
+  }
+
+  const startAudioRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const mediaRecorder = new MediaRecorder(stream)
+      mediaRecorderRef.current = mediaRecorder
+
+      const audioChunks: Blob[] = []
+
+      mediaRecorder.ondataavailable = (event) => {
+        audioChunks.push(event.data)
+      }
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' })
+
+        await transcribeAudio(audioBlob)
+
+        stream.getTracks().forEach(track => track.stop())
+      }
+
+      mediaRecorder.start()
+      setIsRecording(true)
+
+      let duration = 0
+      recordingTimerRef.current = setInterval(() => {
+        duration++
+        setRecordingDuration(duration)
+      }, 1000)
+    } catch (error) {
+      console.error('Error starting audio recording:', error)
+      alert('Failed to access microphone. Please check permissions.')
+    }
+  }
+
+  const stopRecording = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop()
+      recognitionRef.current = null
+    }
+
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop()
+    }
+
+    setIsRecording(false)
+    setRecordingDuration(0)
+
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current)
+      recordingTimerRef.current = null
+    }
+  }
+
+  const transcribeAudio = async (audioBlob: Blob) => {
+    setIsTranscribing(true)
+
+    try {
+      const fileExt = 'webm'
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+      const filePath = `audio-recordings/${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('media-files')
+        .upload(filePath, audioBlob)
+
+      if (uploadError) throw uploadError
+
+      const { data } = supabase.storage
+        .from('media-files')
+        .getPublicUrl(filePath)
+
+      const audioUrl = data.publicUrl
+
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/speech-to-text`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'apikey': supabaseAnonKey
+        },
+        body: JSON.stringify({
+          agent_id: id,
+          audio_url: audioUrl,
+          audio_duration: recordingDuration
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Transcription failed')
+      }
+
+      const { transcription } = await response.json()
+      setInputMessage(transcription)
+
+      await supabase.storage
+        .from('media-files')
+        .remove([filePath])
+
+    } catch (error: any) {
+      console.error('Transcription error:', error)
+      alert(`Failed to transcribe audio: ${error.message}`)
+    } finally {
+      setIsTranscribing(false)
+    }
+  }
+
   const uploadImageToStorage = async (file: File): Promise<string | null> => {
     try {
       const fileExt = file.name.split('.').pop()
@@ -1090,7 +1288,23 @@ When users ask about expenses with time periods (like "this month", "today", "la
                 </button>
               </div>
             )}
-            <div className="flex gap-2">
+            <div className="relative flex gap-2">
+              {isRecording && (
+                <div className="absolute bottom-full left-0 mb-2 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                    <span className="text-sm font-medium">Recording: {recordingDuration}s</span>
+                  </div>
+                </div>
+              )}
+              {isTranscribing && (
+                <div className="absolute bottom-full left-0 mb-2 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg">
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span className="text-sm">Transcribing audio...</span>
+                  </div>
+                </div>
+              )}
               <input
                 ref={fileInputRef}
                 type="file"
@@ -1098,6 +1312,18 @@ When users ask about expenses with time periods (like "this month", "today", "la
                 onChange={handleImageSelect}
                 className="hidden"
               />
+              <button
+                onClick={handleMicrophoneClick}
+                disabled={isTranscribing}
+                className={`p-2 rounded-lg transition-colors ${
+                  isRecording
+                    ? 'bg-red-100 hover:bg-red-200 animate-pulse'
+                    : 'hover:bg-gray-100'
+                }`}
+                title={isRecording ? 'Stop recording' : 'Start voice input'}
+              >
+                <Mic className={`w-5 h-5 ${isRecording ? 'text-red-600' : 'text-gray-500'}`} />
+              </button>
               <button
                 onClick={() => fileInputRef.current?.click()}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -1111,16 +1337,17 @@ When users ask about expenses with time periods (like "this month", "today", "la
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
                 className="flex-1"
+                disabled={isRecording || isTranscribing}
               />
               <Button
                 onClick={handleSendMessage}
-                disabled={!inputMessage.trim() || isTyping}
+                disabled={!inputMessage.trim() || isTyping || isRecording || isTranscribing}
               >
                 <Send className="w-4 h-4" />
               </Button>
             </div>
             <p className="text-xs text-gray-500 mt-2 px-2">
-              Powered by OpenRouter AI. You can attach images for vision models.
+              Powered by OpenRouter AI. Use microphone for voice input or attach images for vision models.
             </p>
           </div>
         </Card>
