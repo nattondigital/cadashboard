@@ -86,7 +86,6 @@ const MCP_SERVER_DESCRIPTIONS = {
 }
 
 function generateSystemPrompt(permissions: MCPPermissions): string {
-  // Get enabled servers and their tools
   const enabledServers: string[] = []
   const availableToolsDetails: string[] = []
 
@@ -95,13 +94,10 @@ function generateSystemPrompt(permissions: MCPPermissions): string {
       const serverInfo = MCP_SERVER_DESCRIPTIONS[serverKey as keyof typeof MCP_SERVER_DESCRIPTIONS]
       if (serverInfo) {
         enabledServers.push(serverInfo.name)
-
-        // Add tools section for this server
         const toolsList = config.tools.map(toolId => {
           const toolDesc = serverInfo.tools[toolId as keyof typeof serverInfo.tools]
           return `  - **${toolId}**: ${toolDesc || 'Available tool'}`
         }).join('\n')
-
         availableToolsDetails.push(`\n### ${serverInfo.name} Server\n${toolsList}`)
       }
     }
@@ -127,11 +123,14 @@ ${availableToolsDetails.join('\n')}
 
 ## Critical Rules
 
-### ALWAYS Use Tools
-- **NEVER** claim you completed an action without calling the tool
-- **NEVER** invent or guess data - always fetch real data using get_* tools
-- **NEVER** respond as if something was created/updated/deleted without calling the tool
+### ALWAYS Use Tools - ZERO TOLERANCE POLICY
+- **NEVER EVER** claim you completed an action without calling the tool
+- **NEVER EVER** invent or guess data - always fetch real data using get_* tools
+- **NEVER EVER** respond as if something was created/updated/deleted without calling the tool
+- **CRITICAL**: Every update, create, or delete request MUST result in a tool call - NO EXCEPTIONS
+- If you respond with success without calling a tool, you are LYING and providing FALSE information
 - If you have sufficient information, call the tool immediately - don't ask unnecessary questions
+- **RULE**: If a user asks to update/create/delete something, you MUST call the corresponding tool BEFORE responding
 
 ### Tool Call Requirements
 1. Match user requests to the correct tool based on tool descriptions
@@ -164,6 +163,14 @@ ${availableToolsDetails.join('\n')}
 
 ❌ User: "update lead L042"
    → Responding: "Lead updated" WITHOUT calling update_lead
+
+❌ User: "also update the email to newemail@example.com" (after previous successful update)
+   → Responding: "Email updated successfully!" WITHOUT calling update_lead
+   → THIS IS LYING! You must ALWAYS call the tool even if you just used it
+
+❌ User: "change the name to John and email to john@example.com"
+   → Only calling update_lead with name, but not email
+   → You MUST include ALL requested fields in the tool call
 
 ## Parameter Handling
 
@@ -222,10 +229,7 @@ Remember: Your primary job is to bridge the gap between natural language request
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, {
-      status: 200,
-      headers: corsHeaders,
-    })
+    return new Response(null, { status: 200, headers: corsHeaders })
   }
 
   try {
@@ -236,56 +240,41 @@ Deno.serve(async (req: Request) => {
     const { agent_id } = await req.json()
 
     if (!agent_id) {
-      return new Response(
-        JSON.stringify({ error: 'agent_id is required' }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      )
+      return new Response(JSON.stringify({ error: 'agent_id is required' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
     }
 
-    // Fetch agent permissions
     const { data: permData, error: permError } = await supabase
       .from('ai_agent_permissions')
       .select('permissions')
       .eq('agent_id', agent_id)
       .maybeSingle()
 
-    if (permError) {
-      throw permError
-    }
+    if (permError) throw permError
 
     if (!permData || !permData.permissions) {
-      return new Response(
-        JSON.stringify({
-          error: 'No permissions found for agent',
-          system_prompt: 'You are a helpful AI assistant without access to specialized tools.',
-        }),
-        {
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      )
+      return new Response(JSON.stringify({
+        error: 'No permissions found for agent',
+        system_prompt: 'You are a helpful AI assistant without access to specialized tools.',
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
     }
 
     const systemPrompt = generateSystemPrompt(permData.permissions as MCPPermissions)
 
-    return new Response(
-      JSON.stringify({ system_prompt: systemPrompt }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    )
+    return new Response(JSON.stringify({ system_prompt: systemPrompt }), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
   } catch (error: any) {
     console.error('Generate system prompt error:', error)
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    )
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
   }
 })
