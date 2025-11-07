@@ -64,6 +64,23 @@ export function Attendance() {
     }
   }, [])
 
+  // Capture GPS location when view changes to 'add' or modal opens
+  useEffect(() => {
+    if (view === 'add' || showMarkModal) {
+      const captureLocation = async () => {
+        try {
+          const currentLocation = await getCurrentLocation()
+          setLocation(currentLocation)
+          console.log('Location captured:', currentLocation)
+        } catch (error) {
+          console.error('Error getting location:', error)
+          alert('Unable to capture location. Please enable location services.')
+        }
+      }
+      captureLocation()
+    }
+  }, [view, showMarkModal])
+
   const fetchAttendance = async () => {
     try {
       setLoading(true)
@@ -338,20 +355,11 @@ export function Attendance() {
     }
   }
 
-  const handleAddAttendance = async () => {
+  const handleAddAttendance = () => {
     setView('add')
     setSelectedMember('')
     setSelfieDataUrl(null)
     setLocation(null)
-
-    // Capture GPS location when the page opens
-    try {
-      const currentLocation = await getCurrentLocation()
-      setLocation(currentLocation)
-    } catch (error) {
-      console.error('Error getting location:', error)
-      alert('Unable to capture location. Please enable location services.')
-    }
   }
 
   const handleBackToList = () => {
@@ -788,17 +796,9 @@ export function Attendance() {
         <div className="px-4 mb-4">
           <motion.button
             whileTap={{ scale: 0.98 }}
-            onClick={async () => {
-              setShowMarkModal(true)
+            onClick={() => {
               setLocation(null)
-              // Capture GPS location when the modal opens
-              try {
-                const currentLocation = await getCurrentLocation()
-                setLocation(currentLocation)
-              } catch (error) {
-                console.error('Error getting location:', error)
-                alert('Unable to capture location. Please enable location services.')
-              }
+              setShowMarkModal(true)
             }}
             className="w-full bg-gradient-to-r from-brand-primary to-blue-600 text-white rounded-2xl py-4 px-6 shadow-lg flex items-center justify-center gap-3 font-semibold"
           >
