@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { UserPlus, Eye, CreditCard as Edit, Trash2, Shield, Crown, User, Settings, Mail, Phone, X, Save, Lock, Unlock, CheckCircle, XCircle, MoreVertical, ChevronRight, ArrowLeft, Users } from 'lucide-react'
+import { UserPlus, Eye, CreditCard as Edit, Trash2, Shield, Crown, User, Settings, Mail, Phone, X, Save, Lock, Unlock, CheckCircle, XCircle, MoreVertical, ChevronRight, ArrowLeft, Users, Clock } from 'lucide-react'
 import { PageHeader } from '@/components/Common/PageHeader'
 import { KPICard } from '@/components/Common/KPICard'
 import { Button } from '@/components/ui/button'
@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { makeApiCall } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
+import { UserWorkingHoursSettings } from '@/components/Settings/UserWorkingHoursSettings'
 
 const mockTeamMembers = [
   {
@@ -117,7 +118,7 @@ export function Team() {
   // Removed showViewModal and showModuleAccessModal - now using view state pattern
   const [selectedMember, setSelectedMember] = useState<any>(null)
   // Removed viewModalTab - now using formTab for all views
-  const [formTab, setFormTab] = useState<'details' | 'modules'>('details')
+  const [formTab, setFormTab] = useState<'details' | 'modules' | 'working-hours'>('details')
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -839,6 +840,17 @@ export function Team() {
                 <Lock className="w-4 h-4" />
                 <span>Module Access</span>
               </button>
+              <button
+                onClick={() => setFormTab('working-hours')}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-md font-medium transition-all ${
+                  formTab === 'working-hours'
+                    ? 'bg-white text-brand-primary shadow-sm'
+                    : 'text-gray-600 hover:text-brand-primary'
+                }`}
+              >
+                <Clock className="w-4 h-4" />
+                <span>Working Hours</span>
+              </button>
             </div>
 
             {formTab === 'details' && (
@@ -1049,6 +1061,10 @@ export function Team() {
             </div>
             )}
 
+            {formTab === 'working-hours' && (
+              <UserWorkingHoursSettings userId={view === 'edit' && selectedMember ? selectedMember.id : undefined} />
+            )}
+
             <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-3 mt-6">
               <Button
                 onClick={view === 'add' ? handleCreateMember : handleEditMember}
@@ -1105,6 +1121,17 @@ export function Team() {
               >
                 <Lock className="w-4 h-4" />
                 <span>Module Access</span>
+              </button>
+              <button
+                onClick={() => setFormTab('working-hours')}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-md font-medium transition-all ${
+                  formTab === 'working-hours'
+                    ? 'bg-white text-brand-primary shadow-sm'
+                    : 'text-gray-600 hover:text-brand-primary'
+                }`}
+              >
+                <Clock className="w-4 h-4" />
+                <span>Working Hours</span>
               </button>
             </div>
 
@@ -1255,6 +1282,11 @@ export function Team() {
                   </div>
                 </div>
               </div>
+            )}
+
+            {/* Working Hours Tab - Read Only View */}
+            {formTab === 'working-hours' && (
+              <UserWorkingHoursSettings userId={selectedMember?.id} />
             )}
 
             {/* Action Buttons */}
