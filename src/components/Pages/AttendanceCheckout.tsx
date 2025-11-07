@@ -37,28 +37,32 @@ export function CheckoutFormDesktop({
   return (
     <>
       <div className="flex items-center gap-4 mb-6">
-        <Button onClick={onBack} variant="outline">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back
+        <Button
+          variant="ghost"
+          onClick={onBack}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to List
         </Button>
-        <h2 className="text-2xl font-bold">Check Out - {selectedRecord?.admin_user?.full_name}</h2>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Mark Check Out</h1>
+          <p className="text-gray-500 mt-1">Record check out for {selectedRecord?.admin_user?.full_name}</p>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <LogOut className="w-5 h-5" />
-            Mark Check Out
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
+      <Card className="max-w-3xl">
+        <CardContent className="p-6 space-y-6">
           <div>
-            <label className="block text-sm font-medium mb-2">Selfie Image *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Selfie Image <span className="text-red-500">*</span>
+            </label>
+
             {!selfieDataUrl ? (
               <div className="space-y-4">
                 <div
                   className="relative bg-gray-900 rounded-lg overflow-hidden"
-                  style={{ aspectRatio: '4/3', maxHeight: '400px' }}
+                  style={{ aspectRatio: '4/3' }}
                 >
                   <video
                     ref={videoRef}
@@ -92,6 +96,7 @@ export function CheckoutFormDesktop({
                       type="button"
                       variant="outline"
                       onClick={onStopCamera}
+                      className="px-8"
                     >
                       Cancel
                     </Button>
@@ -104,7 +109,7 @@ export function CheckoutFormDesktop({
               <div className="space-y-4">
                 <div
                   className="relative bg-gray-100 rounded-lg overflow-hidden"
-                  style={{ aspectRatio: '4/3', maxHeight: '400px' }}
+                  style={{ aspectRatio: '4/3' }}
                 >
                   <img
                     src={selfieDataUrl}
@@ -155,7 +160,6 @@ export function CheckoutFormDesktop({
               Cancel
             </Button>
             <Button onClick={onSubmit} className="flex-1 bg-red-600 hover:bg-red-700">
-              <LogOut className="w-4 h-4 mr-2" />
               Mark Check Out
             </Button>
           </div>
