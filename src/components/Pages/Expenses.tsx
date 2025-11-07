@@ -414,10 +414,7 @@ export function Expenses() {
   }
 
   const handleRejectExpense = async () => {
-    if (!selectedExpense || !rejectionReason.trim()) {
-      alert('Please provide a reason for rejection.')
-      return
-    }
+    if (!selectedExpense) return
 
     try {
       const { error } = await supabase
@@ -425,7 +422,7 @@ export function Expenses() {
         .update({
           status: 'Rejected',
           approved_at: new Date().toISOString(),
-          rejection_reason: rejectionReason
+          rejection_reason: rejectionReason.trim() || null
         })
         .eq('id', selectedExpense.id)
 
@@ -1674,12 +1671,12 @@ export function Expenses() {
             </div>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Rejection Reason *
+                Rejection Reason (Optional)
               </label>
               <Textarea
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
-                placeholder="Please provide a reason for rejecting this expense..."
+                placeholder="Optionally provide a reason for rejecting this expense..."
                 rows={4}
                 className="w-full"
               />
@@ -1687,8 +1684,7 @@ export function Expenses() {
             <div className="flex gap-3">
               <Button
                 onClick={handleRejectExpense}
-                disabled={!rejectionReason.trim()}
-                className="flex-1 bg-red-600 hover:bg-red-700 disabled:opacity-50"
+                className="flex-1 bg-red-600 hover:bg-red-700"
               >
                 Reject
               </Button>

@@ -199,10 +199,7 @@ export function Leave() {
   }
 
   const handleRejectRequest = async () => {
-    if (!selectedRequest || !rejectionReason.trim()) {
-      alert('Please provide a reason for rejection.')
-      return
-    }
+    if (!selectedRequest) return
 
     try {
       const { error } = await supabase
@@ -211,7 +208,7 @@ export function Leave() {
           status: 'Rejected',
           approved_by: teamMembers[0]?.id,
           approved_at: new Date().toISOString(),
-          rejection_reason: rejectionReason
+          rejection_reason: rejectionReason.trim() || null
         })
         .eq('id', selectedRequest.id)
 
@@ -1277,13 +1274,13 @@ export function Leave() {
             </div>
 
             <p className="text-gray-600 mb-4">
-              Please provide a reason for rejecting leave request <span className="font-mono font-semibold">{selectedRequest.request_id}</span>:
+              Optionally provide a reason for rejecting leave request <span className="font-mono font-semibold">{selectedRequest.request_id}</span>:
             </p>
 
             <Textarea
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
-              placeholder="Enter rejection reason..."
+              placeholder="Enter rejection reason (optional)..."
               rows={4}
               className="mb-4"
             />
@@ -1292,7 +1289,6 @@ export function Leave() {
               <Button
                 onClick={handleRejectRequest}
                 className="bg-red-600 hover:bg-red-700 flex-1"
-                disabled={!rejectionReason.trim()}
               >
                 <XCircle className="w-4 h-4 mr-2" />
                 Reject
