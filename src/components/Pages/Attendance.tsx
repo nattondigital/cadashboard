@@ -84,12 +84,16 @@ export function Attendance() {
           alert('Unable to capture location. Please enable location services.')
         }
       }
-      captureLocation()
 
-      // Auto-start camera when entering add or checkout view
-      if (!selfieDataUrl) {
-        startCamera()
+      const initializeCamera = async () => {
+        // Auto-start camera when entering add or checkout view
+        if (!selfieDataUrl) {
+          await startCamera()
+        }
       }
+
+      captureLocation()
+      initializeCamera()
     }
   }, [view, showMarkModal])
 
