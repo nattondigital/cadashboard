@@ -51,15 +51,13 @@ interface LeaveRequest {
 }
 
 export function Leave() {
+  const [view, setView] = useState<'list' | 'add' | 'edit' | 'view'>('list')
   const [searchTerm, setSearchTerm] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([])
   const [teamMembers, setTeamMembers] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [showCreateModal, setShowCreateModal] = useState(false)
-  const [showViewModal, setShowViewModal] = useState(false)
-  const [showEditModal, setShowEditModal] = useState(false)
   const [showApproveModal, setShowApproveModal] = useState(false)
   const [showRejectModal, setShowRejectModal] = useState(false)
   const [selectedRequest, setSelectedRequest] = useState<LeaveRequest | null>(null)
@@ -149,12 +147,22 @@ export function Leave() {
       if (error) throw error
 
       await fetchLeaveRequests()
-      setShowCreateModal(false)
+      setView('list')
       resetForm()
     } catch (error) {
       console.error('Failed to create leave request:', error)
       alert('Failed to create leave request. Please try again.')
     }
+  }
+
+  const handleAddRequest = () => {
+    setView('add')
+    resetForm()
+  }
+
+  const handleBackToList = () => {
+    setView('list')
+    resetForm()
   }
 
   const handleApproveRequest = async () => {
@@ -230,7 +238,7 @@ export function Leave() {
 
   const handleViewRequest = (request: LeaveRequest) => {
     setSelectedRequest(request)
-    setShowViewModal(true)
+    setView('view')
   }
 
   const handleEditClick = (request: LeaveRequest) => {
@@ -243,7 +251,7 @@ export function Leave() {
       reason: request.reason,
       notes: request.notes || ''
     })
-    setShowEditModal(true)
+    setView('edit')
   }
 
   const handleEditRequest = async () => {
@@ -265,7 +273,7 @@ export function Leave() {
       if (error) throw error
 
       await fetchLeaveRequests()
-      setShowEditModal(false)
+      setView('list')
       setSelectedRequest(null)
       resetForm()
     } catch (error) {
@@ -315,18 +323,20 @@ export function Leave() {
     <>
       {/* Desktop View */}
       <div className="hidden md:block ppt-slide p-6">
-        <PageHeader
-          title="Leave Management"
-          subtitle="Manage team leave requests, work from home, and half day requests"
-          actions={[
-            {
-              label: 'New Request',
-              onClick: () => setShowCreateModal(true),
-              variant: 'default',
-              icon: Plus
-            }
-          ]}
-        />
+        {view === 'list' && (
+          <>
+            <PageHeader
+              title="Leave Management"
+              subtitle="Manage team leave requests, work from home, and half day requests"
+              actions={[
+                {
+                  label: 'New Request',
+                  onClick: handleAddRequest,
+                  variant: 'default',
+                  icon: Plus
+                }
+              ]}
+            />
 
         <motion.div
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
@@ -553,9 +563,340 @@ export function Leave() {
             </CardContent>
           </Card>
         </motion.div>
+          </>
+        )}
+
+        {view === 'add' && (
+          <>
+            <div className="flex items-center gap-4 mb-6">
+              <Button variant="ghost" onClick={handleBackToList}>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to List
+              </Button>
+              <div>
+                <h1 className="text-2xl font-bold text-brand-text">New Leave Request</h1>
+                <p className="text-sm text-gray-500">Submit a new leave request for team member</p>
+              </div>
+            </div>
+
+            <Card className="shadow-xl">
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Team Member *</label>
+                    <Select value={formData.admin_user_id} onValueChange={(value) => setFormData(prev => ({ ...prev, admin_user_id: value }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select team member" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {teamMembers.map(member => (
+                          <SelectItem key={member.id} value={member.id}>
+                            {member.full_name} ({member.email})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Request Type *</label>
+                    <Select value={formData.request_type} onValueChange={(value) => setFormData(prev => ({ ...prev, request_type: value }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Leave">Leave</SelectItem>
+                        <SelectItem value="Work From Home">Work From Home</SelectItem>
+                        <SelectItem value="Half Day">Half Day</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Start Date *</label>
+                      <Input
+                        type="date"
+                        value={formData.start_date}
+                        onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
+                      />
+                    </div>
+                    {formData.request_type !== 'Half Day' && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">End Date *</label>
+                        <Input
+                          type="date"
+                          value={formData.end_date}
+                          onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Reason *</label>
+                    <Textarea
+                      value={formData.reason}
+                      onChange={(e) => setFormData(prev => ({ ...prev, reason: e.target.value }))}
+                      placeholder="Enter reason for request"
+                      rows={3}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Additional Notes</label>
+                    <Textarea
+                      value={formData.notes}
+                      onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                      placeholder="Any additional information"
+                      rows={2}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-3 mt-6">
+                  <Button
+                    onClick={handleCreateRequest}
+                    disabled={!formData.admin_user_id || !formData.request_type || !formData.start_date || !formData.reason || (formData.request_type !== 'Half Day' && !formData.end_date)}
+                    className="flex-1"
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    Submit Request
+                  </Button>
+                  <Button variant="outline" onClick={handleBackToList} className="flex-1">
+                    Cancel
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
+
+        {view === 'edit' && selectedRequest && (
+          <>
+            <div className="flex items-center gap-4 mb-6">
+              <Button variant="ghost" onClick={handleBackToList}>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to List
+              </Button>
+              <div>
+                <h1 className="text-2xl font-bold text-brand-text">Edit Leave Request</h1>
+                <p className="text-sm text-gray-500">Update leave request details</p>
+              </div>
+            </div>
+
+            <Card className="shadow-xl">
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Team Member *</label>
+                    <Select value={formData.admin_user_id} onValueChange={(value) => setFormData(prev => ({ ...prev, admin_user_id: value }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select team member" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {teamMembers.map(member => (
+                          <SelectItem key={member.id} value={member.id}>
+                            {member.full_name} ({member.email})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Request Type *</label>
+                    <Select value={formData.request_type} onValueChange={(value) => setFormData(prev => ({ ...prev, request_type: value }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Leave">Leave</SelectItem>
+                        <SelectItem value="Work From Home">Work From Home</SelectItem>
+                        <SelectItem value="Half Day">Half Day</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Start Date *</label>
+                      <Input
+                        type="date"
+                        value={formData.start_date}
+                        onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
+                      />
+                    </div>
+                    {formData.request_type !== 'Half Day' && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">End Date *</label>
+                        <Input
+                          type="date"
+                          value={formData.end_date}
+                          onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Reason *</label>
+                    <Textarea
+                      value={formData.reason}
+                      onChange={(e) => setFormData(prev => ({ ...prev, reason: e.target.value }))}
+                      placeholder="Enter reason for request"
+                      rows={3}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Additional Notes</label>
+                    <Textarea
+                      value={formData.notes}
+                      onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                      placeholder="Any additional information"
+                      rows={2}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-3 mt-6">
+                  <Button
+                    onClick={handleEditRequest}
+                    disabled={!formData.admin_user_id || !formData.request_type || !formData.start_date || !formData.reason || (formData.request_type !== 'Half Day' && !formData.end_date)}
+                    className="flex-1"
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    Save Changes
+                  </Button>
+                  <Button variant="outline" onClick={handleBackToList} className="flex-1">
+                    Cancel
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
+
+        {view === 'view' && selectedRequest && (
+          <>
+            <div className="flex items-center gap-4 mb-6">
+              <Button variant="ghost" onClick={handleBackToList}>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to List
+              </Button>
+              <div>
+                <h1 className="text-2xl font-bold text-brand-text">Request Details</h1>
+                <p className="text-sm text-gray-500">View leave request information</p>
+              </div>
+            </div>
+
+            <Card className="shadow-xl">
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">Team Member</label>
+                      <p className="text-base font-semibold text-gray-800">{selectedRequest.admin_users.full_name}</p>
+                      <p className="text-sm text-gray-500">{selectedRequest.admin_users.email}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">Status</label>
+                      <Badge className={statusColors[selectedRequest.status]}>
+                        {selectedRequest.status}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">Request Type</label>
+                      <Badge className={requestTypeColors[selectedRequest.request_type]}>
+                        {selectedRequest.request_type}
+                      </Badge>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">Duration</label>
+                      <p className="text-base font-semibold text-gray-800">
+                        {selectedRequest.total_days} {selectedRequest.total_days === 1 ? 'day' : 'days'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Dates</label>
+                    <p className="text-base font-semibold text-gray-800">
+                      {format(new Date(selectedRequest.start_date), 'MMM dd, yyyy')} - {format(new Date(selectedRequest.end_date), 'MMM dd, yyyy')}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Reason</label>
+                    <p className="text-base text-gray-700 leading-relaxed">{selectedRequest.reason}</p>
+                  </div>
+
+                  {selectedRequest.notes && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">Additional Notes</label>
+                      <p className="text-base text-gray-700 leading-relaxed">{selectedRequest.notes}</p>
+                    </div>
+                  )}
+
+                  {selectedRequest.status === 'Rejected' && selectedRequest.rejection_reason && (
+                    <div>
+                      <label className="block text-sm font-medium text-red-600 mb-1">Rejection Reason</label>
+                      <p className="text-base text-red-700 leading-relaxed bg-red-50 p-3 rounded-lg border border-red-200">
+                        {selectedRequest.rejection_reason}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-3 mt-6">
+                  {selectedRequest.status === 'Pending' && (
+                    <>
+                      <Button
+                        onClick={() => setShowApproveModal(true)}
+                        className="flex-1 bg-green-600 hover:bg-green-700"
+                      >
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Approve
+                      </Button>
+                      <Button
+                        onClick={() => setShowRejectModal(true)}
+                        className="flex-1 bg-orange-600 hover:bg-orange-700"
+                      >
+                        <XCircle className="w-4 h-4 mr-2" />
+                        Reject
+                      </Button>
+                    </>
+                  )}
+                  <Button
+                    onClick={() => handleEditClick(selectedRequest)}
+                    className="flex-1"
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    Edit
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      handleDeleteRequest(selectedRequest.id, selectedRequest.request_id)
+                      handleBackToList()
+                    }}
+                    className="flex-1 text-red-600 hover:text-red-700 hover:border-red-600"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
 
-      {/* Mobile View - App-like Experience */}
+      {/* Mobile View */}
       <div className="md:hidden min-h-screen bg-gradient-to-br from-purple-50 to-indigo-50">
         {/* Mobile Header */}
         <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-6 shadow-lg">
@@ -624,7 +965,7 @@ export function Leave() {
         <div className="px-4 mb-4">
           <motion.button
             whileTap={{ scale: 0.98 }}
-            onClick={() => setShowCreateModal(true)}
+            onClick={handleAddRequest}
             className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-2xl py-4 px-6 shadow-lg flex items-center justify-center gap-3 font-semibold"
           >
             <Plus className="w-5 h-5" />
@@ -682,9 +1023,9 @@ export function Leave() {
         </div>
       </div>
 
-      {/* Detail Modal for Mobile */}
+      {/* Detail View for Mobile */}
       <AnimatePresence>
-        {showViewModal && selectedRequest && (
+        {view === 'view' && selectedRequest && (
           <motion.div
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
@@ -694,7 +1035,7 @@ export function Leave() {
           >
             <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-6 sticky top-0 z-10">
               <div className="flex items-center gap-3">
-                <button onClick={() => setShowViewModal(false)}>
+                <button onClick={handleBackToList}>
                   <ArrowLeft className="w-6 h-6" />
                 </button>
                 <h2 className="text-xl font-bold">Request Details</h2>
@@ -798,10 +1139,7 @@ export function Leave() {
                   <div className="flex gap-3">
                     <motion.button
                       whileTap={{ scale: 0.98 }}
-                      onClick={() => {
-                        setShowViewModal(false)
-                        setShowApproveModal(true)
-                      }}
+                      onClick={() => setShowApproveModal(true)}
                       className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-2xl py-4 font-semibold shadow-lg flex items-center justify-center gap-2"
                     >
                       <CheckCircle className="w-5 h-5" />
@@ -809,10 +1147,7 @@ export function Leave() {
                     </motion.button>
                     <motion.button
                       whileTap={{ scale: 0.98 }}
-                      onClick={() => {
-                        setShowViewModal(false)
-                        setShowRejectModal(true)
-                      }}
+                      onClick={() => setShowRejectModal(true)}
                       className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-2xl py-4 font-semibold shadow-lg flex items-center justify-center gap-2"
                     >
                       <XCircle className="w-5 h-5" />
@@ -823,10 +1158,7 @@ export function Leave() {
                 <div className="flex gap-3">
                   <motion.button
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => {
-                      setShowViewModal(false)
-                      handleEditClick(selectedRequest)
-                    }}
+                    onClick={() => handleEditClick(selectedRequest)}
                     className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl py-4 font-semibold shadow-lg flex items-center justify-center gap-2"
                   >
                     <Edit className="w-5 h-5" />
@@ -835,8 +1167,8 @@ export function Leave() {
                   <motion.button
                     whileTap={{ scale: 0.98 }}
                     onClick={() => {
-                      setShowViewModal(false)
                       handleDeleteRequest(selectedRequest.id, selectedRequest.request_id)
+                      handleBackToList()
                     }}
                     className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-2xl py-4 font-semibold shadow-lg flex items-center justify-center gap-2"
                   >
@@ -850,328 +1182,6 @@ export function Leave() {
         )}
       </AnimatePresence>
 
-      {/* Desktop View Modal */}
-      {showViewModal && selectedRequest && (
-        <div className="hidden md:flex fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-brand-text">Request Details</h2>
-              <Button variant="ghost" size="sm" onClick={() => setShowViewModal(false)}>
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Team Member</label>
-                  <p className="text-base font-semibold text-gray-800">{selectedRequest.admin_users.full_name}</p>
-                  <p className="text-sm text-gray-500">{selectedRequest.admin_users.email}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Status</label>
-                  <Badge className={statusColors[selectedRequest.status]}>
-                    {selectedRequest.status}
-                  </Badge>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Request Type</label>
-                  <Badge className={requestTypeColors[selectedRequest.request_type]}>
-                    {selectedRequest.request_type}
-                  </Badge>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Duration</label>
-                  <p className="text-base font-semibold text-gray-800">
-                    {selectedRequest.total_days} {selectedRequest.total_days === 1 ? 'day' : 'days'}
-                  </p>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Dates</label>
-                <p className="text-base font-semibold text-gray-800">
-                  {format(new Date(selectedRequest.start_date), 'MMM dd, yyyy')} - {format(new Date(selectedRequest.end_date), 'MMM dd, yyyy')}
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Reason</label>
-                <p className="text-base text-gray-700 leading-relaxed">{selectedRequest.reason}</p>
-              </div>
-
-              {selectedRequest.notes && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Additional Notes</label>
-                  <p className="text-base text-gray-700 leading-relaxed">{selectedRequest.notes}</p>
-                </div>
-              )}
-
-              {selectedRequest.status === 'Rejected' && selectedRequest.rejection_reason && (
-                <div>
-                  <label className="block text-sm font-medium text-red-600 mb-1">Rejection Reason</label>
-                  <p className="text-base text-red-700 leading-relaxed bg-red-50 p-3 rounded-lg border border-red-200">
-                    {selectedRequest.rejection_reason}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-center gap-3 mt-6">
-              {selectedRequest.status === 'Pending' && (
-                <>
-                  <Button
-                    onClick={() => {
-                      setShowViewModal(false)
-                      setShowApproveModal(true)
-                    }}
-                    className="flex-1 bg-green-600 hover:bg-green-700"
-                  >
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    Approve
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      setShowViewModal(false)
-                      setShowRejectModal(true)
-                    }}
-                    className="flex-1 bg-orange-600 hover:bg-orange-700"
-                  >
-                    <XCircle className="w-4 h-4 mr-2" />
-                    Reject
-                  </Button>
-                </>
-              )}
-              <Button
-                onClick={() => {
-                  setShowViewModal(false)
-                  handleEditClick(selectedRequest)
-                }}
-                className="flex-1"
-              >
-                <Edit className="w-4 h-4 mr-2" />
-                Edit
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowViewModal(false)
-                  handleDeleteRequest(selectedRequest.id, selectedRequest.request_id)
-                }}
-                className="flex-1 text-red-600 hover:text-red-700 hover:border-red-600"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Desktop Create Modal */}
-      {showCreateModal && (
-        <div className="hidden md:flex fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-brand-text">New Leave Request</h2>
-              <Button variant="ghost" size="sm" onClick={() => { setShowCreateModal(false); resetForm(); }}>
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Team Member *</label>
-                <Select value={formData.admin_user_id} onValueChange={(value) => setFormData(prev => ({ ...prev, admin_user_id: value }))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select team member" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {teamMembers.map(member => (
-                      <SelectItem key={member.id} value={member.id}>
-                        {member.full_name} ({member.email})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Request Type *</label>
-                <Select value={formData.request_type} onValueChange={(value) => setFormData(prev => ({ ...prev, request_type: value }))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Leave">Leave</SelectItem>
-                    <SelectItem value="Work From Home">Work From Home</SelectItem>
-                    <SelectItem value="Half Day">Half Day</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Start Date *</label>
-                  <Input
-                    type="date"
-                    value={formData.start_date}
-                    onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
-                  />
-                </div>
-                {formData.request_type !== 'Half Day' && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">End Date *</label>
-                    <Input
-                      type="date"
-                      value={formData.end_date}
-                      onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
-                    />
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Reason *</label>
-                <Textarea
-                  value={formData.reason}
-                  onChange={(e) => setFormData(prev => ({ ...prev, reason: e.target.value }))}
-                  placeholder="Enter reason for request"
-                  rows={3}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Additional Notes</label>
-                <Textarea
-                  value={formData.notes}
-                  onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                  placeholder="Any additional information"
-                  rows={2}
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-3 mt-6">
-              <Button
-                onClick={handleCreateRequest}
-                disabled={!formData.admin_user_id || !formData.request_type || !formData.start_date || !formData.reason || (formData.request_type !== 'Half Day' && !formData.end_date)}
-                className="flex-1"
-              >
-                <Save className="w-4 h-4 mr-2" />
-                Submit Request
-              </Button>
-              <Button variant="outline" onClick={() => { setShowCreateModal(false); resetForm(); }} className="flex-1">
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Desktop Edit Modal */}
-      {showEditModal && selectedRequest && (
-        <div className="hidden md:flex fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-brand-text">Edit Leave Request</h2>
-              <Button variant="ghost" size="sm" onClick={() => { setShowEditModal(false); resetForm(); }}>
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Team Member *</label>
-                <Select value={formData.admin_user_id} onValueChange={(value) => setFormData(prev => ({ ...prev, admin_user_id: value }))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select team member" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {teamMembers.map(member => (
-                      <SelectItem key={member.id} value={member.id}>
-                        {member.full_name} ({member.email})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Request Type *</label>
-                <Select value={formData.request_type} onValueChange={(value) => setFormData(prev => ({ ...prev, request_type: value }))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Leave">Leave</SelectItem>
-                    <SelectItem value="Work From Home">Work From Home</SelectItem>
-                    <SelectItem value="Half Day">Half Day</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Start Date *</label>
-                  <Input
-                    type="date"
-                    value={formData.start_date}
-                    onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
-                  />
-                </div>
-                {formData.request_type !== 'Half Day' && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">End Date *</label>
-                    <Input
-                      type="date"
-                      value={formData.end_date}
-                      onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
-                    />
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Reason *</label>
-                <Textarea
-                  value={formData.reason}
-                  onChange={(e) => setFormData(prev => ({ ...prev, reason: e.target.value }))}
-                  placeholder="Enter reason for request"
-                  rows={3}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Additional Notes</label>
-                <Textarea
-                  value={formData.notes}
-                  onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                  placeholder="Any additional information"
-                  rows={2}
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-3 mt-6">
-              <Button
-                onClick={handleEditRequest}
-                disabled={!formData.admin_user_id || !formData.request_type || !formData.start_date || !formData.reason || (formData.request_type !== 'Half Day' && !formData.end_date)}
-                className="flex-1"
-              >
-                <Save className="w-4 h-4 mr-2" />
-                Save Changes
-              </Button>
-              <Button variant="outline" onClick={() => { setShowEditModal(false); resetForm(); }} className="flex-1">
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Approve Modal */}
       {showApproveModal && selectedRequest && (
@@ -1243,7 +1253,7 @@ export function Leave() {
 
       {/* Mobile Create Leave Request Page */}
       <AnimatePresence>
-        {showCreateModal && (
+        {view === 'add' && (
           <motion.div
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
@@ -1253,7 +1263,7 @@ export function Leave() {
           >
             <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-6 sticky top-0 z-10">
               <div className="flex items-center gap-3">
-                <button onClick={() => { setShowCreateModal(false); resetForm(); }}>
+                <button onClick={handleBackToList}>
                   <ArrowLeft className="w-6 h-6" />
                 </button>
                 <h2 className="text-xl font-bold">New Leave Request</h2>
@@ -1379,7 +1389,7 @@ export function Leave() {
 
       {/* Mobile Edit Leave Request Page */}
       <AnimatePresence>
-        {showEditModal && selectedRequest && (
+        {view === 'edit' && selectedRequest && (
           <motion.div
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
@@ -1389,7 +1399,7 @@ export function Leave() {
           >
             <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-6 sticky top-0 z-10">
               <div className="flex items-center gap-3">
-                <button onClick={() => { setShowEditModal(false); resetForm(); }}>
+                <button onClick={handleBackToList}>
                   <ArrowLeft className="w-6 h-6" />
                 </button>
                 <h2 className="text-xl font-bold">Edit Leave Request</h2>
