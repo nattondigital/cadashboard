@@ -709,7 +709,9 @@ export function Attendance() {
                   <label className="block text-sm font-medium mb-2">GPS Location</label>
                   <div className="px-4 py-2 bg-gray-100 rounded-lg flex items-center gap-2">
                     <MapPin className="w-4 h-4 text-gray-500" />
-                    <span className="text-sm">Will be captured when submitting</span>
+                    <span className="text-sm">
+                      {location ? location.address : 'Capturing location...'}
+                    </span>
                   </div>
                 </div>
 
@@ -1136,14 +1138,16 @@ export function Attendance() {
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between py-3">
-                  <div className="flex items-center gap-3">
+                <div className="py-3">
+                  <div className="flex items-center gap-3 mb-2">
                     <div className="bg-purple-100 p-2 rounded-xl">
                       <MapPin className="w-4 h-4 text-purple-600" />
                     </div>
                     <span className="text-sm font-medium text-gray-600">GPS Location</span>
                   </div>
-                  <span className="text-xs text-gray-500">Auto-captured</span>
+                  <p className="text-xs text-gray-500 ml-11">
+                    {location ? location.address : 'Capturing location...'}
+                  </p>
                 </div>
               </div>
             </div>
