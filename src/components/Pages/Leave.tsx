@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { format } from 'date-fns'
+import { useAuth } from '@/contexts/AuthContext'
 
 const requestTypeColors: Record<string, string> = {
   'Leave': 'bg-orange-100 text-orange-800',
@@ -51,6 +52,7 @@ interface LeaveRequest {
 }
 
 export function Leave() {
+  const { userProfile } = useAuth()
   const [view, setView] = useState<'list' | 'add' | 'edit' | 'view'>('list')
   const [searchTerm, setSearchTerm] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
@@ -158,6 +160,9 @@ export function Leave() {
   const handleAddRequest = () => {
     setView('add')
     resetForm()
+    if (userProfile?.id) {
+      setFormData(prev => ({ ...prev, admin_user_id: userProfile.id }))
+    }
   }
 
   const handleBackToList = () => {
