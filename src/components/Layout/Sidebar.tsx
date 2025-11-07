@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   BarChart, Users, UserCheck, Link as LinkIcon, Shield,
-  Library, Zap, FileText, HelpCircle, Settings, Sparkles, CreditCard, GraduationCap, Wrench, ChevronDown, Clock, Receipt, Package, CalendarOff, Contact, FolderOpen, Menu, X, Calendar, CheckSquare, Bot, MessageSquare
+  Library, Zap, FileText, HelpCircle, Settings, Sparkles, CreditCard, GraduationCap, Wrench, ChevronDown, Clock, Receipt, Package, CalendarOff, Contact, FolderOpen, Menu, X, Calendar, CheckSquare, Bot, MessageSquare, TrendingUp
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Sidebar as SidebarContainer } from '@/components/ui/sidebar'
@@ -56,6 +56,10 @@ const aiAgentsNavigation = [
   { icon: Zap, label: 'Activity Logs', to: '/ai-agents/logs' }
 ]
 
+const misReportingNavigation = [
+  { icon: TrendingUp, label: 'Reports', to: '/reports' }
+]
+
 interface SidebarProps {
   collapsed?: boolean
   onClose?: () => void
@@ -68,6 +72,7 @@ export function Sidebar({ collapsed = false, onClose }: SidebarProps) {
   const [membersExpanded, setMembersExpanded] = useState(false)
   const [teamExpanded, setTeamExpanded] = useState(false)
   const [aiAgentsExpanded, setAiAgentsExpanded] = useState(true)
+  const [misReportingExpanded, setMisReportingExpanded] = useState(false)
   const [otherModulesExpanded, setOtherModulesExpanded] = useState(false)
 
   return (
@@ -403,6 +408,68 @@ export function Sidebar({ collapsed = false, onClose }: SidebarProps) {
 
         <AnimatePresence>
           {aiAgentsExpanded && aiAgentsNavigation.map((item) => {
+            const isActive = location.pathname === item.to
+            const Icon = item.icon
+
+            return (
+              <motion.div
+                key={item.to}
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Link
+                  to={item.to}
+                  onClick={onClose}
+                  title={collapsed ? item.label : undefined}
+                  className={cn(
+                    "group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                    !collapsed && "ml-3",
+                    collapsed && "justify-center px-2",
+                    isActive
+                      ? "bg-brand-primary text-white shadow-lg"
+                      : "text-gray-600 hover:bg-brand-primary/10 hover:text-brand-primary"
+                  )}
+                >
+                  <Icon className="h-5 w-5 flex-shrink-0" />
+                  {!collapsed && (
+                    <span className="ml-3 truncate">{item.label}</span>
+                  )}
+                  {isActive && !collapsed && (
+                    <motion.div
+                      className="ml-auto h-2 w-2 rounded-full bg-brand-accent"
+                      layoutId="activeIndicator"
+                    />
+                  )}
+                </Link>
+              </motion.div>
+            )
+          })}
+        </AnimatePresence>
+
+        {/* MIS Reporting Section */}
+        {!collapsed && (
+          <div className="pt-4">
+            <button
+              onClick={() => setMisReportingExpanded(!misReportingExpanded)}
+              className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider hover:text-gray-700 transition-colors"
+            >
+              <span>MIS Reporting</span>
+              <ChevronDown
+                className={cn(
+                  "h-4 w-4 transition-transform duration-200",
+                  misReportingExpanded && "transform rotate-180"
+                )}
+              />
+            </button>
+          </div>
+        )}
+
+        <AnimatePresence>
+          {misReportingExpanded && misReportingNavigation.map((item) => {
             const isActive = location.pathname === item.to
             const Icon = item.icon
 
