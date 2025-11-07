@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Clock, Camera, MapPin, CheckCircle, Calendar, User, LogOut, Plus, X, ChevronRight, ArrowLeft } from 'lucide-react'
+import { Clock, Camera, MapPin, CheckCircle, Calendar, User, LogOut, Plus, X, ChevronRight, ArrowLeft, MoreVertical, Edit, Trash2, Eye } from 'lucide-react'
 import { PageHeader } from '@/components/Common/PageHeader'
 import { KPICard } from '@/components/Common/KPICard'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { supabase } from '@/lib/supabase'
 import { format } from 'date-fns'
 import { CheckoutFormDesktop, CheckoutFormMobile } from './AttendanceCheckout'
@@ -48,7 +49,7 @@ const statusColors: Record<string, string> = {
 }
 
 export function Attendance() {
-  const [view, setView] = useState<'list' | 'add' | 'checkout' | 'details'>('list')
+  const [view, setView] = useState<'list' | 'add' | 'checkout' | 'details' | 'edit'>('list')
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([])
   const [teamMembers, setTeamMembers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -58,6 +59,7 @@ export function Attendance() {
   const [isCameraActive, setIsCameraActive] = useState(false)
   const [location, setLocation] = useState<{ lat: number; lng: number; address: string } | null>(null)
   const [selectedRecord, setSelectedRecord] = useState<AttendanceRecord | null>(null)
+  const [editNotes, setEditNotes] = useState('')
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -589,6 +591,57 @@ export function Attendance() {
     setView('details')
   }
 
+  const handleEditDetails = (record: AttendanceRecord) => {
+    setSelectedRecord(record)
+    setEditNotes(record.notes || '')
+    setView('edit')
+  }
+
+  const handleSaveEdit = async () => {
+    if (!selectedRecord) return
+
+    try {
+      const { error } = await supabase
+        .from('attendance')
+        .update({
+          notes: editNotes || null
+        })
+        .eq('id', selectedRecord.id)
+
+      if (error) throw error
+
+      alert('Attendance details updated successfully')
+      fetchAttendance()
+      setView('list')
+      setSelectedRecord(null)
+      setEditNotes('')
+    } catch (err: any) {
+      console.error('Error updating attendance:', err)
+      alert('Failed to update attendance: ' + (err.message || 'Unknown error'))
+    }
+  }
+
+  const handleDeleteAttendance = async (record: AttendanceRecord) => {
+    if (!confirm('Are you sure you want to delete this attendance record? This action cannot be undone.')) {
+      return
+    }
+
+    try {
+      const { error } = await supabase
+        .from('attendance')
+        .delete()
+        .eq('id', record.id)
+
+      if (error) throw error
+
+      alert('Attendance record deleted successfully')
+      fetchAttendance()
+    } catch (err: any) {
+      console.error('Error deleting attendance:', err)
+      alert('Failed to delete attendance: ' + (err.message || 'Unknown error'))
+    }
+  }
+
   const handleCloseModal = () => {
     setShowMarkModal(false)
     setSelectedMember('')
@@ -796,13 +849,6 @@ export function Attendance() {
                             </td>
                             <td className="py-3 px-4">
                               <div className="flex items-center gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleViewDetails(record)}
-                                >
-                                  View Details
-                                </Button>
                                 {!record.check_out_time && (
                                   <Button
                                     size="sm"
@@ -813,6 +859,30 @@ export function Attendance() {
                                     Check Out
                                   </Button>
                                 )}
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                      <MoreVertical className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => handleViewDetails(record)}>
+                                      <Eye className="w-4 h-4 mr-2" />
+                                      View Details
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleEditDetails(record)}>
+                                      <Edit className="w-4 h-4 mr-2" />
+                                      Edit Details
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() => handleDeleteAttendance(record)}
+                                      className="text-red-600"
+                                    >
+                                      <Trash2 className="w-4 h-4 mr-2" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
                               </div>
                             </td>
                           </tr>
@@ -1200,6 +1270,77 @@ export function Attendance() {
                     </p>
                   </div>
                 )}
+              </CardContent>
+            </Card>
+          </>
+        )}
+
+        {view === 'edit' && selectedRecord && (
+          <>
+            <div className="flex items-center gap-4 mb-6">
+              <Button onClick={handleBackToList} variant="outline">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to List
+              </Button>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Edit Attendance Details</h1>
+                <p className="text-gray-500 mt-1">Update notes for {selectedRecord.admin_user?.full_name}</p>
+              </div>
+            </div>
+
+            {/* Summary Card */}
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle>Attendance Summary</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 mb-1">Date</p>
+                    <p className="text-lg font-semibold">{format(new Date(selectedRecord.date), 'MMM dd, yyyy')}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 mb-1">Check In</p>
+                    <p className="text-lg font-semibold">{format(new Date(selectedRecord.check_in_time), 'hh:mm a')}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 mb-1">Check Out</p>
+                    <p className="text-lg font-semibold">
+                      {selectedRecord.check_out_time ? format(new Date(selectedRecord.check_out_time), 'hh:mm a') : 'Not checked out'}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Edit Form */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Edit Details</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Notes
+                  </label>
+                  <textarea
+                    value={editNotes}
+                    onChange={(e) => setEditNotes(e.target.value)}
+                    rows={4}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent"
+                    placeholder="Add notes about this attendance record..."
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <Button onClick={handleBackToList} variant="outline" className="flex-1">
+                    Cancel
+                  </Button>
+                  <Button onClick={handleSaveEdit} className="flex-1">
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Save Changes
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </>
