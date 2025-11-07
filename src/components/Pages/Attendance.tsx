@@ -405,6 +405,11 @@ export function Attendance() {
       if (error) {
         if (error.code === '23505') {
           alert('Attendance already marked for today')
+        } else if (error.message && error.message.includes('last attendance entry') && error.message.includes('Present')) {
+          // Extract date from error message if possible
+          const dateMatch = error.message.match(/\(([^)]+)\)/)
+          const dateStr = dateMatch ? dateMatch[1] : 'previous entry'
+          alert(`Cannot check in: Your last attendance entry (${dateStr}) is still marked as "Present". Please check out first before creating a new check-in.`)
         } else {
           throw error
         }
@@ -415,9 +420,15 @@ export function Attendance() {
       fetchAttendance()
       handleCloseModal()
       setView('list')
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error marking attendance:', err)
-      alert('Failed to mark attendance')
+      if (err.message && err.message.includes('last attendance entry') && err.message.includes('Present')) {
+        const dateMatch = err.message.match(/\(([^)]+)\)/)
+        const dateStr = dateMatch ? dateMatch[1] : 'previous entry'
+        alert(`Cannot check in: Your last attendance entry (${dateStr}) is still marked as "Present". Please check out first before creating a new check-in.`)
+      } else {
+        alert('Failed to mark attendance: ' + (err.message || 'Unknown error'))
+      }
     }
   }
 
@@ -537,7 +548,19 @@ export function Attendance() {
         })
         .eq('id', selectedRecord.id)
 
-      if (error) throw error
+      if (error) {
+        if (error.message && error.message.includes('Check-out must be done on the same date')) {
+          // Extract dates from error message
+          const checkinDateMatch = error.message.match(/Check-in date: ([^,]+)/)
+          const checkoutDateMatch = error.message.match(/Check-out date: (.+)/)
+          const checkinDate = checkinDateMatch ? checkinDateMatch[1] : 'check-in date'
+          const checkoutDate = checkoutDateMatch ? checkoutDateMatch[1] : 'today'
+          alert(`Cannot check out: Check-out must be done on the same date as check-in.\nCheck-in date: ${checkinDate}\nAttempted check-out: ${checkoutDate}`)
+        } else {
+          throw error
+        }
+        return
+      }
 
       alert('Check-out marked successfully')
       fetchAttendance()
@@ -547,9 +570,17 @@ export function Attendance() {
       setSelfieDataUrl(null)
       setLocation(null)
       stopCamera()
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error marking check-out:', err)
-      alert('Failed to mark check-out')
+      if (err.message && err.message.includes('Check-out must be done on the same date')) {
+        const checkinDateMatch = err.message.match(/Check-in date: ([^,]+)/)
+        const checkoutDateMatch = err.message.match(/Check-out date: (.+)/)
+        const checkinDate = checkinDateMatch ? checkinDateMatch[1] : 'check-in date'
+        const checkoutDate = checkoutDateMatch ? checkoutDateMatch[1] : 'today'
+        alert(`Cannot check out: Check-out must be done on the same date as check-in.\nCheck-in date: ${checkinDate}\nAttempted check-out: ${checkoutDate}`)
+      } else {
+        alert('Failed to mark check-out: ' + (err.message || 'Unknown error'))
+      }
     }
   }
 
