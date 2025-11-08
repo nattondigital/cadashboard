@@ -33,7 +33,6 @@ const mastersNavigation = [
   { icon: Contact, label: 'Contacts', to: '/contacts' },
   { icon: LinkIcon, label: 'Affiliates', to: '/affiliates' },
   { icon: Shield, label: 'Team', to: '/team' },
-  { icon: Library, label: 'Courses', to: '/courses' },
   { icon: GraduationCap, label: 'LMS', to: '/lms' },
 ]
 

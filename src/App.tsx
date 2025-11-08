@@ -8,7 +8,6 @@ import { Dashboard } from '@/components/Pages/Dashboard'
 import { Leads } from '@/components/Pages/Leads'
 import { Affiliates } from '@/components/Pages/Affiliates'
 import { Team } from '@/components/Pages/Team'
-import { Courses } from '@/components/Pages/Courses'
 import { LMS } from '@/components/Pages/LMS'
 import { Templates } from '@/components/Pages/Templates'
 import { Billing } from '@/components/Pages/Billing'
@@ -67,7 +66,6 @@ function ProtectedRoutes() {
         <Route path="affiliates" element={<Affiliates />} />
         <Route path="team" element={<Team />} />
         <Route path="members" element={<Members />} />
-        <Route path="courses" element={<Courses />} />
         <Route path="lms" element={<LMS />} />
         <Route path="templates" element={<Templates />} />
         <Route path="tools-access" element={<ToolsAccess />} />
