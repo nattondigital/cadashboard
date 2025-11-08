@@ -36,6 +36,8 @@ import { AIAgentLogs } from '@/components/Pages/AIAgentLogs'
 import { Followups } from '@/components/Pages/Followups'
 import { Reports } from '@/components/Pages/Reports'
 import { PayrollMIS } from '@/components/Pages/PayrollMIS'
+import { CustomDashboard } from '@/components/Dashboard/CustomDashboard'
+import { DashboardTemplates } from '@/components/Dashboard/DashboardTemplates'
 
 function ProtectedRoutes() {
   const { isAuthenticated, isLoading, login } = useAuth()
@@ -89,6 +91,8 @@ function ProtectedRoutes() {
         <Route path="followups" element={<Followups />} />
         <Route path="reports" element={<Reports />} />
         <Route path="reports/payroll-mis" element={<PayrollMIS />} />
+        <Route path="reports/custom-dashboard" element={<CustomDashboard />} />
+        <Route path="reports/templates" element={<DashboardTemplates />} />
       </Route>
       <Route path="/ai-automation-mastery" element={<AIAutomationLanding />} />
       <Route path="/templates/landing-pages1" element={<AIAutomationMasteryLanding />} />
