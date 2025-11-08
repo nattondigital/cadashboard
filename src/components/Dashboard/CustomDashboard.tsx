@@ -280,7 +280,7 @@ export function CustomDashboard() {
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 auto-rows-[200px]">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-5 auto-rows-[100px]">
             {widgets.map((widget) => {
               const gridWidth = widget.position.w
               const gridHeight = widget.position.h

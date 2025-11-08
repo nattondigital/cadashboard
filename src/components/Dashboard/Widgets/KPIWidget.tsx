@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react'
-import { BaseWidget } from '../BaseWidget'
-import { TrendingUp, TrendingDown } from 'lucide-react'
+import { motion } from 'framer-motion'
+import {
+  TrendingUp, TrendingDown, ArrowUp, ArrowDown,
+  Users, DollarSign, Calendar, BookOpen, Link,
+  HelpCircle, CheckCircle, Receipt, Zap, X, RefreshCw
+} from 'lucide-react'
 import { Widget } from '@/types/dashboard'
 import { supabase } from '@/lib/supabase'
 import { formatCurrency } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 
 interface KPIWidgetProps {
   widget: Widget
@@ -293,33 +298,109 @@ export function KPIWidget({ widget, onRefresh, onRemove, onConfig }: KPIWidgetPr
     onRefresh?.()
   }
 
+  const getModuleIcon = () => {
+    switch (widget.module) {
+      case 'leads': return Users
+      case 'members': return Users
+      case 'billing': return DollarSign
+      case 'attendance': return Calendar
+      case 'courses': return BookOpen
+      case 'affiliates': return Link
+      case 'support': return HelpCircle
+      case 'tasks': return CheckCircle
+      case 'expenses': return Receipt
+      case 'automations': return Zap
+      default: return DollarSign
+    }
+  }
+
+  const getIconColor = () => {
+    const colorScheme = widget.config.colorScheme || 'blue'
+    const colorMap: Record<string, { bg: string; text: string }> = {
+      blue: { bg: 'bg-blue-500/10', text: 'text-blue-600' },
+      green: { bg: 'bg-green-500/10', text: 'text-green-600' },
+      orange: { bg: 'bg-orange-500/10', text: 'text-orange-600' },
+      purple: { bg: 'bg-purple-500/10', text: 'text-purple-600' },
+      red: { bg: 'bg-red-500/10', text: 'text-red-600' },
+      teal: { bg: 'bg-teal-500/10', text: 'text-teal-600' },
+      pink: { bg: 'bg-pink-500/10', text: 'text-pink-600' }
+    }
+    return colorMap[colorScheme] || colorMap.blue
+  }
+
+  const Icon = getModuleIcon()
+  const iconColor = getIconColor()
+  const [showActions, setShowActions] = useState(false)
+
   return (
-    <BaseWidget
-      title={widget.title}
-      onRefresh={handleRefresh}
-      onRemove={onRemove}
-      onConfig={onConfig}
-      isLoading={loading}
-      colorScheme={widget.config.colorScheme}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2 }}
+      className="bg-white rounded-xl border border-gray-200/60 p-6 hover:shadow-lg transition-shadow h-full relative"
+      onMouseEnter={() => setShowActions(true)}
+      onMouseLeave={() => setShowActions(false)}
     >
-      <div className="h-full flex flex-col justify-center">
-        <div className="text-4xl font-bold text-gray-900 mb-2">
-          {data.value}
+      {/* Actions Menu */}
+      {showActions && (
+        <motion.div
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="absolute top-2 right-2 flex items-center gap-1 bg-white rounded-lg shadow-md p-1"
+        >
+          {onRefresh && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleRefresh}
+              className="h-7 w-7 p-0"
+              disabled={loading}
+            >
+              <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
+            </Button>
+          )}
+          {onRemove && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onRemove}
+              className="h-7 w-7 p-0 text-red-600 hover:bg-red-50"
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
+        </motion.div>
+      )}
+
+      {loading ? (
+        <div className="h-full flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
-        {data.change !== undefined && (
-          <div className="flex items-center">
-            {data.trend === 'up' ? (
-              <TrendingUp className="w-4 h-4 mr-1 text-green-500" />
-            ) : (
-              <TrendingDown className="w-4 h-4 mr-1 text-red-500" />
+      ) : (
+        <>
+          <div className="flex items-center justify-between mb-4">
+            <div className={`w-10 h-10 rounded-lg ${iconColor.bg} flex items-center justify-center`}>
+              <Icon className={`w-5 h-5 ${iconColor.text}`} />
+            </div>
+            {data.change !== undefined && (
+              <div className={`flex items-center gap-1 text-sm font-medium ${
+                data.trend === 'up' ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {data.trend === 'up' ? (
+                  <ArrowUp className="w-4 h-4" />
+                ) : (
+                  <ArrowDown className="w-4 h-4" />
+                )}
+                {Math.abs(data.change).toFixed(1)}%
+              </div>
             )}
-            <span className={`text-sm font-medium ${data.trend === 'up' ? 'text-green-500' : 'text-red-500'}`}>
-              {Math.abs(data.change)}%
-            </span>
-            <span className="text-sm text-gray-500 ml-2">vs last period</span>
           </div>
-        )}
-      </div>
-    </BaseWidget>
+          <div className="text-2xl font-semibold text-gray-900 mb-1">
+            {data.value}
+          </div>
+          <div className="text-sm text-gray-500">{widget.title}</div>
+        </>
+      )}
+    </motion.div>
   )
 }
