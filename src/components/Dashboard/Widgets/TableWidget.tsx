@@ -77,7 +77,7 @@ export function TableWidget({ widget, onRefresh, onRemove, onConfig }: TableWidg
   const getLeadsTableData = async (limit: number) => {
     const { data: leads } = await supabase
       .from('leads')
-      .select('lead_id, name, phone, email, stage, priority, created_at')
+      .select('lead_id, name, phone, email, stage, created_at')
       .order('created_at', { ascending: false })
       .limit(limit)
 
@@ -85,8 +85,8 @@ export function TableWidget({ widget, onRefresh, onRemove, onConfig }: TableWidg
       { key: 'lead_id', label: 'Lead ID' },
       { key: 'name', label: 'Name' },
       { key: 'phone', label: 'Phone' },
+      { key: 'email', label: 'Email' },
       { key: 'stage', label: 'Stage', format: 'badge' },
-      { key: 'priority', label: 'Priority', format: 'badge' },
       { key: 'created_at', label: 'Created', format: 'date' }
     ]
 
@@ -133,12 +133,12 @@ export function TableWidget({ widget, onRefresh, onRemove, onConfig }: TableWidg
   const getExpensesTableData = async (limit: number) => {
     const { data: expenses } = await supabase
       .from('expenses')
-      .select('id, description, amount, category, status, expense_date')
+      .select('expense_id, description, amount, category, status, expense_date')
       .order('expense_date', { ascending: false })
       .limit(limit)
 
     const columns = [
-      { key: 'id', label: 'ID' },
+      { key: 'expense_id', label: 'Expense ID' },
       { key: 'description', label: 'Description' },
       { key: 'category', label: 'Category' },
       { key: 'amount', label: 'Amount', format: 'currency' },
