@@ -125,7 +125,23 @@ export function LMS() {
         .order('order_index', { ascending: true })
 
       if (error) throw error
-      setCategories(data || [])
+
+      const categoriesWithLessons = await Promise.all(
+        (data || []).map(async (category) => {
+          const { data: lessonsData } = await supabase
+            .from('lessons')
+            .select('*')
+            .eq('category_id', category.id)
+            .order('order_index', { ascending: true })
+
+          return {
+            ...category,
+            lessons: lessonsData || []
+          }
+        })
+      )
+
+      setCategories(categoriesWithLessons as any)
     } catch (err) {
       console.error('Error fetching categories:', err)
     }
@@ -193,7 +209,7 @@ export function LMS() {
     try {
       const { error } = await supabase.from('lessons').delete().eq('id', id)
       if (error) throw error
-      if (selectedCategory) fetchLessons(selectedCategory.id)
+      if (selectedCourse) fetchCategories(selectedCourse.id)
     } catch (err) {
       console.error('Error deleting lesson:', err)
       alert('Failed to delete lesson')
@@ -220,11 +236,6 @@ export function LMS() {
     setView('categories')
   }
 
-  const handleViewCategory = (category: Category) => {
-    setSelectedCategory(category)
-    setSelectedLesson(null)
-    setView('lessons')
-  }
 
   const handleBackToCourses = () => {
     setSelectedCourse(null)
@@ -427,35 +438,44 @@ export function LMS() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
-          {categories.map((category, index) => (
+        <div className="space-y-6">
+          {categories.map((category: any, categoryIndex) => (
             <motion.div
               key={category.id}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.1 }}
+              transition={{ delay: categoryIndex * 0.1 }}
             >
-              <Card className="hover:shadow-lg transition-shadow">
+              <Card>
                 <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <span className="font-bold text-blue-600">{index + 1}</span>
-                        </div>
-                        <h3 className="text-xl font-bold text-gray-900">{category.title}</h3>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-green-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <span className="text-white font-bold text-lg">
+                          {categoryIndex + 1}
+                        </span>
                       </div>
-                      {category.description && (
-                        <p className="text-gray-600 ml-13">{category.description}</p>
-                      )}
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900">
+                          {category.title}
+                        </h3>
+                        {category.description && (
+                          <p className="text-sm text-gray-600">{category.description}</p>
+                        )}
+                      </div>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Button
                         size="sm"
-                        onClick={() => handleViewCategory(category)}
+                        onClick={() => {
+                          setSelectedCategory(category)
+                          setEditingItem(null)
+                          setShowLessonModal(true)
+                        }}
+                        className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700"
                       >
-                        <PlayCircle className="w-4 h-4 mr-2" />
-                        View Lessons
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Lesson
                       </Button>
                       <Button
                         size="sm"
@@ -477,6 +497,68 @@ export function LMS() {
                       </Button>
                     </div>
                   </div>
+
+                  {category.lessons && category.lessons.length > 0 && (
+                    <div className="ml-15 space-y-2">
+                      {category.lessons.map((lesson: Lesson) => (
+                        <div
+                          key={lesson.id}
+                          className="flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors group"
+                        >
+                          <div className="flex items-center space-x-3 flex-1">
+                            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border-2 border-gray-200 group-hover:border-blue-500 transition-colors">
+                              <PlayCircle className="w-5 h-5 text-gray-600 group-hover:text-blue-600" />
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-2">
+                                <span className="font-medium text-gray-900">
+                                  {lesson.title}
+                                </span>
+                                {lesson.is_free && (
+                                  <Badge className="bg-blue-100 text-blue-800 text-xs">
+                                    Free
+                                  </Badge>
+                                )}
+                              </div>
+                              {lesson.duration && (
+                                <span className="text-sm text-gray-500">
+                                  {lesson.duration}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => {
+                                setSelectedLesson(lesson)
+                                setSelectedCategory(category)
+                                setEditingItem(lesson)
+                                setShowLessonModal(true)
+                              }}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleDeleteLesson(lesson.id)}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {(!category.lessons || category.lessons.length === 0) && (
+                    <div className="ml-15 p-4 bg-gray-50 rounded-lg text-center text-gray-500 text-sm">
+                      No lessons yet. Click "Add Lesson" to create your first lesson.
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </motion.div>
