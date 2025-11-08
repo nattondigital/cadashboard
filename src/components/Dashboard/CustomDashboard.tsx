@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import {
   Plus, Save, Layout, Grid, Settings, X, ChevronRight, Search,
-  LayoutDashboard, RefreshCw
+  LayoutDashboard, RefreshCw, ArrowLeft, Home
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,6 +15,7 @@ import { WIDGET_REGISTRY, getAllModules, getWidgetsByModule } from '@/lib/widget
 import { PageHeader } from '@/components/Common/PageHeader'
 
 export function CustomDashboard() {
+  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const dashboardId = searchParams.get('id')
 
@@ -142,6 +143,33 @@ export function CustomDashboard() {
     alert('Dashboard saved successfully!')
   }
 
+  const handleSetAsDefault = async () => {
+    if (!dashboard) return
+
+    // Unset all other default dashboards
+    await supabase
+      .from('custom_dashboards')
+      .update({ is_default: false })
+      .neq('id', dashboard.id)
+
+    // Set this one as default
+    await supabase
+      .from('custom_dashboards')
+      .update({ is_default: true })
+      .eq('id', dashboard.id)
+
+    setDashboard({ ...dashboard, is_default: true })
+    alert('Dashboard set as default successfully!')
+  }
+
+  const handleBackToTemplates = () => {
+    navigate('/dashboard-builder/templates')
+  }
+
+  const handleBackToBuilder = () => {
+    navigate('/dashboard-builder')
+  }
+
   const handleRefreshAll = () => {
     loadWidgets(dashboard?.id || '')
   }
@@ -181,6 +209,24 @@ export function CustomDashboard() {
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
+            {dashboardId && (
+              <Button
+                onClick={handleBackToTemplates}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to Templates
+              </Button>
+            )}
+            <Button
+              onClick={handleBackToBuilder}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Home className="w-4 h-4" />
+              Dashboard Home
+            </Button>
             <Button
               onClick={() => setShowWidgetSelector(!showWidgetSelector)}
               className="flex items-center gap-2"
@@ -198,6 +244,21 @@ export function CustomDashboard() {
             </Button>
           </div>
           <div className="flex items-center gap-3">
+            {!dashboard?.is_default && dashboardId && (
+              <Button
+                onClick={handleSetAsDefault}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <LayoutDashboard className="w-4 h-4" />
+                Set as Default
+              </Button>
+            )}
+            {dashboard?.is_default && (
+              <span className="text-sm text-gray-600 bg-blue-50 px-3 py-1.5 rounded-md border border-blue-200">
+                Default Dashboard
+              </span>
+            )}
             <Button
               onClick={handleSaveDashboard}
               variant="outline"

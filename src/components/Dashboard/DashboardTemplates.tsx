@@ -92,20 +92,12 @@ export function DashboardTemplates() {
   const handleCreateFromTemplate = async (template: DashboardTemplate) => {
     setCreating(true)
     try {
-      // First, unset any existing default dashboard if creating a new default
-      if (template.category !== 'custom') {
-        await supabase
-          .from('custom_dashboards')
-          .update({ is_default: false })
-          .eq('is_default', true)
-      }
-
       const { data: newDashboard, error: dashboardError } = await supabase
         .from('custom_dashboards')
         .insert({
           name: template.name,
           description: template.description,
-          is_default: template.category !== 'custom',
+          is_default: false,
           layout_config: { cols: 12, rowHeight: 100 }
         })
         .select()
