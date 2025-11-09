@@ -1,7 +1,7 @@
 import React from 'react'
 import { Widget } from '@/types/dashboard'
 import { KPIWidget } from './Widgets/KPIWidget'
-import { ChartWidget } from './Widgets/ChartWidget'
+import { GraphWidget } from './Widgets/GraphWidget'
 import { FunnelWidget } from './Widgets/FunnelWidget'
 import { ActivityFeedWidget } from './Widgets/ActivityFeedWidget'
 import { TableWidget } from './Widgets/TableWidget'
@@ -15,7 +15,7 @@ interface WidgetRendererProps {
   widget: Widget
   onRefresh?: () => void
   onRemove?: () => void
-  onConfig?: () => void
+  onConfig?: (config: any) => void
 }
 
 export function WidgetRenderer({ widget, onRefresh, onRemove, onConfig }: WidgetRendererProps) {
@@ -29,7 +29,7 @@ export function WidgetRenderer({ widget, onRefresh, onRemove, onConfig }: Widget
     case 'line_chart':
     case 'area_chart':
     case 'pie_chart':
-      return <ChartWidget widget={widget} onRefresh={onRefresh} onRemove={onRemove} onConfig={onConfig} />
+      return <GraphWidget widget={widget} onRefresh={onRefresh} onRemove={onRemove} onConfig={onConfig} />
 
     case 'donut_chart':
       return <DonutChartWidget {...commonProps} />
