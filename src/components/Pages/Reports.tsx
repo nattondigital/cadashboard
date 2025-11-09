@@ -1,7 +1,7 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { DollarSign, TrendingUp, BarChart3, FileText } from 'lucide-react'
+import { DollarSign, TrendingUp, BarChart3, FileText, CheckSquare } from 'lucide-react'
 import { PageHeader } from '@/components/Common/PageHeader'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -35,6 +35,16 @@ const reportCards: ReportCard[] = [
     color: 'text-blue-600',
     bgColor: 'bg-blue-50',
     route: '/reports/sales',
+    available: true
+  },
+  {
+    id: 'tasks-mis',
+    title: 'Tasks MIS',
+    description: 'Task management analytics with team performance insights and productivity metrics',
+    icon: CheckSquare,
+    color: 'text-indigo-600',
+    bgColor: 'bg-indigo-50',
+    route: '/reports/tasks-mis',
     available: true
   },
   {
@@ -146,11 +156,11 @@ export function Reports() {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">About MIS Reports</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-              <div className="text-3xl font-bold text-brand-primary">4+</div>
+              <div className="text-3xl font-bold text-brand-primary">5+</div>
               <div className="text-sm text-gray-600 mt-1">Total Reports</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-green-600">2</div>
+              <div className="text-3xl font-bold text-green-600">3</div>
               <div className="text-sm text-gray-600 mt-1">Active Reports</div>
             </div>
             <div>

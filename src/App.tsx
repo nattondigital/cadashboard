@@ -36,6 +36,7 @@ import { Followups } from '@/components/Pages/Followups'
 import { Reports } from '@/components/Pages/Reports'
 import { PayrollMIS } from '@/components/Pages/PayrollMIS'
 import { SalesReport } from '@/components/Pages/SalesReport'
+import { TasksMIS } from '@/components/Pages/TasksMIS'
 import { DashboardBuilder } from '@/components/Pages/DashboardBuilder'
 import { CustomDashboard } from '@/components/Dashboard/CustomDashboard'
 import { DashboardTemplates } from '@/components/Dashboard/DashboardTemplates'
@@ -95,6 +96,7 @@ function ProtectedRoutes() {
         <Route path="reports" element={<Reports />} />
         <Route path="reports/payroll-mis" element={<PayrollMIS />} />
         <Route path="reports/sales" element={<SalesReport />} />
+        <Route path="reports/tasks-mis" element={<TasksMIS />} />
       </Route>
       <Route path="/ai-automation-mastery" element={<AIAutomationLanding />} />
       <Route path="/templates/landing-pages1" element={<AIAutomationMasteryLanding />} />
