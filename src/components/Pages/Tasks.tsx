@@ -826,8 +826,10 @@ export const Tasks: React.FC = () => {
                       )
                       const result = await response.json()
                       if (result.success) {
-                        alert(`Successfully created ${result.tasksCreated} task(s) from recurring templates!`)
-                        fetchTasks()
+                        alert(`Successfully created ${result.tasksCreated} task(s) from recurring templates!\n\nSwitch to "Active Tasks" tab to see them.`)
+                        await fetchTasks()
+                        // Auto-switch to Active Tasks tab to show the newly created tasks
+                        setActiveTab('active')
                       } else {
                         alert('Error generating tasks: ' + result.error)
                       }
