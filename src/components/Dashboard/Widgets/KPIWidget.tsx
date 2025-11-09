@@ -508,10 +508,10 @@ export function KPIWidget({ widget, onRefresh, onRemove, onConfig }: KPIWidgetPr
               </div>
             )}
           </div>
-          <div className="text-2xl font-semibold text-gray-900 mb-1">
+          <div className="text-2xl font-semibold text-gray-900">
             {data.value}
           </div>
-          <div className="text-sm text-gray-500">{widget.title}</div>
+          <div className="text-sm text-gray-500 mt-1">{widget.title}</div>
         </>
       )}
     </motion.div>
