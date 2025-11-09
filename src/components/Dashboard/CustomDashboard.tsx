@@ -92,20 +92,20 @@ export function CustomDashboard() {
   }
 
   const createPayrollWidgets = async (dashboardId: string) => {
-    // Define payroll MIS widgets layout
+    // Define payroll MIS widgets layout - matching exact Payroll MIS dashboard
     const payrollWidgets = [
-      // KPI Cards - Row 1
-      { type: 'kpi', module: 'payroll', metric: 'earned_salary', title: 'Total Earned Salary', x: 0, y: 0, w: 3, h: 2, colorScheme: 'green' },
-      { type: 'kpi', module: 'payroll', metric: 'total_salary_budget', title: 'Salary Budget', x: 3, y: 0, w: 3, h: 2, colorScheme: 'blue' },
-      { type: 'kpi', module: 'payroll', metric: 'salary_variance', title: 'Salary Variance', x: 6, y: 0, w: 3, h: 2, colorScheme: 'orange' },
-      { type: 'kpi', module: 'payroll', metric: 'total_attendance_days', title: 'Total Attendance', x: 9, y: 0, w: 3, h: 2, colorScheme: 'purple' },
+      // KPI Cards - Row 1 (matching exact titles from PayrollMIS.tsx)
+      { type: 'kpi', module: 'payroll', metric: 'earned_salary', title: "Today's earned salary", x: 0, y: 0, w: 3, h: 2, colorScheme: 'green' },
+      { type: 'kpi', module: 'payroll', metric: 'total_attendance_days', title: 'Total attendance days', x: 3, y: 0, w: 3, h: 2, colorScheme: 'blue' },
+      { type: 'kpi', module: 'payroll', metric: 'total_salary_budget', title: 'Total salary budget', x: 6, y: 0, w: 3, h: 2, colorScheme: 'orange' },
+      { type: 'kpi', module: 'payroll', metric: 'avg_hours_employee', title: 'Avg hours/employee', x: 9, y: 0, w: 3, h: 2, colorScheme: 'blue' },
 
       // Charts - Row 2 & 3
       { type: 'bar_chart', module: 'payroll', metric: 'attendance_stats', title: 'Attendance Statistics', x: 0, y: 2, w: 6, h: 4, colorScheme: 'blue' },
       { type: 'line_chart', module: 'payroll', metric: 'salary_overview', title: 'Salary Overview', x: 6, y: 2, w: 6, h: 4, colorScheme: 'green', chartType: 'area' },
 
       // Table - Row 4
-      { type: 'table', module: 'payroll', metric: 'employee_payroll', title: 'Employee Payroll', x: 0, y: 6, w: 12, h: 5, limit: 20 }
+      { type: 'table', module: 'payroll', metric: 'employee_payroll', title: 'Employee Payroll Details', x: 0, y: 6, w: 12, h: 5, limit: 20 }
     ]
 
     const widgetsToInsert = payrollWidgets.map(w => ({

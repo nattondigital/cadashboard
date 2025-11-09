@@ -311,6 +311,7 @@ export function KPIWidget({ widget, onRefresh, onRemove, onConfig }: KPIWidgetPr
 
         const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate()
         let totalEarned = 0
+        let totalSalary = 0
 
         teamMembers?.forEach(member => {
           const memberAttendance = attendance?.filter(a => a.admin_user_id === member.id) || []
@@ -320,12 +321,14 @@ export function KPIWidget({ widget, onRefresh, onRemove, onConfig }: KPIWidgetPr
           const present = memberAttendance.filter(a => a.status === 'Present').length
 
           const salary = typeof member.salary === 'string' ? parseFloat(member.salary) : (member.salary || 0)
+          totalSalary += salary
           const perDaySalary = salary / daysInMonth
           const earnedDays = fullDays + (halfDays * 0.5) + (overtime * 1.5) + present
           totalEarned += Math.round(earnedDays * perDaySalary)
         })
 
-        return { value: formatCurrency(totalEarned), change: 15, trend: 'up' as const }
+        const percentage = totalSalary > 0 ? ((totalEarned / totalSalary) * 100) : 0
+        return { value: `₹${(totalEarned / 1000).toFixed(0)}K`, change: parseFloat(percentage.toFixed(1)), trend: 'up' as const }
       }
       case 'total_salary_budget': {
         const { data: teamMembers } = await supabase.from('admin_users').select('salary')
@@ -333,7 +336,7 @@ export function KPIWidget({ widget, onRefresh, onRemove, onConfig }: KPIWidgetPr
           const salary = typeof member.salary === 'string' ? parseFloat(member.salary) : (member.salary || 0)
           return sum + salary
         }, 0) || 0
-        return { value: formatCurrency(total), change: 5, trend: 'up' as const }
+        return { value: `₹${(total / 1000).toFixed(0)}K`, change: 20, trend: 'up' as const }
       }
       case 'salary_variance': {
         const { data: teamMembers } = await supabase.from('admin_users').select('id, salary')

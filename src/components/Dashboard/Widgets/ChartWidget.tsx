@@ -247,8 +247,13 @@ export function ChartWidget({ widget, onRefresh, onRemove, onConfig }: ChartWidg
                     fontSize: '12px'
                   }}
                 />
-                <Bar dataKey="present" fill="#3b82f6" radius={[8, 8, 0, 0]} />
-                <Bar dataKey="absent" fill="#f87171" radius={[8, 8, 0, 0]} />
+                <Legend
+                  wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
+                  iconType="circle"
+                  formatter={(value) => value.charAt(0).toUpperCase() + value.slice(1)}
+                />
+                <Bar dataKey="present" fill="#3b82f6" radius={[8, 8, 0, 0]} name="Present" />
+                <Bar dataKey="absent" fill="#f87171" radius={[8, 8, 0, 0]} name="Absent" />
               </BarChart>
             </ResponsiveContainer>
           )
@@ -321,6 +326,10 @@ export function ChartWidget({ widget, onRefresh, onRemove, onConfig }: ChartWidg
                     borderRadius: '8px',
                     fontSize: '12px'
                   }}
+                />
+                <Legend
+                  wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
+                  iconType="circle"
                 />
                 <Area
                   type="monotone"
