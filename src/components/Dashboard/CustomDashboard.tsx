@@ -180,18 +180,6 @@ export function CustomDashboard() {
     setWidgets(widgets.filter(w => w.id !== widgetId))
   }
 
-  const handleUpdateWidgetConfig = async (widgetId: string, newConfig: any) => {
-    const updatedWidgets = widgets.map(w =>
-      w.id === widgetId ? { ...w, config: newConfig } : w
-    )
-    setWidgets(updatedWidgets)
-
-    await supabase
-      .from('dashboard_widgets')
-      .update({ config: newConfig })
-      .eq('id', widgetId)
-  }
-
   const handleSaveDashboard = async () => {
     if (!dashboard) return
 
@@ -436,7 +424,6 @@ export function CustomDashboard() {
                   <WidgetRenderer
                     widget={widget}
                     onRemove={() => handleRemoveWidget(widget.id)}
-                    onConfig={(config) => handleUpdateWidgetConfig(widget.id, config)}
                   />
                 </div>
               )
