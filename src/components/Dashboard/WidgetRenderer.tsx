@@ -22,6 +22,7 @@ export function WidgetRenderer({ widget, onRefresh, onRemove, onConfig }: Widget
   const commonProps = { title: widget.title, config: widget.config }
 
   switch (widget.widget_type) {
+    case 'kpi':
     case 'kpi_card':
       return <KPIWidget widget={widget} onRefresh={onRefresh} onRemove={onRemove} onConfig={onConfig} />
 
