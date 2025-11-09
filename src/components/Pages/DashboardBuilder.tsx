@@ -1,5 +1,5 @@
-import React from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { useEffect } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { LayoutDashboard, Sparkles, Plus } from 'lucide-react'
 import { PageHeader } from '@/components/Common/PageHeader'
@@ -39,6 +39,15 @@ const builderCards: BuilderCard[] = [
 
 export function DashboardBuilder() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const template = searchParams.get('template')
+
+  useEffect(() => {
+    // If template parameter is provided, redirect to custom dashboard with template
+    if (template) {
+      navigate(`/dashboard-builder/custom?template=${template}`)
+    }
+  }, [template, navigate])
 
   const handleCardClick = (card: BuilderCard) => {
     navigate(card.route)

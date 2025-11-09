@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   ArrowLeft, Users, DollarSign, Clock, TrendingUp, Calendar,
-  Download, Search, ArrowUp, ArrowDown, MoreVertical, ChevronDown
+  Download, Search, ArrowUp, ArrowDown, MoreVertical, ChevronDown, Settings
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
@@ -239,6 +239,14 @@ export function PayrollMIS() {
                 onChange={(e) => setSelectedMonth(e.target.value)}
                 className="px-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               />
+              <Button
+                onClick={() => navigate('/dashboard-builder?template=payroll-mis')}
+                variant="outline"
+                className="flex items-center gap-2 border-blue-200 text-blue-600 hover:bg-blue-50"
+              >
+                <Settings className="w-4 h-4" />
+                Customize Report
+              </Button>
               <Button
                 onClick={exportToCSV}
                 variant="outline"

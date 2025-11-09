@@ -18,6 +18,7 @@ export function CustomDashboard() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const dashboardId = searchParams.get('id')
+  const template = searchParams.get('template')
 
   const [dashboard, setDashboard] = useState<Dashboard | null>(null)
   const [widgets, setWidgets] = useState<Widget[]>([])
@@ -62,11 +63,15 @@ export function CustomDashboard() {
   }
 
   const createBlankDashboard = async () => {
+    // Set dashboard name based on template
+    const dashboardName = template === 'payroll-mis' ? 'Payroll MIS Dashboard' : 'My Dashboard'
+    const dashboardDesc = template === 'payroll-mis' ? 'Customizable Payroll & Attendance Report' : 'Custom MIS Dashboard'
+
     const { data: newDashboard, error } = await supabase
       .from('custom_dashboards')
       .insert({
-        name: 'My Dashboard',
-        description: 'Custom MIS Dashboard',
+        name: dashboardName,
+        description: dashboardDesc,
         is_default: false,
         layout_config: { cols: 12, rowHeight: 100 }
       })
@@ -76,7 +81,54 @@ export function CustomDashboard() {
     if (newDashboard) {
       setDashboard(newDashboard)
       setDashboardName(newDashboard.name)
-      setWidgets([]) // Start with no widgets - blank dashboard
+
+      // If template is payroll-mis, create payroll widgets
+      if (template === 'payroll-mis') {
+        await createPayrollWidgets(newDashboard.id)
+      } else {
+        setWidgets([]) // Start with no widgets - blank dashboard
+      }
+    }
+  }
+
+  const createPayrollWidgets = async (dashboardId: string) => {
+    // Define payroll MIS widgets layout
+    const payrollWidgets = [
+      // KPI Cards - Row 1
+      { type: 'kpi', module: 'payroll', metric: 'earned_salary', title: 'Total Earned Salary', x: 0, y: 0, w: 3, h: 2, colorScheme: 'green' },
+      { type: 'kpi', module: 'payroll', metric: 'total_salary_budget', title: 'Salary Budget', x: 3, y: 0, w: 3, h: 2, colorScheme: 'blue' },
+      { type: 'kpi', module: 'payroll', metric: 'salary_variance', title: 'Salary Variance', x: 6, y: 0, w: 3, h: 2, colorScheme: 'orange' },
+      { type: 'kpi', module: 'payroll', metric: 'total_attendance_days', title: 'Total Attendance', x: 9, y: 0, w: 3, h: 2, colorScheme: 'purple' },
+
+      // Charts - Row 2 & 3
+      { type: 'bar_chart', module: 'payroll', metric: 'attendance_stats', title: 'Attendance Statistics', x: 0, y: 2, w: 6, h: 4, colorScheme: 'blue' },
+      { type: 'line_chart', module: 'payroll', metric: 'salary_overview', title: 'Salary Overview', x: 6, y: 2, w: 6, h: 4, colorScheme: 'green', chartType: 'area' },
+
+      // Table - Row 4
+      { type: 'table', module: 'payroll', metric: 'employee_payroll', title: 'Employee Payroll', x: 0, y: 6, w: 12, h: 5, limit: 20 }
+    ]
+
+    const widgetsToInsert = payrollWidgets.map(w => ({
+      dashboard_id: dashboardId,
+      widget_type: w.type,
+      module: w.module,
+      title: w.title,
+      position: { x: w.x, y: w.y, w: w.w, h: w.h },
+      config: {
+        metric: w.metric,
+        colorScheme: w.colorScheme || 'blue',
+        limit: w.limit,
+        chartType: (w as any).chartType
+      }
+    }))
+
+    const { data: createdWidgets } = await supabase
+      .from('dashboard_widgets')
+      .insert(widgetsToInsert)
+      .select()
+
+    if (createdWidgets) {
+      setWidgets(createdWidgets)
     }
   }
 
