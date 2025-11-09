@@ -95,19 +95,20 @@ export function CustomDashboard() {
     // Define payroll MIS widgets layout - matching exact Payroll MIS dashboard
     // Grid: 12 columns, auto-rows-[100px]
     // Widths: KPI=25% (3/12), Charts=50% (6/12), Table=100% (12/12)
+    // Heights: KPI=1.3 (130px natural content), Charts=4 (400px), Table=5 (500px)
     const payrollWidgets = [
-      // KPI Cards - Row 1 (h=1.5 for compact height, matching exact titles from PayrollMIS.tsx)
-      { type: 'kpi', module: 'payroll', metric: 'earned_salary', title: "Today's earned salary", x: 0, y: 0, w: 3, h: 1.5, colorScheme: 'green' },
-      { type: 'kpi', module: 'payroll', metric: 'total_attendance_days', title: 'Total attendance days', x: 3, y: 0, w: 3, h: 1.5, colorScheme: 'blue' },
-      { type: 'kpi', module: 'payroll', metric: 'total_salary_budget', title: 'Total salary budget', x: 6, y: 0, w: 3, h: 1.5, colorScheme: 'orange' },
-      { type: 'kpi', module: 'payroll', metric: 'avg_hours_employee', title: 'Avg hours/employee', x: 9, y: 0, w: 3, h: 1.5, colorScheme: 'blue' },
+      // KPI Cards - Row 1 (h=1.3 for natural content height matching PayrollMIS)
+      { type: 'kpi', module: 'payroll', metric: 'earned_salary', title: "Today's earned salary", x: 0, y: 0, w: 3, h: 1.3, colorScheme: 'green' },
+      { type: 'kpi', module: 'payroll', metric: 'total_attendance_days', title: 'Total attendance days', x: 3, y: 0, w: 3, h: 1.3, colorScheme: 'blue' },
+      { type: 'kpi', module: 'payroll', metric: 'total_salary_budget', title: 'Total salary budget', x: 6, y: 0, w: 3, h: 1.3, colorScheme: 'orange' },
+      { type: 'kpi', module: 'payroll', metric: 'avg_hours_employee', title: 'Avg hours/employee', x: 9, y: 0, w: 3, h: 1.3, colorScheme: 'blue' },
 
-      // Charts - Row 2 & 3 (starting at y=1.5, h=4 for good chart visibility)
-      { type: 'bar_chart', module: 'payroll', metric: 'attendance_stats', title: 'Attendance Statistics', x: 0, y: 1.5, w: 6, h: 4, colorScheme: 'blue' },
-      { type: 'line_chart', module: 'payroll', metric: 'salary_overview', title: 'Salary Overview', x: 6, y: 1.5, w: 6, h: 4, colorScheme: 'green', chartType: 'area' },
+      // Charts - Row 2 & 3 (starting at y=1.3, h=4 for good chart visibility)
+      { type: 'bar_chart', module: 'payroll', metric: 'attendance_stats', title: 'Attendance Statistics', x: 0, y: 1.3, w: 6, h: 4, colorScheme: 'blue' },
+      { type: 'line_chart', module: 'payroll', metric: 'salary_overview', title: 'Salary Overview', x: 6, y: 1.3, w: 6, h: 4, colorScheme: 'green', chartType: 'area' },
 
-      // Table - Row 4 (starting at y=5.5)
-      { type: 'table', module: 'payroll', metric: 'employee_payroll', title: 'Employee Payroll Details', x: 0, y: 5.5, w: 12, h: 5, limit: 20 }
+      // Table - Row 4 (starting at y=5.3)
+      { type: 'table', module: 'payroll', metric: 'employee_payroll', title: 'Employee Payroll Details', x: 0, y: 5.3, w: 12, h: 5, limit: 20 }
     ]
 
     const widgetsToInsert = payrollWidgets.map(w => ({

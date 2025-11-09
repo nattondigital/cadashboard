@@ -450,7 +450,7 @@ export function KPIWidget({ widget, onRefresh, onRemove, onConfig }: KPIWidgetPr
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
-      className="bg-white rounded-xl border border-gray-200/60 p-5 hover:shadow-lg transition-shadow h-full relative flex flex-col justify-center"
+      className="bg-white rounded-xl border border-gray-200/60 p-6 hover:shadow-lg transition-shadow relative"
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
@@ -486,12 +486,12 @@ export function KPIWidget({ widget, onRefresh, onRemove, onConfig }: KPIWidgetPr
       )}
 
       {loading ? (
-        <div className="flex items-center justify-center">
+        <div className="h-full flex items-center justify-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
       ) : (
-        <div className="flex flex-col">
-          <div className="flex items-center justify-between mb-3">
+        <>
+          <div className="flex items-center justify-between mb-4">
             <div className={`w-10 h-10 rounded-lg ${iconColor.bg} flex items-center justify-center`}>
               <Icon className={`w-5 h-5 ${iconColor.text}`} />
             </div>
@@ -508,11 +508,11 @@ export function KPIWidget({ widget, onRefresh, onRemove, onConfig }: KPIWidgetPr
               </div>
             )}
           </div>
-          <div className="text-2xl font-semibold text-gray-900">
+          <div className="text-2xl font-semibold text-gray-900 mb-1">
             {data.value}
           </div>
-          <div className="text-sm text-gray-500 mt-1">{widget.title}</div>
-        </div>
+          <div className="text-sm text-gray-500">{widget.title}</div>
+        </>
       )}
     </motion.div>
   )
