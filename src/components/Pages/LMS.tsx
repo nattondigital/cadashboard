@@ -915,7 +915,13 @@ export function LMS() {
           }}
           categoryId={selectedCategory.id}
           lesson={editingItem}
-          onSuccess={() => fetchLessons(selectedCategory.id)}
+          onSuccess={() => {
+            if (view === 'categories' && selectedCourse) {
+              fetchCategories(selectedCourse.id)
+            } else if (view === 'lessons') {
+              fetchLessons(selectedCategory.id)
+            }
+          }}
         />
       )}
     </div>
