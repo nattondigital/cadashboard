@@ -37,14 +37,14 @@ Deno.serve(async (req: Request) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // Get current date in IST
     const now = new Date()
     const currentDayOfWeek = now.toLocaleDateString('en-US', { weekday: 'short' }).toLowerCase()
     const currentDayOfMonth = now.getDate()
-    const currentHour = now.getHours()
-    const currentMinute = now.getMinutes()
 
-    // Fetch all active recurring tasks
+    console.log('Running task generation at:', now.toISOString())
+    console.log('Current day of week:', currentDayOfWeek)
+    console.log('Current day of month:', currentDayOfMonth)
+
     const { data: recurringTasks, error: fetchError } = await supabase
       .from('recurring_tasks')
       .select('*')
@@ -53,6 +53,8 @@ Deno.serve(async (req: Request) => {
     if (fetchError) {
       throw fetchError
     }
+
+    console.log('Found recurring tasks:', recurringTasks?.length || 0)
 
     const tasksCreated: any[] = []
     const errors: any[] = []
@@ -64,98 +66,91 @@ Deno.serve(async (req: Request) => {
         let dueDateTime: Date | null = null
 
         if (task.recurrence_type === 'daily') {
-          // For daily tasks, create if we're at or past the start time
+          shouldCreateTask = true
+
           const [startHour, startMinute] = task.start_time.split(':').map(Number)
           const [dueHour, dueMinute] = task.due_time.split(':').map(Number)
 
-          if (currentHour === startHour && currentMinute === startMinute) {
+          startDateTime = new Date(now)
+          startDateTime.setHours(startHour, startMinute, 0, 0)
+
+          dueDateTime = new Date(now)
+          dueDateTime.setHours(dueHour, dueMinute, 0, 0)
+
+          console.log(`Daily task "${task.title}": should create`)
+        } else if (task.recurrence_type === 'weekly') {
+          const startDays = task.start_days || []
+
+          if (startDays.includes(currentDayOfWeek)) {
             shouldCreateTask = true
+
+            const [startHour, startMinute] = task.start_time.split(':').map(Number)
+            const [dueHour, dueMinute] = task.due_time.split(':').map(Number)
 
             startDateTime = new Date(now)
             startDateTime.setHours(startHour, startMinute, 0, 0)
 
-            dueDateTime = new Date(now)
-            dueDateTime.setHours(dueHour, dueMinute, 0, 0)
-          }
-        } else if (task.recurrence_type === 'weekly') {
-          // For weekly tasks, check if today is a start day
-          const startDays = task.start_days || []
-          const dueDays = task.due_days || []
+            const dueDays = task.due_days || []
+            const daysOfWeek = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
+            const currentDayIndex = daysOfWeek.indexOf(currentDayOfWeek)
 
-          if (startDays.includes(currentDayOfWeek)) {
-            const [startHour, startMinute] = task.start_time.split(':').map(Number)
-
-            if (currentHour === startHour && currentMinute === startMinute) {
-              shouldCreateTask = true
-
-              startDateTime = new Date(now)
-              startDateTime.setHours(startHour, startMinute, 0, 0)
-
-              // Calculate due date
-              const [dueHour, dueMinute] = task.due_time.split(':').map(Number)
-              dueDateTime = new Date(now)
-
-              // Find the next due day
-              const daysOfWeek = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
-              const currentDayIndex = daysOfWeek.indexOf(currentDayOfWeek)
-
-              // Find the closest due day
-              let daysToAdd = 0
-              for (const dueDay of dueDays) {
-                const dueDayIndex = daysOfWeek.indexOf(dueDay)
-                let diff = dueDayIndex - currentDayIndex
-                if (diff < 0) diff += 7
-                if (daysToAdd === 0 || diff < daysToAdd) {
-                  daysToAdd = diff
-                }
+            let daysToAdd = 0
+            for (const dueDay of dueDays) {
+              const dueDayIndex = daysOfWeek.indexOf(dueDay)
+              let diff = dueDayIndex - currentDayIndex
+              if (diff < 0) diff += 7
+              if (daysToAdd === 0 || diff < daysToAdd) {
+                daysToAdd = diff
               }
-
-              dueDateTime.setDate(dueDateTime.getDate() + daysToAdd)
-              dueDateTime.setHours(dueHour, dueMinute, 0, 0)
             }
+
+            dueDateTime = new Date(now)
+            dueDateTime.setDate(dueDateTime.getDate() + daysToAdd)
+            dueDateTime.setHours(dueHour, dueMinute, 0, 0)
+
+            console.log(`Weekly task "${task.title}": should create (today is ${currentDayOfWeek}, start days: ${startDays.join(',')})`)
+          } else {
+            console.log(`Weekly task "${task.title}": skip (today is ${currentDayOfWeek}, start days: ${startDays.join(',')})`)
           }
         } else if (task.recurrence_type === 'monthly') {
-          // For monthly tasks, check if today is the start day
           let startDay = task.start_day_of_month
-          let dueDay = task.due_day_of_month
 
-          // Handle "last day of month" (0 means last day)
           if (startDay === 0) {
             const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
             startDay = lastDay
           }
 
           if (currentDayOfMonth === startDay) {
+            shouldCreateTask = true
+
             const [startHour, startMinute] = task.start_time.split(':').map(Number)
+            const [dueHour, dueMinute] = task.due_time.split(':').map(Number)
 
-            if (currentHour === startHour && currentMinute === startMinute) {
-              shouldCreateTask = true
+            startDateTime = new Date(now)
+            startDateTime.setHours(startHour, startMinute, 0, 0)
 
-              startDateTime = new Date(now)
-              startDateTime.setHours(startHour, startMinute, 0, 0)
+            let dueDay = task.due_day_of_month
+            dueDateTime = new Date(now)
 
-              // Calculate due date
-              const [dueHour, dueMinute] = task.due_time.split(':').map(Number)
-              dueDateTime = new Date(now)
-
-              if (dueDay === 0) {
-                const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
-                dueDay = lastDay
-              }
-
-              dueDateTime.setDate(dueDay!)
-              dueDateTime.setHours(dueHour, dueMinute, 0, 0)
-
-              // If due day is before start day, it's in the next month
-              if (dueDay! < startDay!) {
-                dueDateTime.setMonth(dueDateTime.getMonth() + 1)
-              }
+            if (dueDay === 0) {
+              const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
+              dueDay = lastDay
             }
+
+            dueDateTime.setDate(dueDay!)
+            dueDateTime.setHours(dueHour, dueMinute, 0, 0)
+
+            if (dueDay! < startDay!) {
+              dueDateTime.setMonth(dueDateTime.getMonth() + 1)
+            }
+
+            console.log(`Monthly task "${task.title}": should create (today is day ${currentDayOfMonth}, start day: ${startDay})`)
+          } else {
+            console.log(`Monthly task "${task.title}": skip (today is day ${currentDayOfMonth}, start day: ${startDay})`)
           }
         }
 
         if (shouldCreateTask && startDateTime && dueDateTime) {
-          // Check if a task already exists for this recurring task today
           const startOfDay = new Date(now)
           startOfDay.setHours(0, 0, 0, 0)
           const endOfDay = new Date(now)
@@ -169,10 +164,10 @@ Deno.serve(async (req: Request) => {
             .lte('start_date', endOfDay.toISOString())
 
           if (existingTasks && existingTasks.length > 0) {
-            continue // Skip if task already exists today
+            console.log(`Task "${task.title}" already exists today, skipping`)
+            continue
           }
 
-          // Create the task
           const newTask = {
             title: task.title,
             description: task.description,
@@ -189,6 +184,8 @@ Deno.serve(async (req: Request) => {
             updated_at: new Date().toISOString()
           }
 
+          console.log(`Creating task "${task.title}"...`)
+
           const { data: createdTask, error: createError } = await supabase
             .from('tasks')
             .insert([newTask])
@@ -196,11 +193,14 @@ Deno.serve(async (req: Request) => {
             .single()
 
           if (createError) {
+            console.error(`Error creating task "${task.title}":`, createError)
             errors.push({
               recurringTaskId: task.id,
+              taskTitle: task.title,
               error: createError.message
             })
           } else {
+            console.log(`Successfully created task "${task.title}" with ID:`, createdTask.id)
             tasksCreated.push({
               recurringTaskId: task.id,
               taskId: createdTask.id,
@@ -209,12 +209,16 @@ Deno.serve(async (req: Request) => {
           }
         }
       } catch (err) {
+        console.error(`Error processing task ${task.id}:`, err)
         errors.push({
           recurringTaskId: task.id,
+          taskTitle: task.title,
           error: err.message
         })
       }
     }
+
+    console.log(`Task generation complete. Created: ${tasksCreated.length}, Errors: ${errors.length}`)
 
     return new Response(
       JSON.stringify({
