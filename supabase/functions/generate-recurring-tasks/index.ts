@@ -66,8 +66,6 @@ Deno.serve(async (req: Request) => {
         let dueDateTime: Date | null = null
 
         if (task.recurrence_type === 'daily') {
-          shouldCreateTask = true
-
           const [startHour, startMinute] = task.start_time.split(':').map(Number)
           const [dueHour, dueMinute] = task.due_time.split(':').map(Number)
 
@@ -77,13 +75,20 @@ Deno.serve(async (req: Request) => {
           dueDateTime = new Date(now)
           dueDateTime.setHours(dueHour, dueMinute, 0, 0)
 
-          console.log(`Daily task "${task.title}": should create`)
+          // Only create task if current time has reached or passed the start time
+          const currentTime = now.getHours() * 60 + now.getMinutes()
+          const startTime = startHour * 60 + startMinute
+
+          if (currentTime >= startTime) {
+            shouldCreateTask = true
+            console.log(`Daily task "${task.title}": should create (current time ${now.getHours()}:${now.getMinutes()} >= start time ${startHour}:${startMinute})`)
+          } else {
+            console.log(`Daily task "${task.title}": skip (current time ${now.getHours()}:${now.getMinutes()} < start time ${startHour}:${startMinute})`)
+          }
         } else if (task.recurrence_type === 'weekly') {
           const startDays = task.start_days || []
 
           if (startDays.includes(currentDayOfWeek)) {
-            shouldCreateTask = true
-
             const [startHour, startMinute] = task.start_time.split(':').map(Number)
             const [dueHour, dueMinute] = task.due_time.split(':').map(Number)
 
@@ -108,7 +113,16 @@ Deno.serve(async (req: Request) => {
             dueDateTime.setDate(dueDateTime.getDate() + daysToAdd)
             dueDateTime.setHours(dueHour, dueMinute, 0, 0)
 
-            console.log(`Weekly task "${task.title}": should create (today is ${currentDayOfWeek}, start days: ${startDays.join(',')})`)
+            // Only create task if current time has reached or passed the start time
+            const currentTime = now.getHours() * 60 + now.getMinutes()
+            const startTime = startHour * 60 + startMinute
+
+            if (currentTime >= startTime) {
+              shouldCreateTask = true
+              console.log(`Weekly task "${task.title}": should create (today is ${currentDayOfWeek}, current time ${now.getHours()}:${now.getMinutes()} >= start time ${startHour}:${startMinute})`)
+            } else {
+              console.log(`Weekly task "${task.title}": skip (today is ${currentDayOfWeek}, current time ${now.getHours()}:${now.getMinutes()} < start time ${startHour}:${startMinute})`)
+            }
           } else {
             console.log(`Weekly task "${task.title}": skip (today is ${currentDayOfWeek}, start days: ${startDays.join(',')})`)
           }
@@ -121,8 +135,6 @@ Deno.serve(async (req: Request) => {
           }
 
           if (currentDayOfMonth === startDay) {
-            shouldCreateTask = true
-
             const [startHour, startMinute] = task.start_time.split(':').map(Number)
             const [dueHour, dueMinute] = task.due_time.split(':').map(Number)
 
@@ -144,7 +156,16 @@ Deno.serve(async (req: Request) => {
               dueDateTime.setMonth(dueDateTime.getMonth() + 1)
             }
 
-            console.log(`Monthly task "${task.title}": should create (today is day ${currentDayOfMonth}, start day: ${startDay})`)
+            // Only create task if current time has reached or passed the start time
+            const currentTime = now.getHours() * 60 + now.getMinutes()
+            const startTime = startHour * 60 + startMinute
+
+            if (currentTime >= startTime) {
+              shouldCreateTask = true
+              console.log(`Monthly task "${task.title}": should create (today is day ${currentDayOfMonth}, current time ${now.getHours()}:${now.getMinutes()} >= start time ${startHour}:${startMinute})`)
+            } else {
+              console.log(`Monthly task "${task.title}": skip (today is day ${currentDayOfMonth}, current time ${now.getHours()}:${now.getMinutes()} < start time ${startHour}:${startMinute})`)
+            }
           } else {
             console.log(`Monthly task "${task.title}": skip (today is day ${currentDayOfMonth}, start day: ${startDay})`)
           }
