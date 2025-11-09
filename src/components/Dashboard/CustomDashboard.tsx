@@ -93,23 +93,22 @@ export function CustomDashboard() {
 
   const createPayrollWidgets = async (dashboardId: string) => {
     // Define payroll MIS widgets layout - matching exact Payroll MIS dashboard
-    // Grid: 12 columns, auto-rows-[100px], gap-5 (20px between rows)
+    // Grid: 12 columns, auto-rows-[100px]
     // Widths: KPI=25% (3/12), Charts=50% (6/12), Table=100% (12/12)
-    // Heights: KPI=1.3 (130px), Charts=4 (400px), Table=5 (500px)
-    // Y-positions account for gap between rows (0.2 units = 20px gap)
+    // Heights: KPI=1.3 (130px natural content), Charts=4 (400px), Table=5 (500px)
     const payrollWidgets = [
-      // KPI Cards - Row 1 (y=0, h=1.3, ends at 1.3)
+      // KPI Cards - Row 1 (h=1.3 for natural content height matching PayrollMIS)
       { type: 'kpi', module: 'payroll', metric: 'earned_salary', title: "Today's earned salary", x: 0, y: 0, w: 3, h: 1.3, colorScheme: 'green' },
       { type: 'kpi', module: 'payroll', metric: 'total_attendance_days', title: 'Total attendance days', x: 3, y: 0, w: 3, h: 1.3, colorScheme: 'blue' },
       { type: 'kpi', module: 'payroll', metric: 'total_salary_budget', title: 'Total salary budget', x: 6, y: 0, w: 3, h: 1.3, colorScheme: 'orange' },
       { type: 'kpi', module: 'payroll', metric: 'avg_hours_employee', title: 'Avg hours/employee', x: 9, y: 0, w: 3, h: 1.3, colorScheme: 'blue' },
 
-      // Charts - Row 2-5 (y=2 to leave gap, h=4, ends at 6)
-      { type: 'bar_chart', module: 'payroll', metric: 'attendance_stats', title: 'Attendance Statistics', x: 0, y: 2, w: 6, h: 4, colorScheme: 'blue' },
-      { type: 'line_chart', module: 'payroll', metric: 'salary_overview', title: 'Salary Overview', x: 6, y: 2, w: 6, h: 4, colorScheme: 'green', chartType: 'area' },
+      // Charts - Row 2 & 3 (starting at y=1.3, h=4 for good chart visibility)
+      { type: 'bar_chart', module: 'payroll', metric: 'attendance_stats', title: 'Attendance Statistics', x: 0, y: 1.3, w: 6, h: 4, colorScheme: 'blue' },
+      { type: 'line_chart', module: 'payroll', metric: 'salary_overview', title: 'Salary Overview', x: 6, y: 1.3, w: 6, h: 4, colorScheme: 'green', chartType: 'area' },
 
-      // Table - Row 6-10 (y=7 to leave gap, h=5)
-      { type: 'table', module: 'payroll', metric: 'employee_payroll', title: 'Employee Payroll Details', x: 0, y: 7, w: 12, h: 5, limit: 20 }
+      // Table - Row 4 (starting at y=5.3)
+      { type: 'table', module: 'payroll', metric: 'employee_payroll', title: 'Employee Payroll Details', x: 0, y: 5.3, w: 12, h: 5, limit: 20 }
     ]
 
     const widgetsToInsert = payrollWidgets.map(w => ({
@@ -412,23 +411,14 @@ export function CustomDashboard() {
             {widgets.map((widget) => {
               const gridWidth = widget.position.w
               const gridHeight = widget.position.h
-              const gridX = widget.position.x
-              const gridY = widget.position.y
-
-              // Calculate grid row start and end positions
-              // Grid rows are 1-indexed in CSS
-              const rowStart = Math.floor(gridY) + 1
-              const rowEnd = Math.ceil(gridY + gridHeight) + 1
-              const colStart = gridX + 1
-              const colEnd = gridX + gridWidth + 1
 
               return (
                 <div
                   key={widget.id}
-                  className="h-full"
+                  className={`col-span-${gridWidth > 12 ? 12 : gridWidth} row-span-${gridHeight}`}
                   style={{
-                    gridColumn: `${colStart} / ${colEnd}`,
-                    gridRow: `${rowStart} / ${rowEnd}`
+                    gridColumn: `span ${gridWidth > 12 ? 12 : gridWidth}`,
+                    gridRow: `span ${gridHeight}`
                   }}
                 >
                   <WidgetRenderer

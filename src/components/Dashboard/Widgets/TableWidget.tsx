@@ -8,11 +8,12 @@ import { ArrowUpDown, ExternalLink } from 'lucide-react'
 
 interface TableWidgetProps {
   widget: Widget
+  onRefresh?: () => void
   onRemove?: () => void
   onConfig?: () => void
 }
 
-export function TableWidget({ widget, onRemove, onConfig }: TableWidgetProps) {
+export function TableWidget({ widget, onRefresh, onRemove, onConfig }: TableWidgetProps) {
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState<any[]>([])
   const [columns, setColumns] = useState<Array<{ key: string; label: string; format?: string }>>([])
@@ -282,9 +283,15 @@ export function TableWidget({ widget, onRemove, onConfig }: TableWidgetProps) {
     return 'bg-gray-100 text-gray-800'
   }
 
+  const handleRefresh = () => {
+    fetchData()
+    onRefresh?.()
+  }
+
   return (
     <BaseWidget
       title={widget.title}
+      onRefresh={handleRefresh}
       onRemove={onRemove}
       onConfig={onConfig}
       isLoading={loading}

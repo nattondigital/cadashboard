@@ -73,7 +73,7 @@ const mockActivities = [
   }
 ]
 
-export function ActivityFeedWidget({ widget, onRemove, onConfig }: ActivityFeedWidgetProps) {
+export function ActivityFeedWidget({ widget, onRefresh, onRemove, onConfig }: ActivityFeedWidgetProps) {
   const [loading, setLoading] = useState(false)
   const [activities, setActivities] = useState(mockActivities)
 
@@ -82,9 +82,18 @@ export function ActivityFeedWidget({ widget, onRemove, onConfig }: ActivityFeedW
     setActivities(mockActivities.slice(0, limit))
   }, [widget.config])
 
+  const handleRefresh = () => {
+    setLoading(true)
+    setTimeout(() => {
+      setLoading(false)
+      onRefresh?.()
+    }, 500)
+  }
+
   return (
     <BaseWidget
       title={widget.title}
+      onRefresh={handleRefresh}
       onRemove={onRemove}
       onConfig={onConfig}
       isLoading={loading}

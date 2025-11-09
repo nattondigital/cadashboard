@@ -13,35 +13,35 @@ import { CalendarWidget } from './Widgets/CalendarWidget'
 
 interface WidgetRendererProps {
   widget: Widget
+  onRefresh?: () => void
   onRemove?: () => void
   onConfig?: () => void
 }
 
-export function WidgetRenderer({ widget, onRemove, onConfig }: WidgetRendererProps) {
+export function WidgetRenderer({ widget, onRefresh, onRemove, onConfig }: WidgetRendererProps) {
   const commonProps = { title: widget.title, config: widget.config }
 
   switch (widget.widget_type) {
-    case 'kpi':
     case 'kpi_card':
-      return <KPIWidget widget={widget} onRemove={onRemove} onConfig={onConfig} />
+      return <KPIWidget widget={widget} onRefresh={onRefresh} onRemove={onRemove} onConfig={onConfig} />
 
     case 'bar_chart':
     case 'line_chart':
     case 'area_chart':
     case 'pie_chart':
-      return <ChartWidget widget={widget} onRemove={onRemove} onConfig={onConfig} />
+      return <ChartWidget widget={widget} onRefresh={onRefresh} onRemove={onRemove} onConfig={onConfig} />
 
     case 'donut_chart':
       return <DonutChartWidget {...commonProps} />
 
     case 'funnel':
-      return <FunnelWidget widget={widget} onRemove={onRemove} onConfig={onConfig} />
+      return <FunnelWidget widget={widget} onRefresh={onRefresh} onRemove={onRemove} onConfig={onConfig} />
 
     case 'activity_feed':
-      return <ActivityFeedWidget widget={widget} onRemove={onRemove} onConfig={onConfig} />
+      return <ActivityFeedWidget widget={widget} onRefresh={onRefresh} onRemove={onRemove} onConfig={onConfig} />
 
     case 'table':
-      return <TableWidget widget={widget} onRemove={onRemove} onConfig={onConfig} />
+      return <TableWidget widget={widget} onRefresh={onRefresh} onRemove={onRemove} onConfig={onConfig} />
 
     case 'progress_bar':
       return <ProgressBarWidget {...commonProps} />

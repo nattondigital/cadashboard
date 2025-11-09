@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import {
   TrendingUp, TrendingDown, ArrowUp, ArrowDown,
   Users, DollarSign, Calendar, BookOpen, Link,
-  HelpCircle, CheckCircle, Receipt, Zap, X, Clock
+  HelpCircle, CheckCircle, Receipt, Zap, X, RefreshCw, Clock
 } from 'lucide-react'
 import { Widget } from '@/types/dashboard'
 import { supabase } from '@/lib/supabase'
@@ -12,11 +12,12 @@ import { Button } from '@/components/ui/button'
 
 interface KPIWidgetProps {
   widget: Widget
+  onRefresh?: () => void
   onRemove?: () => void
   onConfig?: () => void
 }
 
-export function KPIWidget({ widget, onRemove, onConfig }: KPIWidgetProps) {
+export function KPIWidget({ widget, onRefresh, onRemove, onConfig }: KPIWidgetProps) {
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState<{
     value: string | number
@@ -404,6 +405,11 @@ export function KPIWidget({ widget, onRemove, onConfig }: KPIWidgetProps) {
     }
   }
 
+  const handleRefresh = () => {
+    fetchData()
+    onRefresh?.()
+  }
+
   const getModuleIcon = () => {
     switch (widget.module) {
       case 'leads': return Users
@@ -449,20 +455,33 @@ export function KPIWidget({ widget, onRemove, onConfig }: KPIWidgetProps) {
       onMouseLeave={() => setShowActions(false)}
     >
       {/* Actions Menu */}
-      {showActions && onRemove && (
+      {showActions && (
         <motion.div
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
           className="absolute top-2 right-2 flex items-center gap-1 bg-white rounded-lg shadow-md p-1"
         >
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onRemove}
-            className="h-7 w-7 p-0 text-red-600 hover:bg-red-50"
-          >
-            <X className="h-3 w-3" />
-          </Button>
+          {onRefresh && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleRefresh}
+              className="h-7 w-7 p-0"
+              disabled={loading}
+            >
+              <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
+            </Button>
+          )}
+          {onRemove && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onRemove}
+              className="h-7 w-7 p-0 text-red-600 hover:bg-red-50"
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
         </motion.div>
       )}
 
