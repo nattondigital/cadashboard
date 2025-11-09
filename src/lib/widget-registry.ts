@@ -955,6 +955,166 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
       sortOrder: 'desc'
     }
   },
+  // Payroll Module - KPI Widgets
+  {
+    type: 'kpi_card',
+    module: 'payroll',
+    label: 'Earned Salary',
+    description: 'Total earned salary for the selected period',
+    icon: 'DollarSign',
+    defaultSize: { x: 0, y: 0, w: 3, h: 2 },
+    defaultConfig: {
+      metric: 'earned_salary',
+      colorScheme: 'green',
+      showTrend: true
+    },
+    availableMetrics: [
+      { value: 'earned_salary', label: 'Earned Salary' },
+      { value: 'total_salary_budget', label: 'Total Salary Budget' },
+      { value: 'salary_variance', label: 'Salary Variance' }
+    ],
+    configSchema: {
+      metric: {
+        type: 'select',
+        label: 'Metric',
+        options: [
+          { value: 'earned_salary', label: 'Earned Salary' },
+          { value: 'total_salary_budget', label: 'Total Salary Budget' },
+          { value: 'salary_variance', label: 'Salary Variance' }
+        ],
+        default: 'earned_salary'
+      },
+      colorScheme: {
+        type: 'select',
+        label: 'Color Scheme',
+        options: [
+          { value: 'blue', label: 'Blue' },
+          { value: 'green', label: 'Green' },
+          { value: 'orange', label: 'Orange' },
+          { value: 'purple', label: 'Purple' }
+        ],
+        default: 'green'
+      }
+    }
+  },
+  {
+    type: 'kpi_card',
+    module: 'payroll',
+    label: 'Total Attendance Days',
+    description: 'Total attendance days across all employees',
+    icon: 'Calendar',
+    defaultSize: { x: 0, y: 0, w: 3, h: 2 },
+    defaultConfig: {
+      metric: 'total_attendance_days',
+      colorScheme: 'blue',
+      showTrend: true
+    }
+  },
+  {
+    type: 'kpi_card',
+    module: 'payroll',
+    label: 'Avg Hours per Employee',
+    description: 'Average working hours per employee',
+    icon: 'Clock',
+    defaultSize: { x: 0, y: 0, w: 3, h: 2 },
+    defaultConfig: {
+      metric: 'avg_hours_employee',
+      colorScheme: 'blue',
+      showTrend: true
+    }
+  },
+  {
+    type: 'kpi_card',
+    module: 'payroll',
+    label: 'Overtime Days',
+    description: 'Total overtime days across all employees',
+    icon: 'TrendingUp',
+    defaultSize: { x: 0, y: 0, w: 3, h: 2 },
+    defaultConfig: {
+      metric: 'total_overtime',
+      colorScheme: 'orange',
+      showTrend: true
+    }
+  },
+  // Payroll Module - Chart Widgets
+  {
+    type: 'bar_chart',
+    module: 'payroll',
+    label: 'Attendance Statistics',
+    description: 'Bar chart showing present vs absent by week',
+    icon: 'BarChart3',
+    defaultSize: { x: 0, y: 0, w: 6, h: 4 },
+    defaultConfig: {
+      metric: 'attendance_stats',
+      chartType: 'bar',
+      timeRange: '30d'
+    }
+  },
+  {
+    type: 'line_chart',
+    module: 'payroll',
+    label: 'Salary Overview',
+    description: 'Area chart showing earned vs budget salary',
+    icon: 'TrendingUp',
+    defaultSize: { x: 0, y: 0, w: 6, h: 4 },
+    defaultConfig: {
+      metric: 'salary_overview',
+      chartType: 'area',
+      timeRange: '30d'
+    }
+  },
+  {
+    type: 'bar_chart',
+    module: 'payroll',
+    label: 'Salary by Employee',
+    description: 'Bar chart comparing earned vs budget salary by employee',
+    icon: 'BarChart3',
+    defaultSize: { x: 0, y: 0, w: 8, h: 4 },
+    defaultConfig: {
+      metric: 'salary_by_employee',
+      chartType: 'bar',
+      limit: 10
+    }
+  },
+  {
+    type: 'donut_chart',
+    module: 'payroll',
+    label: 'Attendance Breakdown',
+    description: 'Donut chart showing full days, half days, overtime, and absent',
+    icon: 'PieChart',
+    defaultSize: { x: 0, y: 0, w: 4, h: 4 },
+    defaultConfig: {
+      metric: 'attendance_breakdown',
+      showLegend: true
+    }
+  },
+  // Payroll Module - Table Widget
+  {
+    type: 'table',
+    module: 'payroll',
+    label: 'Employee Payroll',
+    description: 'Detailed payroll table with attendance and salary data',
+    icon: 'FileText',
+    defaultSize: { x: 0, y: 0, w: 12, h: 5 },
+    defaultConfig: {
+      limit: 20,
+      sortBy: 'earned_salary',
+      sortOrder: 'desc',
+      columns: ['name', 'role', 'full_days', 'half_days', 'absent', 'overtime', 'total_hours', 'salary', 'earned_salary']
+    }
+  },
+  {
+    type: 'progress_bar',
+    module: 'payroll',
+    label: 'Salary Utilization',
+    description: 'Progress bar showing earned vs budget salary',
+    icon: 'Target',
+    defaultSize: { x: 0, y: 0, w: 6, h: 2 },
+    defaultConfig: {
+      metric: 'salary_utilization',
+      target: 100
+    }
+  },
   // Support Module - Additional Widgets
   {
     type: 'bar_chart',
