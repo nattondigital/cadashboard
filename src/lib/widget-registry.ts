@@ -868,17 +868,6 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
       timeRange: '30d'
     }
   },
-  {
-    type: 'heatmap',
-    module: 'leads',
-    label: 'Lead Activity Heatmap',
-    description: 'Heatmap showing lead activity by day and hour',
-    icon: 'Activity',
-    defaultSize: { x: 0, y: 0, w: 8, h: 4 },
-    defaultConfig: {
-      timeRange: '30d'
-    }
-  },
   // Tasks Module - Additional Widgets
   {
     type: 'pie_chart',
@@ -964,17 +953,6 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
       limit: 10,
       sortBy: 'date',
       sortOrder: 'desc'
-    }
-  },
-  {
-    type: 'heatmap',
-    module: 'attendance',
-    label: 'Attendance Heatmap',
-    description: 'Heatmap showing attendance patterns',
-    icon: 'Activity',
-    defaultSize: { x: 0, y: 0, w: 8, h: 4 },
-    defaultConfig: {
-      timeRange: '30d'
     }
   },
   // Support Module - Additional Widgets

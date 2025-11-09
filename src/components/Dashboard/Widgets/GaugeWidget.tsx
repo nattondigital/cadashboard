@@ -62,8 +62,8 @@ export function GaugeWidget({ title, config }: GaugeWidgetProps) {
       <CardHeader className="pb-2">
         <CardTitle className="text-lg font-semibold">{title}</CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-col items-center justify-center">
-        <div className="relative w-48 h-24 mb-4">
+      <CardContent className="flex flex-col items-center justify-center p-4">
+        <div className="relative w-full max-w-xs h-32 mb-4">
           <svg viewBox="0 0 200 100" className="w-full h-full">
             <path
               d="M 20 100 A 80 80 0 0 1 180 100"

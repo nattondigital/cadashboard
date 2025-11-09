@@ -10,7 +10,6 @@ import { DonutChartWidget } from './Widgets/DonutChartWidget'
 import { GaugeWidget } from './Widgets/GaugeWidget'
 import { ListWidget } from './Widgets/ListWidget'
 import { CalendarWidget } from './Widgets/CalendarWidget'
-import { HeatmapWidget } from './Widgets/HeatmapWidget'
 
 interface WidgetRendererProps {
   widget: Widget
@@ -55,9 +54,6 @@ export function WidgetRenderer({ widget, onRefresh, onRemove, onConfig }: Widget
 
     case 'calendar':
       return <CalendarWidget {...commonProps} />
-
-    case 'heatmap':
-      return <HeatmapWidget {...commonProps} />
 
     default:
       return (

@@ -130,8 +130,8 @@ export function CalendarWidget({ title, config }: CalendarWidgetProps) {
               <div
                 key={index}
                 className={`
-                  min-h-20 p-1 border rounded-lg cursor-pointer transition-colors
-                  ${isCurrentMonth ? 'bg-white hover:bg-gray-50' : 'bg-gray-100'}
+                  min-h-16 p-1 border rounded cursor-pointer transition-colors
+                  ${isCurrentMonth ? 'bg-white hover:bg-gray-50' : 'bg-gray-50'}
                   ${isToday ? 'border-blue-500 border-2' : 'border-gray-200'}
                 `}
               >
@@ -144,19 +144,19 @@ export function CalendarWidget({ title, config }: CalendarWidgetProps) {
                 >
                   {format(day, 'd')}
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-0.5">
                   {dayEvents.slice(0, 2).map((event, i) => (
                     <div
                       key={event.id}
                       className={`${getEventColor(event.type)} text-white text-xs rounded px-1 py-0.5 truncate`}
                       title={event.title}
                     >
-                      {event.title}
+                      •
                     </div>
                   ))}
                   {dayEvents.length > 2 && (
                     <div className="text-xs text-gray-500 text-center">
-                      +{dayEvents.length - 2} more
+                      +{dayEvents.length - 2}
                     </div>
                   )}
                 </div>

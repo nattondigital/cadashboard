@@ -157,8 +157,8 @@ export function DashboardTemplates() {
           { widget_type: 'funnel', module: 'leads', title: 'Sales Funnel', config: {}, position: { x: 0, y: 4, w: 6, h: 4 } },
           { widget_type: 'line_chart', module: 'leads', title: 'Lead Generation Trend', config: { metric: 'lead_generation', timeRange: '90d' }, position: { x: 0, y: 8, w: 6, h: 4 } },
           { widget_type: 'bar_chart', module: 'leads', title: 'Leads by Source', config: { metric: 'lead_sources' }, position: { x: 6, y: 8, w: 6, h: 4 } },
-          { widget_type: 'heatmap', module: 'leads', title: 'Lead Activity Heatmap', config: { timeRange: '30d' }, position: { x: 0, y: 12, w: 8, h: 4 } },
-          { widget_type: 'list', module: 'leads', title: 'Top Performing Leads', config: { limit: 5, sortBy: 'value' }, position: { x: 8, y: 12, w: 4, h: 5 } }
+          { widget_type: 'table', module: 'leads', title: 'Recent Leads', config: { limit: 10 }, position: { x: 0, y: 12, w: 8, h: 5 } },
+          { widget_type: 'list', module: 'leads', title: 'Top Performing Leads', config: { limit: 8, sortBy: 'value' }, position: { x: 8, y: 12, w: 4, h: 5 } }
         ]
 
       case 'hr':
@@ -170,10 +170,10 @@ export function DashboardTemplates() {
           { widget_type: 'pie_chart', module: 'attendance', title: 'Attendance Status Today', config: { metric: 'attendance_today', showLegend: true }, position: { x: 0, y: 2, w: 4, h: 4 } },
           { widget_type: 'donut_chart', module: 'team', title: 'Team by Role', config: { metric: 'team_by_role', showLegend: true }, position: { x: 4, y: 2, w: 4, h: 4 } },
           { widget_type: 'line_chart', module: 'attendance', title: 'Attendance Trend', config: { timeRange: '30d' }, position: { x: 8, y: 2, w: 4, h: 4 } },
-          { widget_type: 'heatmap', module: 'attendance', title: 'Attendance Heatmap', config: { timeRange: '30d' }, position: { x: 0, y: 6, w: 8, h: 4 } },
-          { widget_type: 'bar_chart', module: 'leave', title: 'Leave by Category', config: { timeRange: '90d' }, position: { x: 8, y: 6, w: 4, h: 4 } },
+          { widget_type: 'bar_chart', module: 'attendance', title: 'Weekly Attendance', config: { timeRange: '7d' }, position: { x: 0, y: 6, w: 6, h: 4 } },
+          { widget_type: 'bar_chart', module: 'leave', title: 'Leave by Category', config: { timeRange: '90d' }, position: { x: 6, y: 6, w: 6, h: 4 } },
           { widget_type: 'table', module: 'team', title: 'Team Members', config: { limit: 10 }, position: { x: 0, y: 10, w: 8, h: 5 } },
-          { widget_type: 'list', module: 'leave', title: 'Recent Leave Requests', config: { limit: 5 }, position: { x: 8, y: 10, w: 4, h: 5 } }
+          { widget_type: 'list', module: 'leave', title: 'Recent Leave Requests', config: { limit: 8 }, position: { x: 8, y: 10, w: 4, h: 5 } }
         ]
 
       case 'finance':
