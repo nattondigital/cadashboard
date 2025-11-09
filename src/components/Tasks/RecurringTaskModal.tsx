@@ -14,9 +14,12 @@ interface RecurringTask {
   assigned_to: string | null
   priority: string
   recurrence_type: 'daily' | 'weekly' | 'monthly'
-  recurrence_time: string
-  recurrence_days: string[] | null
-  recurrence_day_of_month: number | null
+  start_time: string
+  start_days: string[] | null
+  start_day_of_month: number | null
+  due_time: string
+  due_days: string[] | null
+  due_day_of_month: number | null
   supporting_docs: string[]
   is_active: boolean
 }
@@ -72,15 +75,20 @@ export const RecurringTaskModal: React.FC<RecurringTaskModalProps> = ({
     assigned_to: null,
     priority: 'medium',
     recurrence_type: 'daily',
-    recurrence_time: '09:00',
-    recurrence_days: null,
-    recurrence_day_of_month: null,
+    start_time: '09:00',
+    start_days: null,
+    start_day_of_month: null,
+    due_time: '17:00',
+    due_days: null,
+    due_day_of_month: null,
     supporting_docs: [],
     is_active: true
   })
 
-  const [selectedDays, setSelectedDays] = useState<string[]>([])
-  const [selectedDayOfMonth, setSelectedDayOfMonth] = useState<number>(1)
+  const [selectedStartDays, setSelectedStartDays] = useState<string[]>([])
+  const [selectedStartDayOfMonth, setSelectedStartDayOfMonth] = useState<number>(1)
+  const [selectedDueDays, setSelectedDueDays] = useState<string[]>([])
+  const [selectedDueDayOfMonth, setSelectedDueDayOfMonth] = useState<number>(1)
   const [contactSearchTerm, setContactSearchTerm] = useState('')
   const [showContactDropdown, setShowContactDropdown] = useState(false)
   const [uploadingFiles, setUploadingFiles] = useState(false)
@@ -88,11 +96,17 @@ export const RecurringTaskModal: React.FC<RecurringTaskModalProps> = ({
   useEffect(() => {
     if (task) {
       setFormData(task)
-      if (task.recurrence_days) {
-        setSelectedDays(task.recurrence_days)
+      if (task.start_days) {
+        setSelectedStartDays(task.start_days)
       }
-      if (task.recurrence_day_of_month !== null) {
-        setSelectedDayOfMonth(task.recurrence_day_of_month)
+      if (task.start_day_of_month !== null) {
+        setSelectedStartDayOfMonth(task.start_day_of_month)
+      }
+      if (task.due_days) {
+        setSelectedDueDays(task.due_days)
+      }
+      if (task.due_day_of_month !== null) {
+        setSelectedDueDayOfMonth(task.due_day_of_month)
       }
     } else {
       setFormData({
@@ -102,14 +116,19 @@ export const RecurringTaskModal: React.FC<RecurringTaskModalProps> = ({
         assigned_to: null,
         priority: 'medium',
         recurrence_type: 'daily',
-        recurrence_time: '09:00',
-        recurrence_days: null,
-        recurrence_day_of_month: null,
+        start_time: '09:00',
+        start_days: null,
+        start_day_of_month: null,
+        due_time: '17:00',
+        due_days: null,
+        due_day_of_month: null,
         supporting_docs: [],
         is_active: true
       })
-      setSelectedDays([])
-      setSelectedDayOfMonth(1)
+      setSelectedStartDays([])
+      setSelectedStartDayOfMonth(1)
+      setSelectedDueDays([])
+      setSelectedDueDayOfMonth(1)
     }
   }, [task])
 
@@ -117,22 +136,37 @@ export const RecurringTaskModal: React.FC<RecurringTaskModalProps> = ({
     setFormData(prev => ({
       ...prev,
       recurrence_type: type,
-      recurrence_days: type === 'weekly' ? selectedDays : null,
-      recurrence_day_of_month: type === 'monthly' ? selectedDayOfMonth : null
+      start_days: type === 'weekly' ? selectedStartDays : null,
+      start_day_of_month: type === 'monthly' ? selectedStartDayOfMonth : null,
+      due_days: type === 'weekly' ? selectedDueDays : null,
+      due_day_of_month: type === 'monthly' ? selectedDueDayOfMonth : null
     }))
   }
 
-  const handleDayToggle = (day: string) => {
-    const newDays = selectedDays.includes(day)
-      ? selectedDays.filter(d => d !== day)
-      : [...selectedDays, day]
-    setSelectedDays(newDays)
-    setFormData(prev => ({ ...prev, recurrence_days: newDays }))
+  const handleStartDayToggle = (day: string) => {
+    const newDays = selectedStartDays.includes(day)
+      ? selectedStartDays.filter(d => d !== day)
+      : [...selectedStartDays, day]
+    setSelectedStartDays(newDays)
+    setFormData(prev => ({ ...prev, start_days: newDays }))
   }
 
-  const handleDayOfMonthChange = (day: number) => {
-    setSelectedDayOfMonth(day)
-    setFormData(prev => ({ ...prev, recurrence_day_of_month: day }))
+  const handleDueDayToggle = (day: string) => {
+    const newDays = selectedDueDays.includes(day)
+      ? selectedDueDays.filter(d => d !== day)
+      : [...selectedDueDays, day]
+    setSelectedDueDays(newDays)
+    setFormData(prev => ({ ...prev, due_days: newDays }))
+  }
+
+  const handleStartDayOfMonthChange = (day: number) => {
+    setSelectedStartDayOfMonth(day)
+    setFormData(prev => ({ ...prev, start_day_of_month: day }))
+  }
+
+  const handleDueDayOfMonthChange = (day: number) => {
+    setSelectedDueDayOfMonth(day)
+    setFormData(prev => ({ ...prev, due_day_of_month: day }))
   }
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -182,14 +216,26 @@ export const RecurringTaskModal: React.FC<RecurringTaskModalProps> = ({
       return
     }
 
-    if (formData.recurrence_type === 'weekly' && (!formData.recurrence_days || formData.recurrence_days.length === 0)) {
-      alert('Please select at least one day for weekly recurrence')
-      return
+    if (formData.recurrence_type === 'weekly') {
+      if (!formData.start_days || formData.start_days.length === 0) {
+        alert('Please select at least one start day for weekly recurrence')
+        return
+      }
+      if (!formData.due_days || formData.due_days.length === 0) {
+        alert('Please select at least one due day for weekly recurrence')
+        return
+      }
     }
 
-    if (formData.recurrence_type === 'monthly' && formData.recurrence_day_of_month === null) {
-      alert('Please select a day of the month')
-      return
+    if (formData.recurrence_type === 'monthly') {
+      if (formData.start_day_of_month === null) {
+        alert('Please select a start day of the month')
+        return
+      }
+      if (formData.due_day_of_month === null) {
+        alert('Please select a due day of the month')
+        return
+      }
     }
 
     try {
@@ -203,9 +249,12 @@ export const RecurringTaskModal: React.FC<RecurringTaskModalProps> = ({
             assigned_to: formData.assigned_to,
             priority: formData.priority,
             recurrence_type: formData.recurrence_type,
-            recurrence_time: formData.recurrence_time,
-            recurrence_days: formData.recurrence_days,
-            recurrence_day_of_month: formData.recurrence_day_of_month,
+            start_time: formData.start_time,
+            start_days: formData.start_days,
+            start_day_of_month: formData.start_day_of_month,
+            due_time: formData.due_time,
+            due_days: formData.due_days,
+            due_day_of_month: formData.due_day_of_month,
             supporting_docs: formData.supporting_docs,
             is_active: formData.is_active
           })
@@ -371,57 +420,154 @@ export const RecurringTaskModal: React.FC<RecurringTaskModalProps> = ({
             </div>
           </div>
 
+          {formData.recurrence_type === 'daily' && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Start Time <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  type="time"
+                  value={formData.start_time}
+                  onChange={e => setFormData(prev => ({ ...prev, start_time: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Due Time <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  type="time"
+                  value={formData.due_time}
+                  onChange={e => setFormData(prev => ({ ...prev, due_time: e.target.value }))}
+                />
+              </div>
+            </div>
+          )}
+
           {formData.recurrence_type === 'weekly' && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Select Days <span className="text-red-500">*</span>
-              </label>
-              <div className="flex gap-2 flex-wrap">
-                {daysOfWeek.map(day => (
-                  <Button
-                    key={day.value}
-                    type="button"
-                    variant={selectedDays.includes(day.value) ? 'default' : 'outline'}
-                    onClick={() => handleDayToggle(day.value)}
-                    className="flex-1 min-w-[60px]"
-                  >
-                    {day.label}
-                  </Button>
-                ))}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Start Days <span className="text-red-500">*</span>
+                </label>
+                <div className="flex gap-2 flex-wrap">
+                  {daysOfWeek.map(day => (
+                    <Button
+                      key={day.value}
+                      type="button"
+                      variant={selectedStartDays.includes(day.value) ? 'default' : 'outline'}
+                      onClick={() => handleStartDayToggle(day.value)}
+                      className="flex-1 min-w-[60px]"
+                    >
+                      {day.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Start Time <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  type="time"
+                  value={formData.start_time}
+                  onChange={e => setFormData(prev => ({ ...prev, start_time: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Due Days <span className="text-red-500">*</span>
+                </label>
+                <div className="flex gap-2 flex-wrap">
+                  {daysOfWeek.map(day => (
+                    <Button
+                      key={day.value}
+                      type="button"
+                      variant={selectedDueDays.includes(day.value) ? 'default' : 'outline'}
+                      onClick={() => handleDueDayToggle(day.value)}
+                      className="flex-1 min-w-[60px]"
+                    >
+                      {day.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Due Time <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  type="time"
+                  value={formData.due_time}
+                  onChange={e => setFormData(prev => ({ ...prev, due_time: e.target.value }))}
+                />
               </div>
             </div>
           )}
 
           {formData.recurrence_type === 'monthly' && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Day of Month <span className="text-red-500">*</span>
-              </label>
-              <Select value={selectedDayOfMonth.toString()} onValueChange={value => handleDayOfMonthChange(Number(value))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {daysOfMonth.map(day => (
-                    <SelectItem key={day.value} value={day.value.toString()}>
-                      {day.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Start Day of Month <span className="text-red-500">*</span>
+                  </label>
+                  <Select value={selectedStartDayOfMonth.toString()} onValueChange={value => handleStartDayOfMonthChange(Number(value))}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {daysOfMonth.map(day => (
+                        <SelectItem key={day.value} value={day.value.toString()}>
+                          {day.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Start Time <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    type="time"
+                    value={formData.start_time}
+                    onChange={e => setFormData(prev => ({ ...prev, start_time: e.target.value }))}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Due Day of Month <span className="text-red-500">*</span>
+                  </label>
+                  <Select value={selectedDueDayOfMonth.toString()} onValueChange={value => handleDueDayOfMonthChange(Number(value))}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {daysOfMonth.map(day => (
+                        <SelectItem key={day.value} value={day.value.toString()}>
+                          {day.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Due Time <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    type="time"
+                    value={formData.due_time}
+                    onChange={e => setFormData(prev => ({ ...prev, due_time: e.target.value }))}
+                  />
+                </div>
+              </div>
             </div>
           )}
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Time <span className="text-red-500">*</span>
-            </label>
-            <Input
-              type="time"
-              value={formData.recurrence_time}
-              onChange={e => setFormData(prev => ({ ...prev, recurrence_time: e.target.value }))}
-            />
-          </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Supporting Documents</label>

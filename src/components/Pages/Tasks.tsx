@@ -1091,13 +1091,21 @@ export const Tasks: React.FC = () => {
                               <tbody>
                                 {recurringTasks.map((task, index) => {
                                   let scheduleText = ''
+                                  let timeText = ''
+
                                   if (task.recurrence_type === 'daily') {
                                     scheduleText = 'Every Day'
+                                    timeText = `${task.start_time} - ${task.due_time}`
                                   } else if (task.recurrence_type === 'weekly') {
-                                    const days = task.recurrence_days?.map((d: string) => d.toUpperCase()).join(', ')
-                                    scheduleText = days || 'Weekly'
+                                    const startDays = task.start_days?.map((d: string) => d.toUpperCase()).join(', ')
+                                    const dueDays = task.due_days?.map((d: string) => d.toUpperCase()).join(', ')
+                                    scheduleText = `Start: ${startDays || ''} | Due: ${dueDays || ''}`
+                                    timeText = `${task.start_time} - ${task.due_time}`
                                   } else if (task.recurrence_type === 'monthly') {
-                                    scheduleText = task.recurrence_day_of_month === 0 ? 'Last Day' : `Day ${task.recurrence_day_of_month}`
+                                    const startDay = task.start_day_of_month === 0 ? 'Last Day' : `Day ${task.start_day_of_month}`
+                                    const dueDay = task.due_day_of_month === 0 ? 'Last Day' : `Day ${task.due_day_of_month}`
+                                    scheduleText = `Start: ${startDay} | Due: ${dueDay}`
+                                    timeText = `${task.start_time} - ${task.due_time}`
                                   }
 
                                   return (
@@ -1123,7 +1131,7 @@ export const Tasks: React.FC = () => {
                                         <span className="text-sm text-gray-600">{scheduleText}</span>
                                       </td>
                                       <td className="py-3 px-4">
-                                        <span className="text-sm text-gray-600">{task.recurrence_time}</span>
+                                        <span className="text-sm text-gray-600">{timeText}</span>
                                       </td>
                                       <td className="py-3 px-4">
                                         <Badge className={`capitalize ${priorityColors[task.priority] || 'bg-gray-100 text-gray-800'}`}>
