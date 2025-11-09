@@ -1,13 +1,12 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { MoreVertical, RefreshCw, X, Maximize2 } from 'lucide-react'
+import { MoreVertical, X, Maximize2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 
 interface BaseWidgetProps {
   title: string
   children: React.ReactNode
-  onRefresh?: () => void
   onRemove?: () => void
   onConfig?: () => void
   onExpand?: () => void
@@ -20,7 +19,6 @@ interface BaseWidgetProps {
 export function BaseWidget({
   title,
   children,
-  onRefresh,
   onRemove,
   onConfig,
   onExpand,
@@ -67,17 +65,6 @@ export function BaseWidget({
                   animate={{ opacity: 1, x: 0 }}
                   className="flex items-center gap-1"
                 >
-                  {onRefresh && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={onRefresh}
-                      className={`h-7 w-7 p-0 ${isColoredHeader ? 'text-white hover:bg-white/20' : ''}`}
-                      disabled={isLoading}
-                    >
-                      <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                    </Button>
-                  )}
                   {onExpand && (
                     <Button
                       variant="ghost"

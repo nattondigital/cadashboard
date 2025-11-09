@@ -6,12 +6,11 @@ import { motion } from 'framer-motion'
 
 interface FunnelWidgetProps {
   widget: Widget
-  onRefresh?: () => void
   onRemove?: () => void
   onConfig?: () => void
 }
 
-export function FunnelWidget({ widget, onRefresh, onRemove, onConfig }: FunnelWidgetProps) {
+export function FunnelWidget({ widget, onRemove, onConfig }: FunnelWidgetProps) {
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState<Array<{ stage: string; count: number; percentage: number; color: string }>>([])
 
@@ -53,15 +52,9 @@ export function FunnelWidget({ widget, onRefresh, onRemove, onConfig }: FunnelWi
     }
   }
 
-  const handleRefresh = () => {
-    fetchData()
-    onRefresh?.()
-  }
-
   return (
     <BaseWidget
       title={widget.title}
-      onRefresh={handleRefresh}
       onRemove={onRemove}
       onConfig={onConfig}
       isLoading={loading}

@@ -9,14 +9,13 @@ import {
 
 interface ChartWidgetProps {
   widget: Widget
-  onRefresh?: () => void
   onRemove?: () => void
   onConfig?: () => void
 }
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6']
 
-export function ChartWidget({ widget, onRefresh, onRemove, onConfig }: ChartWidgetProps) {
+export function ChartWidget({ widget, onRemove, onConfig }: ChartWidgetProps) {
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState<any[]>([])
 
@@ -482,15 +481,9 @@ export function ChartWidget({ widget, onRefresh, onRemove, onConfig }: ChartWidg
     }
   }
 
-  const handleRefresh = () => {
-    fetchData()
-    onRefresh?.()
-  }
-
   return (
     <BaseWidget
       title={widget.title}
-      onRefresh={handleRefresh}
       onRemove={onRemove}
       onConfig={onConfig}
       isLoading={loading}
