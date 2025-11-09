@@ -456,6 +456,575 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
         default: 'active_automations'
       }
     ]
+  },
+  // Contacts Module Widgets
+  {
+    type: 'kpi_card',
+    module: 'contacts',
+    label: 'Contacts KPI Card',
+    description: 'Display contact metrics',
+    icon: 'Users',
+    defaultSize: { x: 0, y: 0, w: 3, h: 2 },
+    defaultConfig: {
+      metric: 'total_contacts',
+      timeRange: '30d',
+      colorScheme: 'blue'
+    },
+    configOptions: [
+      {
+        name: 'metric',
+        label: 'Metric',
+        type: 'select',
+        options: [
+          { value: 'total_contacts', label: 'Total Contacts' },
+          { value: 'new_contacts', label: 'New Contacts' },
+          { value: 'active_contacts', label: 'Active Contacts' },
+          { value: 'contacts_with_notes', label: 'Contacts with Notes' }
+        ],
+        default: 'total_contacts'
+      }
+    ]
+  },
+  {
+    type: 'table',
+    module: 'contacts',
+    label: 'Contacts Table',
+    description: 'Table showing contact details',
+    icon: 'FileText',
+    defaultSize: { x: 0, y: 0, w: 12, h: 5 },
+    defaultConfig: {
+      limit: 10,
+      sortBy: 'created_at',
+      sortOrder: 'desc'
+    }
+  },
+  {
+    type: 'line_chart',
+    module: 'contacts',
+    label: 'Contact Growth Chart',
+    description: 'Line chart showing contact growth over time',
+    icon: 'TrendingUp',
+    defaultSize: { x: 0, y: 0, w: 6, h: 4 },
+    defaultConfig: {
+      timeRange: '90d',
+      chartType: 'line'
+    }
+  },
+  // Appointments Module Widgets
+  {
+    type: 'kpi_card',
+    module: 'appointments',
+    label: 'Appointments KPI Card',
+    description: 'Display appointment metrics',
+    icon: 'Calendar',
+    defaultSize: { x: 0, y: 0, w: 3, h: 2 },
+    defaultConfig: {
+      metric: 'today_appointments',
+      colorScheme: 'green'
+    },
+    configOptions: [
+      {
+        name: 'metric',
+        label: 'Metric',
+        type: 'select',
+        options: [
+          { value: 'today_appointments', label: 'Today\'s Appointments' },
+          { value: 'upcoming_appointments', label: 'Upcoming Appointments' },
+          { value: 'completed_appointments', label: 'Completed' },
+          { value: 'cancelled_appointments', label: 'Cancelled' }
+        ],
+        default: 'today_appointments'
+      }
+    ]
+  },
+  {
+    type: 'table',
+    module: 'appointments',
+    label: 'Appointments Table',
+    description: 'Table showing appointment details',
+    icon: 'FileText',
+    defaultSize: { x: 0, y: 0, w: 12, h: 5 },
+    defaultConfig: {
+      limit: 10,
+      sortBy: 'appointment_date',
+      sortOrder: 'asc'
+    }
+  },
+  {
+    type: 'bar_chart',
+    module: 'appointments',
+    label: 'Appointments by Day',
+    description: 'Bar chart showing appointments by day of week',
+    icon: 'BarChart3',
+    defaultSize: { x: 0, y: 0, w: 6, h: 4 },
+    defaultConfig: {
+      timeRange: '30d',
+      chartType: 'bar'
+    }
+  },
+  {
+    type: 'calendar',
+    module: 'appointments',
+    label: 'Appointments Calendar',
+    description: 'Calendar view of appointments',
+    icon: 'Calendar',
+    defaultSize: { x: 0, y: 0, w: 8, h: 6 },
+    defaultConfig: {
+      view: 'month',
+      showWeekends: true
+    }
+  },
+  // Products Module Widgets
+  {
+    type: 'kpi_card',
+    module: 'products',
+    label: 'Products KPI Card',
+    description: 'Display product metrics',
+    icon: 'Package',
+    defaultSize: { x: 0, y: 0, w: 3, h: 2 },
+    defaultConfig: {
+      metric: 'total_products',
+      colorScheme: 'purple'
+    },
+    configOptions: [
+      {
+        name: 'metric',
+        label: 'Metric',
+        type: 'select',
+        options: [
+          { value: 'total_products', label: 'Total Products' },
+          { value: 'active_products', label: 'Active Products' },
+          { value: 'avg_price', label: 'Average Price' },
+          { value: 'total_categories', label: 'Total Categories' }
+        ],
+        default: 'total_products'
+      }
+    ]
+  },
+  {
+    type: 'table',
+    module: 'products',
+    label: 'Products Table',
+    description: 'Table showing product details',
+    icon: 'FileText',
+    defaultSize: { x: 0, y: 0, w: 12, h: 5 },
+    defaultConfig: {
+      limit: 10,
+      sortBy: 'name',
+      sortOrder: 'asc'
+    }
+  },
+  {
+    type: 'pie_chart',
+    module: 'products',
+    label: 'Products by Category',
+    description: 'Pie chart showing product distribution by category',
+    icon: 'PieChart',
+    defaultSize: { x: 0, y: 0, w: 4, h: 4 },
+    defaultConfig: {
+      metric: 'products_by_category',
+      showLegend: true
+    }
+  },
+  {
+    type: 'bar_chart',
+    module: 'products',
+    label: 'Product Price Range',
+    description: 'Bar chart showing products by price range',
+    icon: 'BarChart3',
+    defaultSize: { x: 0, y: 0, w: 6, h: 4 },
+    defaultConfig: {
+      chartType: 'bar'
+    }
+  },
+  // Team Module Widgets
+  {
+    type: 'kpi_card',
+    module: 'team',
+    label: 'Team KPI Card',
+    description: 'Display team metrics',
+    icon: 'Users',
+    defaultSize: { x: 0, y: 0, w: 3, h: 2 },
+    defaultConfig: {
+      metric: 'total_team_members',
+      colorScheme: 'blue'
+    },
+    configOptions: [
+      {
+        name: 'metric',
+        label: 'Metric',
+        type: 'select',
+        options: [
+          { value: 'total_team_members', label: 'Total Team Members' },
+          { value: 'active_members', label: 'Active Members' },
+          { value: 'on_leave', label: 'On Leave' },
+          { value: 'new_joiners', label: 'New Joiners' }
+        ],
+        default: 'total_team_members'
+      }
+    ]
+  },
+  {
+    type: 'table',
+    module: 'team',
+    label: 'Team Members Table',
+    description: 'Table showing team member details',
+    icon: 'FileText',
+    defaultSize: { x: 0, y: 0, w: 12, h: 5 },
+    defaultConfig: {
+      limit: 10,
+      sortBy: 'name',
+      sortOrder: 'asc'
+    }
+  },
+  {
+    type: 'pie_chart',
+    module: 'team',
+    label: 'Team by Role',
+    description: 'Pie chart showing team distribution by role',
+    icon: 'PieChart',
+    defaultSize: { x: 0, y: 0, w: 4, h: 4 },
+    defaultConfig: {
+      metric: 'team_by_role',
+      showLegend: true
+    }
+  },
+  // Leave Module Widgets
+  {
+    type: 'kpi_card',
+    module: 'leave',
+    label: 'Leave KPI Card',
+    description: 'Display leave metrics',
+    icon: 'Calendar',
+    defaultSize: { x: 0, y: 0, w: 3, h: 2 },
+    defaultConfig: {
+      metric: 'pending_requests',
+      colorScheme: 'orange'
+    },
+    configOptions: [
+      {
+        name: 'metric',
+        label: 'Metric',
+        type: 'select',
+        options: [
+          { value: 'pending_requests', label: 'Pending Requests' },
+          { value: 'approved_requests', label: 'Approved Requests' },
+          { value: 'on_leave_today', label: 'On Leave Today' },
+          { value: 'total_leave_days', label: 'Total Leave Days' }
+        ],
+        default: 'pending_requests'
+      }
+    ]
+  },
+  {
+    type: 'table',
+    module: 'leave',
+    label: 'Leave Requests Table',
+    description: 'Table showing leave request details',
+    icon: 'FileText',
+    defaultSize: { x: 0, y: 0, w: 12, h: 5 },
+    defaultConfig: {
+      limit: 10,
+      sortBy: 'start_date',
+      sortOrder: 'desc'
+    }
+  },
+  {
+    type: 'bar_chart',
+    module: 'leave',
+    label: 'Leave by Category',
+    description: 'Bar chart showing leave distribution by category',
+    icon: 'BarChart3',
+    defaultSize: { x: 0, y: 0, w: 6, h: 4 },
+    defaultConfig: {
+      timeRange: '90d',
+      chartType: 'bar'
+    }
+  },
+  // Expenses Module - Additional Widgets
+  {
+    type: 'pie_chart',
+    module: 'expenses',
+    label: 'Expenses by Category',
+    description: 'Pie chart showing expense distribution by category',
+    icon: 'PieChart',
+    defaultSize: { x: 0, y: 0, w: 4, h: 4 },
+    defaultConfig: {
+      metric: 'expenses_by_category',
+      timeRange: '30d',
+      showLegend: true
+    }
+  },
+  {
+    type: 'line_chart',
+    module: 'expenses',
+    label: 'Expense Trend',
+    description: 'Line chart showing expense trends over time',
+    icon: 'TrendingUp',
+    defaultSize: { x: 0, y: 0, w: 6, h: 4 },
+    defaultConfig: {
+      timeRange: '90d',
+      chartType: 'line'
+    }
+  },
+  {
+    type: 'bar_chart',
+    module: 'expenses',
+    label: 'Expenses by Employee',
+    description: 'Bar chart showing expenses by employee',
+    icon: 'BarChart3',
+    defaultSize: { x: 0, y: 0, w: 6, h: 4 },
+    defaultConfig: {
+      timeRange: '30d',
+      chartType: 'bar',
+      limit: 10
+    }
+  },
+  // Billing Module - Additional Widgets
+  {
+    type: 'donut_chart',
+    module: 'billing',
+    label: 'Invoice Status Distribution',
+    description: 'Donut chart showing invoice status breakdown',
+    icon: 'DollarSign',
+    defaultSize: { x: 0, y: 0, w: 4, h: 4 },
+    defaultConfig: {
+      metric: 'invoice_status',
+      showLegend: true
+    }
+  },
+  {
+    type: 'line_chart',
+    module: 'billing',
+    label: 'Payment Collection Trend',
+    description: 'Line chart showing payment collections over time',
+    icon: 'TrendingUp',
+    defaultSize: { x: 0, y: 0, w: 6, h: 4 },
+    defaultConfig: {
+      timeRange: '90d',
+      chartType: 'line'
+    }
+  },
+  {
+    type: 'table',
+    module: 'billing',
+    label: 'Outstanding Invoices',
+    description: 'Table showing unpaid/overdue invoices',
+    icon: 'FileText',
+    defaultSize: { x: 0, y: 0, w: 12, h: 5 },
+    defaultConfig: {
+      limit: 10,
+      sortBy: 'due_date',
+      sortOrder: 'asc',
+      filters: { status: 'outstanding' }
+    }
+  },
+  {
+    type: 'progress_bar',
+    module: 'billing',
+    label: 'Revenue Target Progress',
+    description: 'Progress bar showing revenue vs target',
+    icon: 'Target',
+    defaultSize: { x: 0, y: 0, w: 6, h: 2 },
+    defaultConfig: {
+      metric: 'revenue_target',
+      timeRange: '30d'
+    }
+  },
+  // Leads Module - Additional Widgets
+  {
+    type: 'donut_chart',
+    module: 'leads',
+    label: 'Lead Stage Distribution',
+    description: 'Donut chart showing leads by stage',
+    icon: 'PieChart',
+    defaultSize: { x: 0, y: 0, w: 4, h: 4 },
+    defaultConfig: {
+      metric: 'leads_by_stage',
+      showLegend: true
+    }
+  },
+  {
+    type: 'line_chart',
+    module: 'leads',
+    label: 'Lead Generation Trend',
+    description: 'Line chart showing new leads over time',
+    icon: 'TrendingUp',
+    defaultSize: { x: 0, y: 0, w: 6, h: 4 },
+    defaultConfig: {
+      timeRange: '90d',
+      chartType: 'line'
+    }
+  },
+  {
+    type: 'progress_bar',
+    module: 'leads',
+    label: 'Lead Conversion Progress',
+    description: 'Progress bar showing conversion rate vs target',
+    icon: 'Target',
+    defaultSize: { x: 0, y: 0, w: 6, h: 2 },
+    defaultConfig: {
+      metric: 'conversion_target',
+      timeRange: '30d'
+    }
+  },
+  {
+    type: 'heatmap',
+    module: 'leads',
+    label: 'Lead Activity Heatmap',
+    description: 'Heatmap showing lead activity by day and hour',
+    icon: 'Activity',
+    defaultSize: { x: 0, y: 0, w: 8, h: 4 },
+    defaultConfig: {
+      timeRange: '30d'
+    }
+  },
+  // Tasks Module - Additional Widgets
+  {
+    type: 'pie_chart',
+    module: 'tasks',
+    label: 'Tasks by Status',
+    description: 'Pie chart showing task distribution by status',
+    icon: 'PieChart',
+    defaultSize: { x: 0, y: 0, w: 4, h: 4 },
+    defaultConfig: {
+      metric: 'tasks_by_status',
+      showLegend: true
+    }
+  },
+  {
+    type: 'bar_chart',
+    module: 'tasks',
+    label: 'Tasks by Priority',
+    description: 'Bar chart showing tasks by priority level',
+    icon: 'BarChart3',
+    defaultSize: { x: 0, y: 0, w: 6, h: 4 },
+    defaultConfig: {
+      chartType: 'bar'
+    }
+  },
+  {
+    type: 'progress_bar',
+    module: 'tasks',
+    label: 'Task Completion Progress',
+    description: 'Progress bar showing completed vs total tasks',
+    icon: 'Target',
+    defaultSize: { x: 0, y: 0, w: 6, h: 2 },
+    defaultConfig: {
+      metric: 'completion_rate',
+      timeRange: '30d'
+    }
+  },
+  {
+    type: 'list',
+    module: 'tasks',
+    label: 'Upcoming Tasks',
+    description: 'List of upcoming tasks ordered by due date',
+    icon: 'List',
+    defaultSize: { x: 0, y: 0, w: 4, h: 5 },
+    defaultConfig: {
+      limit: 10,
+      sortBy: 'due_date',
+      sortOrder: 'asc'
+    }
+  },
+  // Attendance Module - Additional Widgets
+  {
+    type: 'pie_chart',
+    module: 'attendance',
+    label: 'Attendance Status Today',
+    description: 'Pie chart showing today\'s attendance breakdown',
+    icon: 'PieChart',
+    defaultSize: { x: 0, y: 0, w: 4, h: 4 },
+    defaultConfig: {
+      metric: 'attendance_today',
+      showLegend: true
+    }
+  },
+  {
+    type: 'line_chart',
+    module: 'attendance',
+    label: 'Attendance Trend',
+    description: 'Line chart showing attendance trends over time',
+    icon: 'TrendingUp',
+    defaultSize: { x: 0, y: 0, w: 6, h: 4 },
+    defaultConfig: {
+      timeRange: '30d',
+      chartType: 'line'
+    }
+  },
+  {
+    type: 'table',
+    module: 'attendance',
+    label: 'Attendance Records',
+    description: 'Table showing attendance records',
+    icon: 'FileText',
+    defaultSize: { x: 0, y: 0, w: 12, h: 5 },
+    defaultConfig: {
+      limit: 10,
+      sortBy: 'date',
+      sortOrder: 'desc'
+    }
+  },
+  {
+    type: 'heatmap',
+    module: 'attendance',
+    label: 'Attendance Heatmap',
+    description: 'Heatmap showing attendance patterns',
+    icon: 'Activity',
+    defaultSize: { x: 0, y: 0, w: 8, h: 4 },
+    defaultConfig: {
+      timeRange: '30d'
+    }
+  },
+  // Support Module - Additional Widgets
+  {
+    type: 'bar_chart',
+    module: 'support',
+    label: 'Tickets by Priority',
+    description: 'Bar chart showing tickets by priority',
+    icon: 'BarChart3',
+    defaultSize: { x: 0, y: 0, w: 6, h: 4 },
+    defaultConfig: {
+      chartType: 'bar'
+    }
+  },
+  {
+    type: 'line_chart',
+    module: 'support',
+    label: 'Ticket Resolution Trend',
+    description: 'Line chart showing ticket resolution over time',
+    icon: 'TrendingUp',
+    defaultSize: { x: 0, y: 0, w: 6, h: 4 },
+    defaultConfig: {
+      timeRange: '30d',
+      chartType: 'line'
+    }
+  },
+  {
+    type: 'gauge',
+    module: 'support',
+    label: 'Customer Satisfaction Score',
+    description: 'Gauge showing customer satisfaction rating',
+    icon: 'Smile',
+    defaultSize: { x: 0, y: 0, w: 3, h: 3 },
+    defaultConfig: {
+      metric: 'satisfaction_score',
+      max: 100
+    }
+  },
+  {
+    type: 'list',
+    module: 'support',
+    label: 'Recent Tickets',
+    description: 'List of recently created support tickets',
+    icon: 'List',
+    defaultSize: { x: 0, y: 0, w: 4, h: 5 },
+    defaultConfig: {
+      limit: 10,
+      sortBy: 'created_at',
+      sortOrder: 'desc'
+    }
   }
 ]
 

@@ -5,6 +5,12 @@ import { ChartWidget } from './Widgets/ChartWidget'
 import { FunnelWidget } from './Widgets/FunnelWidget'
 import { ActivityFeedWidget } from './Widgets/ActivityFeedWidget'
 import { TableWidget } from './Widgets/TableWidget'
+import { ProgressBarWidget } from './Widgets/ProgressBarWidget'
+import { DonutChartWidget } from './Widgets/DonutChartWidget'
+import { GaugeWidget } from './Widgets/GaugeWidget'
+import { ListWidget } from './Widgets/ListWidget'
+import { CalendarWidget } from './Widgets/CalendarWidget'
+import { HeatmapWidget } from './Widgets/HeatmapWidget'
 
 interface WidgetRendererProps {
   widget: Widget
@@ -14,6 +20,8 @@ interface WidgetRendererProps {
 }
 
 export function WidgetRenderer({ widget, onRefresh, onRemove, onConfig }: WidgetRendererProps) {
+  const commonProps = { title: widget.title, config: widget.config }
+
   switch (widget.widget_type) {
     case 'kpi_card':
       return <KPIWidget widget={widget} onRefresh={onRefresh} onRemove={onRemove} onConfig={onConfig} />
@@ -24,6 +32,9 @@ export function WidgetRenderer({ widget, onRefresh, onRemove, onConfig }: Widget
     case 'pie_chart':
       return <ChartWidget widget={widget} onRefresh={onRefresh} onRemove={onRemove} onConfig={onConfig} />
 
+    case 'donut_chart':
+      return <DonutChartWidget {...commonProps} />
+
     case 'funnel':
       return <FunnelWidget widget={widget} onRefresh={onRefresh} onRemove={onRemove} onConfig={onConfig} />
 
@@ -32,6 +43,21 @@ export function WidgetRenderer({ widget, onRefresh, onRemove, onConfig }: Widget
 
     case 'table':
       return <TableWidget widget={widget} onRefresh={onRefresh} onRemove={onRemove} onConfig={onConfig} />
+
+    case 'progress_bar':
+      return <ProgressBarWidget {...commonProps} />
+
+    case 'gauge':
+      return <GaugeWidget {...commonProps} />
+
+    case 'list':
+      return <ListWidget {...commonProps} />
+
+    case 'calendar':
+      return <CalendarWidget {...commonProps} />
+
+    case 'heatmap':
+      return <HeatmapWidget {...commonProps} />
 
     default:
       return (

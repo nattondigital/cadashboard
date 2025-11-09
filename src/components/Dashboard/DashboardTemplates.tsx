@@ -30,7 +30,7 @@ const templates: DashboardTemplate[] = [
     icon: TrendingUp,
     color: 'text-blue-600',
     bgColor: 'bg-blue-50',
-    widgets_count: 8
+    widgets_count: 9
   },
   {
     id: 'sales',
@@ -40,7 +40,7 @@ const templates: DashboardTemplate[] = [
     icon: DollarSign,
     color: 'text-green-600',
     bgColor: 'bg-green-50',
-    widgets_count: 8
+    widgets_count: 11
   },
   {
     id: 'hr',
@@ -50,7 +50,7 @@ const templates: DashboardTemplate[] = [
     icon: Users,
     color: 'text-purple-600',
     bgColor: 'bg-purple-50',
-    widgets_count: 9
+    widgets_count: 11
   },
   {
     id: 'finance',
@@ -60,7 +60,7 @@ const templates: DashboardTemplate[] = [
     icon: DollarSign,
     color: 'text-orange-600',
     bgColor: 'bg-orange-50',
-    widgets_count: 6
+    widgets_count: 10
   },
   {
     id: 'operations',
@@ -70,7 +70,7 @@ const templates: DashboardTemplate[] = [
     icon: Briefcase,
     color: 'text-teal-600',
     bgColor: 'bg-teal-50',
-    widgets_count: 7
+    widgets_count: 12
   },
   {
     id: 'custom',
@@ -139,10 +139,11 @@ export function DashboardTemplates() {
           { widget_type: 'kpi_card', module: 'leads', title: 'Total Leads', config: { metric: 'total_leads', colorScheme: 'blue' }, position: { x: 3, y: 0, w: 3, h: 2 } },
           { widget_type: 'kpi_card', module: 'members', title: 'Active Members', config: { metric: 'active_members', colorScheme: 'purple' }, position: { x: 6, y: 0, w: 3, h: 2 } },
           { widget_type: 'kpi_card', module: 'support', title: 'Open Tickets', config: { metric: 'open_tickets', colorScheme: 'orange' }, position: { x: 9, y: 0, w: 3, h: 2 } },
-          { widget_type: 'funnel', module: 'leads', title: 'Lead Conversion Funnel', config: {}, position: { x: 0, y: 2, w: 6, h: 4 } },
-          { widget_type: 'area_chart', module: 'billing', title: 'Revenue Trend', config: { metric: 'revenue_trend' }, position: { x: 6, y: 2, w: 6, h: 4 } },
-          { widget_type: 'pie_chart', module: 'members', title: 'Member Plans Distribution', config: { metric: 'plans_distribution' }, position: { x: 0, y: 6, w: 4, h: 4 } },
-          { widget_type: 'activity_feed', module: 'leads', title: 'Recent Activity', config: { limit: 8 }, position: { x: 8, y: 6, w: 4, h: 6 } }
+          { widget_type: 'progress_bar', module: 'billing', title: 'Revenue Target Progress', config: { metric: 'revenue_target', target: 100000 }, position: { x: 0, y: 2, w: 6, h: 2 } },
+          { widget_type: 'gauge', module: 'support', title: 'Customer Satisfaction', config: { metric: 'satisfaction_score', max: 100 }, position: { x: 6, y: 2, w: 3, h: 3 } },
+          { widget_type: 'donut_chart', module: 'leads', title: 'Lead Stage Distribution', config: { metric: 'leads_by_stage', showLegend: true }, position: { x: 9, y: 2, w: 3, h: 3 } },
+          { widget_type: 'area_chart', module: 'billing', title: 'Revenue Trend', config: { metric: 'revenue_trend', timeRange: '90d' }, position: { x: 0, y: 4, w: 8, h: 4 } },
+          { widget_type: 'activity_feed', module: 'leads', title: 'Recent Activity', config: { limit: 8 }, position: { x: 8, y: 5, w: 4, h: 5 } }
         ]
 
       case 'sales':
@@ -151,19 +152,28 @@ export function DashboardTemplates() {
           { widget_type: 'kpi_card', module: 'leads', title: 'Hot Leads', config: { metric: 'hot_leads', colorScheme: 'red' }, position: { x: 3, y: 0, w: 3, h: 2 } },
           { widget_type: 'kpi_card', module: 'leads', title: 'Conversion Rate', config: { metric: 'conversion_rate', colorScheme: 'green' }, position: { x: 6, y: 0, w: 3, h: 2 } },
           { widget_type: 'kpi_card', module: 'billing', title: 'Monthly Revenue', config: { metric: 'monthly_revenue', colorScheme: 'green' }, position: { x: 9, y: 0, w: 3, h: 2 } },
-          { widget_type: 'funnel', module: 'leads', title: 'Sales Funnel', config: {}, position: { x: 0, y: 2, w: 8, h: 4 } },
-          { widget_type: 'bar_chart', module: 'leads', title: 'Leads by Source', config: { metric: 'lead_sources' }, position: { x: 0, y: 6, w: 6, h: 4 } },
-          { widget_type: 'area_chart', module: 'billing', title: 'Revenue Trend', config: { metric: 'revenue_trend' }, position: { x: 6, y: 6, w: 6, h: 4 } },
-          { widget_type: 'table', module: 'leads', title: 'Recent Leads', config: { limit: 10 }, position: { x: 0, y: 10, w: 12, h: 5 } }
+          { widget_type: 'progress_bar', module: 'leads', title: 'Conversion Target', config: { metric: 'conversion_target', target: 100 }, position: { x: 0, y: 2, w: 6, h: 2 } },
+          { widget_type: 'donut_chart', module: 'leads', title: 'Lead Stage Distribution', config: { metric: 'leads_by_stage', showLegend: true }, position: { x: 6, y: 2, w: 6, h: 4 } },
+          { widget_type: 'funnel', module: 'leads', title: 'Sales Funnel', config: {}, position: { x: 0, y: 4, w: 6, h: 4 } },
+          { widget_type: 'line_chart', module: 'leads', title: 'Lead Generation Trend', config: { metric: 'lead_generation', timeRange: '90d' }, position: { x: 0, y: 8, w: 6, h: 4 } },
+          { widget_type: 'bar_chart', module: 'leads', title: 'Leads by Source', config: { metric: 'lead_sources' }, position: { x: 6, y: 8, w: 6, h: 4 } },
+          { widget_type: 'heatmap', module: 'leads', title: 'Lead Activity Heatmap', config: { timeRange: '30d' }, position: { x: 0, y: 12, w: 8, h: 4 } },
+          { widget_type: 'list', module: 'leads', title: 'Top Performing Leads', config: { limit: 5, sortBy: 'value' }, position: { x: 8, y: 12, w: 4, h: 5 } }
         ]
 
       case 'hr':
         return [
           { widget_type: 'kpi_card', module: 'attendance', title: 'Present Today', config: { metric: 'present_today', colorScheme: 'blue' }, position: { x: 0, y: 0, w: 3, h: 2 } },
           { widget_type: 'kpi_card', module: 'attendance', title: 'Total Hours', config: { metric: 'total_hours', colorScheme: 'green' }, position: { x: 3, y: 0, w: 3, h: 2 } },
-          { widget_type: 'kpi_card', module: 'members', title: 'Total Employees', config: { metric: 'total_members', colorScheme: 'purple' }, position: { x: 6, y: 0, w: 3, h: 2 } },
-          { widget_type: 'kpi_card', module: 'expenses', title: 'Pending Expenses', config: { metric: 'pending_expenses', colorScheme: 'orange' }, position: { x: 9, y: 0, w: 3, h: 2 } },
-          { widget_type: 'bar_chart', module: 'attendance', title: 'Weekly Attendance', config: {}, position: { x: 0, y: 2, w: 8, h: 4 } }
+          { widget_type: 'kpi_card', module: 'team', title: 'Total Employees', config: { metric: 'total_team_members', colorScheme: 'purple' }, position: { x: 6, y: 0, w: 3, h: 2 } },
+          { widget_type: 'kpi_card', module: 'leave', title: 'Pending Leave Requests', config: { metric: 'pending_requests', colorScheme: 'orange' }, position: { x: 9, y: 0, w: 3, h: 2 } },
+          { widget_type: 'pie_chart', module: 'attendance', title: 'Attendance Status Today', config: { metric: 'attendance_today', showLegend: true }, position: { x: 0, y: 2, w: 4, h: 4 } },
+          { widget_type: 'donut_chart', module: 'team', title: 'Team by Role', config: { metric: 'team_by_role', showLegend: true }, position: { x: 4, y: 2, w: 4, h: 4 } },
+          { widget_type: 'line_chart', module: 'attendance', title: 'Attendance Trend', config: { timeRange: '30d' }, position: { x: 8, y: 2, w: 4, h: 4 } },
+          { widget_type: 'heatmap', module: 'attendance', title: 'Attendance Heatmap', config: { timeRange: '30d' }, position: { x: 0, y: 6, w: 8, h: 4 } },
+          { widget_type: 'bar_chart', module: 'leave', title: 'Leave by Category', config: { timeRange: '90d' }, position: { x: 8, y: 6, w: 4, h: 4 } },
+          { widget_type: 'table', module: 'team', title: 'Team Members', config: { limit: 10 }, position: { x: 0, y: 10, w: 8, h: 5 } },
+          { widget_type: 'list', module: 'leave', title: 'Recent Leave Requests', config: { limit: 5 }, position: { x: 8, y: 10, w: 4, h: 5 } }
         ]
 
       case 'finance':
@@ -172,8 +182,12 @@ export function DashboardTemplates() {
           { widget_type: 'kpi_card', module: 'billing', title: 'Paid Invoices', config: { metric: 'paid_invoices', colorScheme: 'blue' }, position: { x: 3, y: 0, w: 3, h: 2 } },
           { widget_type: 'kpi_card', module: 'billing', title: 'Pending Invoices', config: { metric: 'pending_invoices', colorScheme: 'orange' }, position: { x: 6, y: 0, w: 3, h: 2 } },
           { widget_type: 'kpi_card', module: 'expenses', title: 'Total Expenses', config: { metric: 'total_expenses', colorScheme: 'red' }, position: { x: 9, y: 0, w: 3, h: 2 } },
-          { widget_type: 'area_chart', module: 'billing', title: 'Revenue Trend', config: { metric: 'revenue_trend' }, position: { x: 0, y: 2, w: 12, h: 4 } },
-          { widget_type: 'table', module: 'billing', title: 'Recent Invoices', config: { limit: 10 }, position: { x: 0, y: 6, w: 12, h: 5 } }
+          { widget_type: 'progress_bar', module: 'billing', title: 'Revenue Target Progress', config: { metric: 'revenue_target', target: 100000 }, position: { x: 0, y: 2, w: 8, h: 2 } },
+          { widget_type: 'donut_chart', module: 'billing', title: 'Invoice Status', config: { metric: 'invoice_status', showLegend: true }, position: { x: 8, y: 2, w: 4, h: 4 } },
+          { widget_type: 'line_chart', module: 'billing', title: 'Payment Collection Trend', config: { timeRange: '90d' }, position: { x: 0, y: 4, w: 8, h: 4 } },
+          { widget_type: 'pie_chart', module: 'expenses', title: 'Expenses by Category', config: { metric: 'expenses_by_category', timeRange: '30d', showLegend: true }, position: { x: 0, y: 8, w: 6, h: 4 } },
+          { widget_type: 'bar_chart', module: 'expenses', title: 'Expenses by Employee', config: { timeRange: '30d', limit: 10 }, position: { x: 6, y: 8, w: 6, h: 4 } },
+          { widget_type: 'table', module: 'billing', title: 'Outstanding Invoices', config: { limit: 10, filters: { status: 'outstanding' } }, position: { x: 0, y: 12, w: 12, h: 5 } }
         ]
 
       case 'operations':
@@ -181,10 +195,15 @@ export function DashboardTemplates() {
           { widget_type: 'kpi_card', module: 'tasks', title: 'Pending Tasks', config: { metric: 'pending_tasks', colorScheme: 'blue' }, position: { x: 0, y: 0, w: 3, h: 2 } },
           { widget_type: 'kpi_card', module: 'support', title: 'Open Tickets', config: { metric: 'open_tickets', colorScheme: 'orange' }, position: { x: 3, y: 0, w: 3, h: 2 } },
           { widget_type: 'kpi_card', module: 'automations', title: 'Active Automations', config: { metric: 'active_automations', colorScheme: 'purple' }, position: { x: 6, y: 0, w: 3, h: 2 } },
-          { widget_type: 'activity_feed', module: 'leads', title: 'Recent Activity', config: { limit: 10 }, position: { x: 0, y: 2, w: 6, h: 6 } },
-          { widget_type: 'pie_chart', module: 'support', title: 'Tickets by Status', config: { metric: 'tickets_by_status' }, position: { x: 6, y: 2, w: 6, h: 4 } },
-          { widget_type: 'table', module: 'tasks', title: 'Active Tasks', config: { limit: 10 }, position: { x: 0, y: 8, w: 6, h: 5 } },
-          { widget_type: 'table', module: 'support', title: 'Recent Tickets', config: { limit: 10 }, position: { x: 6, y: 8, w: 6, h: 5 } }
+          { widget_type: 'kpi_card', module: 'appointments', title: 'Today\'s Appointments', config: { metric: 'today_appointments', colorScheme: 'green' }, position: { x: 9, y: 0, w: 3, h: 2 } },
+          { widget_type: 'progress_bar', module: 'tasks', title: 'Task Completion Progress', config: { metric: 'completion_rate', timeRange: '30d' }, position: { x: 0, y: 2, w: 6, h: 2 } },
+          { widget_type: 'gauge', module: 'support', title: 'Customer Satisfaction', config: { metric: 'satisfaction_score', max: 100 }, position: { x: 6, y: 2, w: 3, h: 3 } },
+          { widget_type: 'donut_chart', module: 'tasks', title: 'Tasks by Status', config: { metric: 'tasks_by_status', showLegend: true }, position: { x: 9, y: 2, w: 3, h: 3 } },
+          { widget_type: 'calendar', module: 'appointments', title: 'Appointments Calendar', config: { view: 'month', showWeekends: true }, position: { x: 0, y: 4, w: 8, h: 6 } },
+          { widget_type: 'list', module: 'tasks', title: 'Upcoming Tasks', config: { limit: 8, sortBy: 'due_date' }, position: { x: 8, y: 5, w: 4, h: 5 } },
+          { widget_type: 'bar_chart', module: 'support', title: 'Tickets by Priority', config: {}, position: { x: 0, y: 10, w: 6, h: 4 } },
+          { widget_type: 'line_chart', module: 'support', title: 'Ticket Resolution Trend', config: { timeRange: '30d' }, position: { x: 6, y: 10, w: 6, h: 4 } },
+          { widget_type: 'activity_feed', module: 'leads', title: 'Recent Activity', config: { limit: 10 }, position: { x: 0, y: 14, w: 12, h: 6 } }
         ]
 
       default:
