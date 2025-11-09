@@ -268,7 +268,8 @@ export function LeadsMIS() {
       console.log('Fetching leads for pipeline:', pipelineFilter)
       console.log('Date range:', { start, end })
 
-      const [leadsRes, previousLeadsRes] = await Promise.all([
+      // Also fetch all leads to check what's in the database
+      const [leadsRes, previousLeadsRes, allLeadsCheck] = await Promise.all([
         supabase
           .from('leads')
           .select('*')
@@ -281,11 +282,20 @@ export function LeadsMIS() {
           .select('stage')
           .eq('pipeline_id', pipelineFilter)
           .gte('created_at', previousStart)
-          .lte('created_at', previousEnd)
+          .lte('created_at', previousEnd),
+
+        supabase
+          .from('leads')
+          .select('id, stage, created_at')
+          .eq('pipeline_id', pipelineFilter)
+          .order('created_at', { ascending: false })
+          .limit(10)
       ])
 
       console.log('Leads response:', leadsRes)
-      console.log('Leads count:', leadsRes.data?.length)
+      console.log('Leads count in date range:', leadsRes.data?.length)
+      console.log('Sample leads from pipeline (last 10):', allLeadsCheck.data)
+      console.log('Date filter:', { start, end })
 
       if (leadsRes.error) {
         console.error('Error fetching leads:', leadsRes.error)
@@ -297,16 +307,35 @@ export function LeadsMIS() {
 
       console.log('Processing', allLeads.length, 'leads')
 
+      // If no leads in date range, show a message but continue with 0 data
+      if (allLeads.length === 0) {
+        console.warn('No leads found in selected date range. Check if leads exist with different dates.')
+      }
+
       // Get the first stage name from pipeline stages (typically "New")
       const firstStageName = pipelineStages[pipelineFilter]?.[0]?.name || 'New'
-      const wonStageName = pipelineStages[pipelineFilter]?.find(s => s.name.toLowerCase().includes('won'))?.name || 'Won'
-      const lostStageName = pipelineStages[pipelineFilter]?.find(s => s.name.toLowerCase().includes('lost'))?.name || 'Lost'
+      const wonStageName = pipelineStages[pipelineFilter]?.find(s =>
+        s.name.toLowerCase().includes('won') ||
+        s.name.toLowerCase().includes('enrolled') ||
+        s.name.toLowerCase().includes('client')
+      )?.name
+      const lostStageName = pipelineStages[pipelineFilter]?.find(s => s.name.toLowerCase().includes('lost'))?.name
+
+      console.log('Detected stage names:', { firstStageName, wonStageName, lostStageName })
+      console.log('Available stages:', pipelineStages[pipelineFilter]?.map(s => s.name))
 
       const newLeads = allLeads.filter(l => l.stage === firstStageName)
       const contactedLeads = allLeads.filter(l => l.stage !== firstStageName)
-      const wonLeads = allLeads.filter(l => l.stage === wonStageName)
-      const lostLeads = allLeads.filter(l => l.stage === lostStageName)
-      const previousWonLeads = previousLeads.filter(l => l.stage === wonStageName)
+      const wonLeads = wonStageName ? allLeads.filter(l => l.stage === wonStageName) : []
+      const lostLeads = lostStageName ? allLeads.filter(l => l.stage === lostStageName) : []
+      const previousWonLeads = wonStageName ? previousLeads.filter(l => l.stage === wonStageName) : []
+
+      console.log('Lead counts by category:', {
+        new: newLeads.length,
+        contacted: contactedLeads.length,
+        won: wonLeads.length,
+        lost: lostLeads.length
+      })
 
       const totalLeadScore = allLeads.reduce((sum, l) => sum + (Number(l.lead_score) || 0), 0)
       const avgLeadScore = allLeads.length > 0 ? totalLeadScore / allLeads.length : 0
