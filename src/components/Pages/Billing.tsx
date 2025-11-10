@@ -13,6 +13,8 @@ import { formatCurrency, formatDate } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import { InvoicePDF } from '@/components/Billing/InvoicePDF'
 import { EstimatePDF } from '@/components/Billing/EstimatePDF'
+import { useAuth } from '@/contexts/AuthContext'
+import { PermissionGuard } from '@/components/Common/PermissionGuard'
 
 const statusColors: Record<string, string> = {
   'Paid': 'bg-green-100 text-green-800',
@@ -37,6 +39,7 @@ type TabType = 'estimates' | 'invoices' | 'subscriptions' | 'receipts'
 type ViewState = 'list' | 'add' | 'edit' | 'view'
 
 export function Billing() {
+  const { canCreate, canUpdate, canDelete } = useAuth()
   const [activeTab, setActiveTab] = useState<TabType>('estimates')
   const [viewState, setViewState] = useState<ViewState>('list')
   const [searchTerm, setSearchTerm] = useState('')

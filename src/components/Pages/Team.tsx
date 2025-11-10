@@ -13,6 +13,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { makeApiCall } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import { UserWorkingHoursSettings } from '@/components/Settings/UserWorkingHoursSettings'
+import { useAuth } from '@/contexts/AuthContext'
+import { PermissionGuard } from '@/components/Common/PermissionGuard'
 
 const mockTeamMembers = [
   {
@@ -109,6 +111,7 @@ const departmentColors: Record<string, string> = {
 type ViewState = 'list' | 'add' | 'view' | 'edit'
 
 export function Team() {
+  const { canCreate, canUpdate, canDelete } = useAuth()
   const [view, setView] = useState<ViewState>('list')
   const [searchTerm, setSearchTerm] = useState('')
   const [roleFilter, setRoleFilter] = useState('')

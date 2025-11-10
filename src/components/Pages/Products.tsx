@@ -11,6 +11,8 @@ import { supabase } from '@/lib/supabase'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { useAuth } from '@/contexts/AuthContext'
+import { PermissionGuard } from '@/components/Common/PermissionGuard'
 
 const productTypeColors: Record<string, string> = {
   'Business Registration': 'bg-blue-100 text-blue-800',
@@ -68,6 +70,7 @@ interface PackageType {
 }
 
 export function Products() {
+  const { canCreate, canUpdate, canDelete } = useAuth()
   const [activeTab, setActiveTab] = useState<TabType>('products')
   const [view, setView] = useState<ViewType>('list')
   const [searchTerm, setSearchTerm] = useState('')
@@ -449,12 +452,12 @@ export function Products() {
               title="Products Master"
               subtitle="Manage CA Practice Services & Packages"
               actions={[
-                {
+                ...(canCreate('products') ? [{
                   label: activeTab === 'products' ? 'Add Product' : 'Add Package',
                   onClick: () => setView('add'),
-                  variant: 'default',
+                  variant: 'default' as const,
                   icon: Plus
-                }
+                }] : [])
               ]}
             />
 

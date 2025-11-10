@@ -13,6 +13,8 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { formatDate } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/contexts/AuthContext'
+import { PermissionGuard } from '@/components/Common/PermissionGuard'
 
 const priorityColors: Record<string, string> = {
   'Low': 'bg-green-100 text-green-800',
@@ -41,6 +43,7 @@ const categoryColors: Record<string, string> = {
 type ViewType = 'list' | 'add' | 'edit' | 'view'
 
 export function Support() {
+  const { canCreate, canUpdate, canDelete } = useAuth()
   const [view, setView] = useState<ViewType>('list')
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
@@ -476,12 +479,12 @@ export function Support() {
             title="Customer Support Center"
             subtitle="Manage support tickets and customer inquiries"
             actions={[
-              {
+              ...(canCreate('support') ? [{
                 label: 'New Ticket',
                 onClick: () => setView('add'),
-                variant: 'default',
+                variant: 'default' as const,
                 icon: Plus
-              }
+              }] : [])
             ]}
           />
         )}
@@ -639,11 +642,13 @@ export function Support() {
                               <Eye className="w-4 h-4 mr-2" />
                               View Ticket
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleEditClick(ticket)}>
-                              <Edit className="w-4 h-4 mr-2" />
-                              Edit Ticket
-                            </DropdownMenuItem>
-                            {ticket.status !== 'Resolved' && ticket.status !== 'Closed' && (
+                            {canUpdate('support') && (
+                              <DropdownMenuItem onClick={() => handleEditClick(ticket)}>
+                                <Edit className="w-4 h-4 mr-2" />
+                                Edit Ticket
+                              </DropdownMenuItem>
+                            )}
+                            {canUpdate('support') && ticket.status !== 'Resolved' && ticket.status !== 'Closed' && (
                               <DropdownMenuItem
                                 onClick={() => updateTicketStatus(ticket.ticketId, 'Resolved')}
                                 className="text-green-600 focus:text-green-600"
@@ -652,13 +657,15 @@ export function Support() {
                                 Mark Resolved
                               </DropdownMenuItem>
                             )}
-                            <DropdownMenuItem
-                              onClick={() => handleDeleteTicket(ticket.id)}
-                              className="text-red-600 focus:text-red-600"
-                            >
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              Delete Ticket
-                            </DropdownMenuItem>
+                            {canDelete('support') && (
+                              <DropdownMenuItem
+                                onClick={() => handleDeleteTicket(ticket.id)}
+                                className="text-red-600 focus:text-red-600"
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete Ticket
+                              </DropdownMenuItem>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </td>
@@ -1007,11 +1014,13 @@ export function Support() {
               </div>
 
               <div className="flex items-center space-x-3 mt-6">
-                <Button onClick={() => handleEditClick(selectedTicket)}>
-                  <Edit className="w-4 h-4 mr-2" />
-                  Edit
-                </Button>
-                {selectedTicket.status !== 'Resolved' && selectedTicket.status !== 'Closed' && (
+                <PermissionGuard module="support" action="update">
+                  <Button onClick={() => handleEditClick(selectedTicket)}>
+                    <Edit className="w-4 h-4 mr-2" />
+                    Edit
+                  </Button>
+                </PermissionGuard>
+                {canUpdate('support') && selectedTicket.status !== 'Resolved' && selectedTicket.status !== 'Closed' && (
                   <Button
                     variant="outline"
                     onClick={() => updateTicketStatus(selectedTicket.ticketId, 'Resolved')}
@@ -1021,17 +1030,19 @@ export function Support() {
                     Resolve
                   </Button>
                 )}
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setView('list')
-                    handleDeleteTicket(selectedTicket.id)
-                  }}
-                  className="text-red-600 hover:text-red-700"
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete
-                </Button>
+                <PermissionGuard module="support" action="delete">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setView('list')
+                      handleDeleteTicket(selectedTicket.id)
+                    }}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete
+                  </Button>
+                </PermissionGuard>
               </div>
             </CardContent>
           </Card>

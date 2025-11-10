@@ -13,6 +13,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { supabase } from '@/lib/supabase'
 import { formatDate, formatTime, formatDateTime, getISTDateString, formatLongDate } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
+import { PermissionGuard } from '@/components/Common/PermissionGuard'
 
 interface Contact {
   id: string
@@ -106,7 +107,7 @@ type ViewType = 'list' | 'add' | 'edit' | 'view'
 export function Appointments() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { userMobile } = useAuth()
+  const { userMobile, canCreate, canUpdate, canDelete } = useAuth()
   const [view, setView] = useState<ViewType>('list')
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
@@ -683,16 +684,16 @@ export function Appointments() {
             title="Appointments"
             subtitle="Manage and track all your sales appointments"
             actions={[
-              {
+              ...(canCreate('appointments') ? [{
                 label: 'Add Appointment',
                 onClick: () => setView('add'),
-                variant: 'default',
+                variant: 'default' as const,
                 icon: Plus
-              },
+              }] : []),
               {
                 label: 'Refresh',
                 onClick: fetchAppointments,
-                variant: 'outline',
+                variant: 'outline' as const,
                 icon: RefreshCw
               }
             ]}
@@ -909,17 +910,21 @@ export function Appointments() {
                                         <Eye className="w-4 h-4 mr-2" />
                                         View Details
                                       </DropdownMenuItem>
-                                      <DropdownMenuItem onClick={() => handleEditClick(appointment)}>
-                                        <Edit className="w-4 h-4 mr-2" />
-                                        Edit Appointment
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem
-                                        onClick={() => handleDeleteAppointment(appointment.id)}
-                                        className="text-red-600 focus:text-red-600"
-                                      >
-                                        <Trash2 className="w-4 h-4 mr-2" />
-                                        Delete Appointment
-                                      </DropdownMenuItem>
+                                      {canUpdate('appointments') && (
+                                        <DropdownMenuItem onClick={() => handleEditClick(appointment)}>
+                                          <Edit className="w-4 h-4 mr-2" />
+                                          Edit Appointment
+                                        </DropdownMenuItem>
+                                      )}
+                                      {canDelete('appointments') && (
+                                        <DropdownMenuItem
+                                          onClick={() => handleDeleteAppointment(appointment.id)}
+                                          className="text-red-600 focus:text-red-600"
+                                        >
+                                          <Trash2 className="w-4 h-4 mr-2" />
+                                          Delete Appointment
+                                        </DropdownMenuItem>
+                                      )}
                                     </DropdownMenuContent>
                                   </DropdownMenu>
                                 </td>

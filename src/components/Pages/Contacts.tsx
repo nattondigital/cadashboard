@@ -15,6 +15,8 @@ import { formatDate, formatTime, getPhoneValidationError, getEmailValidationErro
 import { supabase } from '@/lib/supabase'
 import { ValidatedInput } from '@/components/ui/validated-input'
 import { format } from 'date-fns'
+import { useAuth } from '@/contexts/AuthContext'
+import { PermissionGuard } from '@/components/Common/PermissionGuard'
 
 interface Contact {
   id: string
@@ -106,6 +108,7 @@ type TabType = 'personal' | 'business' | 'notes' | 'appointments' | 'tasks'
 export function Contacts() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { canCreate, canUpdate, canDelete } = useAuth()
   const [view, setView] = useState<ViewType>('list')
   const [formTab, setFormTab] = useState<TabType>('personal')
   const [searchTerm, setSearchTerm] = useState('')
@@ -627,16 +630,16 @@ export function Contacts() {
           title="Contacts Master"
           subtitle="Manage all your contacts with personal and business details"
           actions={[
-            {
+            ...(canCreate('contacts') ? [{
               label: 'Add Contact',
               onClick: () => setView('add'),
-              variant: 'default',
+              variant: 'default' as const,
               icon: UserPlus
-            },
+            }] : []),
             {
               label: 'Refresh Data',
               onClick: fetchContacts,
-              variant: 'outline',
+              variant: 'outline' as const,
               icon: RefreshCw
             }
           ]}
@@ -861,17 +864,21 @@ export function Contacts() {
                                       <Eye className="w-4 h-4 mr-2" />
                                       View Details
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleEditClick(contact)}>
-                                      <Edit className="w-4 h-4 mr-2" />
-                                      Edit Contact
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      onClick={() => handleDeleteContact(contact.id)}
-                                      className="text-red-600 focus:text-red-600"
-                                    >
-                                      <Trash2 className="w-4 h-4 mr-2" />
-                                      Delete Contact
-                                    </DropdownMenuItem>
+                                    {canUpdate('contacts') && (
+                                      <DropdownMenuItem onClick={() => handleEditClick(contact)}>
+                                        <Edit className="w-4 h-4 mr-2" />
+                                        Edit Contact
+                                      </DropdownMenuItem>
+                                    )}
+                                    {canDelete('contacts') && (
+                                      <DropdownMenuItem
+                                        onClick={() => handleDeleteContact(contact.id)}
+                                        className="text-red-600 focus:text-red-600"
+                                      >
+                                        <Trash2 className="w-4 h-4 mr-2" />
+                                        Delete Contact
+                                      </DropdownMenuItem>
+                                    )}
                                   </DropdownMenuContent>
                                 </DropdownMenu>
                               </td>
@@ -1679,10 +1686,12 @@ export function Contacts() {
             )}
 
             <div className="flex items-center space-x-3 mt-6">
-              <Button onClick={() => handleEditClick(selectedContact)}>
-                <Edit className="w-4 h-4 mr-2" />
-                Edit Contact
-              </Button>
+              <PermissionGuard module="contacts" action="update">
+                <Button onClick={() => handleEditClick(selectedContact)}>
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit Contact
+                </Button>
+              </PermissionGuard>
               <Button variant="outline" onClick={() => { setView('list'); resetForm(); }}>
                 Close
               </Button>
