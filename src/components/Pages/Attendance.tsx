@@ -51,7 +51,7 @@ const statusColors: Record<string, string> = {
 }
 
 export function Attendance() {
-  const { canCreate, canUpdate, canDelete } = useAuth()
+  const { canCreate, canUpdate, canDelete, shouldFilterByUser, userProfile } = useAuth()
   const [view, setView] = useState<'list' | 'add' | 'checkout' | 'details' | 'edit'>('list')
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([])
   const [teamMembers, setTeamMembers] = useState<any[]>([])
@@ -131,7 +131,7 @@ export function Attendance() {
   const fetchAttendance = async () => {
     try {
       setLoading(true)
-      const { data, error } = await supabase
+      let query = supabase
         .from('attendance')
         .select(`
           *,
@@ -139,6 +139,12 @@ export function Attendance() {
         `)
         .order('date', { ascending: false })
         .order('check_in_time', { ascending: false })
+
+      if (shouldFilterByUser() && userProfile?.id) {
+        query = query.eq('admin_user_id', userProfile.id)
+      }
+
+      const { data, error } = await query
 
       if (error) {
         console.error('Supabase error:', error)

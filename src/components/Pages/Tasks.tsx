@@ -106,7 +106,7 @@ const categoryOptions = ['Development', 'Design', 'Marketing', 'Sales', 'Support
 export const Tasks: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { canCreate, canUpdate, canDelete } = useAuth()
+  const { canCreate, canUpdate, canDelete, shouldFilterByUser, userProfile } = useAuth()
   const [activeTab, setActiveTab] = useState<'active' | 'recurring'>('active')
   const [view, setView] = useState<'list' | 'add' | 'edit' | 'view'>('list')
   const [tasks, setTasks] = useState<Task[]>([])
@@ -212,10 +212,16 @@ export const Tasks: React.FC = () => {
   const fetchTasks = async () => {
     try {
       setIsLoading(true)
-      const { data, error } = await supabase
+      let query = supabase
         .from('tasks')
         .select('*')
         .order('created_at', { ascending: false })
+
+      if (shouldFilterByUser() && userProfile?.id) {
+        query = query.or(`assigned_to.eq.${userProfile.id},assigned_by.eq.${userProfile.id}`)
+      }
+
+      const { data, error } = await query
 
       if (error) throw error
       setTasks(data || [])

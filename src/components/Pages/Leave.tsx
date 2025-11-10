@@ -54,7 +54,7 @@ interface LeaveRequest {
 }
 
 export function Leave() {
-  const { userProfile, canCreate, canUpdate, canDelete } = useAuth()
+  const { userProfile, canCreate, canUpdate, canDelete, shouldFilterByUser } = useAuth()
   const [view, setView] = useState<'list' | 'add' | 'edit' | 'view'>('list')
   const [searchTerm, setSearchTerm] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
@@ -84,7 +84,7 @@ export function Leave() {
   const fetchLeaveRequests = async () => {
     setIsLoading(true)
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('leave_requests')
         .select(`
           *,
@@ -97,6 +97,12 @@ export function Leave() {
           )
         `)
         .order('created_at', { ascending: false })
+
+      if (shouldFilterByUser() && userProfile?.id) {
+        query = query.eq('admin_user_id', userProfile.id)
+      }
+
+      const { data, error } = await query
 
       if (error) throw error
       setLeaveRequests(data || [])

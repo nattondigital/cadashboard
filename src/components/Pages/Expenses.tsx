@@ -63,7 +63,7 @@ interface Expense {
 }
 
 export function Expenses() {
-  const { canCreate, canUpdate, canDelete } = useAuth()
+  const { canCreate, canUpdate, canDelete, shouldFilterByUser, userProfile } = useAuth()
   const [view, setView] = useState<'list' | 'add' | 'edit' | 'view'>('list')
   const [searchTerm, setSearchTerm] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
@@ -96,10 +96,16 @@ export function Expenses() {
   const fetchExpenses = async () => {
     setIsLoading(true)
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('expenses')
         .select('*')
         .order('expense_date', { ascending: false })
+
+      if (shouldFilterByUser() && userProfile?.id) {
+        query = query.eq('admin_user_id', userProfile.id)
+      }
+
+      const { data, error } = await query
 
       if (error) throw error
       setExpenses(data || [])

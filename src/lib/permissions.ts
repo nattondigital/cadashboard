@@ -120,3 +120,16 @@ export function canPerformAction(
   const mappedAction = ACTION_PERMISSION_MAP[action as keyof typeof ACTION_PERMISSION_MAP] || action
   return hasPermission(permissions, module, mappedAction as PermissionAction)
 }
+
+export function isTeamMember(role: string | null | undefined): boolean {
+  return role === 'Team Member'
+}
+
+export function canAccessAllEntries(role: string | null | undefined): boolean {
+  if (!role) return false
+  return role !== 'Team Member'
+}
+
+export function shouldFilterByUser(role: string | null | undefined): boolean {
+  return isTeamMember(role)
+}

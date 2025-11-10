@@ -9,6 +9,9 @@ import {
   canPerformAction,
   getModulePermissions,
   hasAnyPermission,
+  isTeamMember,
+  canAccessAllEntries,
+  shouldFilterByUser,
   type ModuleName,
   type PermissionAction,
   type UserPermissions,
@@ -45,6 +48,9 @@ interface AuthContextType {
   canDelete: (module: ModuleName) => boolean
   canPerformAction: (module: ModuleName, action: string) => boolean
   hasAnyPermission: (module: ModuleName) => boolean
+  isTeamMember: () => boolean
+  canAccessAllEntries: () => boolean
+  shouldFilterByUser: () => boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -188,6 +194,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return hasAnyPermission(userProfile?.permissions || null, module)
   }
 
+  const checkIsTeamMember = (): boolean => {
+    return isTeamMember(userProfile?.role)
+  }
+
+  const checkCanAccessAllEntries = (): boolean => {
+    return canAccessAllEntries(userProfile?.role)
+  }
+
+  const checkShouldFilterByUser = (): boolean => {
+    return shouldFilterByUser(userProfile?.role)
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -205,6 +223,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         canDelete: checkCanDelete,
         canPerformAction: checkCanPerformAction,
         hasAnyPermission: checkHasAnyPermission,
+        isTeamMember: checkIsTeamMember,
+        canAccessAllEntries: checkCanAccessAllEntries,
+        shouldFilterByUser: checkShouldFilterByUser,
       }}
     >
       {children}
