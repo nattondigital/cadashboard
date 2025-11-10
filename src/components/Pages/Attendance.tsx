@@ -11,6 +11,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { supabase } from '@/lib/supabase'
 import { format } from 'date-fns'
 import { CheckoutFormDesktop, CheckoutFormMobile } from './AttendanceCheckout'
+import { useAuth } from '@/contexts/AuthContext'
+import { PermissionGuard } from '@/components/Common/PermissionGuard'
 
 interface AttendanceRecord {
   id: string
@@ -49,6 +51,7 @@ const statusColors: Record<string, string> = {
 }
 
 export function Attendance() {
+  const { canCreate, canUpdate, canDelete } = useAuth()
   const [view, setView] = useState<'list' | 'add' | 'checkout' | 'details' | 'edit'>('list')
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([])
   const [teamMembers, setTeamMembers] = useState<any[]>([])
@@ -709,12 +712,12 @@ export function Attendance() {
               title="Attendance Management"
               subtitle="Track and manage team attendance"
               actions={[
-                {
+                ...(canCreate('attendance') ? [{
                   label: 'Mark Attendance',
                   onClick: handleAddAttendance,
-                  variant: 'default',
+                  variant: 'default' as const,
                   icon: Plus
-                }
+                }] : [])
               ]}
             />
 

@@ -13,6 +13,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { ValidatedInput } from '@/components/ui/validated-input'
 import { formatDate, getPhoneValidationError, getEmailValidationError } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/contexts/AuthContext'
+import { PermissionGuard } from '@/components/Common/PermissionGuard'
 
 interface Member {
   id: string
@@ -59,6 +61,7 @@ const experienceColors: Record<string, string> = {
 }
 
 export function Members() {
+  const { canCreate, canUpdate, canDelete } = useAuth()
   const [view, setView] = useState<ViewType>('list')
   const [viewTab, setViewTab] = useState<TabType>('personal')
   const [formTab, setFormTab] = useState<TabType>('personal')

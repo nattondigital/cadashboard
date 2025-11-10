@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { format } from 'date-fns'
 import { useAuth } from '@/contexts/AuthContext'
+import { PermissionGuard } from '@/components/Common/PermissionGuard'
 
 const requestTypeColors: Record<string, string> = {
   'Leave': 'bg-orange-100 text-orange-800',
@@ -53,7 +54,7 @@ interface LeaveRequest {
 }
 
 export function Leave() {
-  const { userProfile } = useAuth()
+  const { userProfile, canCreate, canUpdate, canDelete } = useAuth()
   const [view, setView] = useState<'list' | 'add' | 'edit' | 'view'>('list')
   const [searchTerm, setSearchTerm] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
@@ -339,12 +340,12 @@ export function Leave() {
               title="Leave Management"
               subtitle="Manage team leave requests, work from home, and half day requests"
               actions={[
-                {
+                ...(canCreate('leave') ? [{
                   label: 'New Request',
                   onClick: handleAddRequest,
-                  variant: 'default',
+                  variant: 'default' as const,
                   icon: Plus
-                }
+                }] : [])
               ]}
             />
 
@@ -525,11 +526,13 @@ export function Leave() {
                                   <Eye className="w-4 h-4 mr-2" />
                                   View Details
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleEditClick(request)}>
-                                  <Edit className="w-4 h-4 mr-2" />
-                                  Edit Request
-                                </DropdownMenuItem>
-                                {request.status === 'Pending' && (
+                                {canUpdate('leave') && (
+                                  <DropdownMenuItem onClick={() => handleEditClick(request)}>
+                                    <Edit className="w-4 h-4 mr-2" />
+                                    Edit Request
+                                  </DropdownMenuItem>
+                                )}
+                                {canUpdate('leave') && request.status === 'Pending' && (
                                   <>
                                     <DropdownMenuItem
                                       onClick={() => {
@@ -553,13 +556,15 @@ export function Leave() {
                                     </DropdownMenuItem>
                                   </>
                                 )}
-                                <DropdownMenuItem
-                                  onClick={() => handleDeleteRequest(request.id, request.request_id)}
-                                  className="text-red-600 focus:text-red-600"
-                                >
-                                  <Trash2 className="w-4 h-4 mr-2" />
-                                  Delete Request
-                                </DropdownMenuItem>
+                                {canDelete('leave') && (
+                                  <DropdownMenuItem
+                                    onClick={() => handleDeleteRequest(request.id, request.request_id)}
+                                    className="text-red-600 focus:text-red-600"
+                                  >
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Delete Request
+                                  </DropdownMenuItem>
+                                )}
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </td>

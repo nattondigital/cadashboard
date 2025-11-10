@@ -14,6 +14,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { formatCurrency, getPhoneValidationError, getEmailValidationError } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import { ValidatedInput } from '@/components/ui/validated-input'
+import { useAuth } from '@/contexts/AuthContext'
+import { PermissionGuard } from '@/components/Common/PermissionGuard'
 
 interface Affiliate {
   id?: string
@@ -43,6 +45,7 @@ const statusColors: Record<string, string> = {
 }
 
 export function Affiliates() {
+  const { canCreate, canUpdate, canDelete } = useAuth()
   const [viewState, setViewState] = useState<ViewState>('list')
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('')

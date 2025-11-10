@@ -13,6 +13,8 @@ import { CategoryModal } from '@/components/LMS/CategoryModal'
 import { LessonModal } from '@/components/LMS/LessonModal'
 import { formatCurrency } from '@/lib/utils'
 import { linkifyText } from '@/lib/linkify'
+import { useAuth } from '@/contexts/AuthContext'
+import { PermissionGuard } from '@/components/Common/PermissionGuard'
 
 interface Course {
   id: string
@@ -63,6 +65,7 @@ interface Attachment {
 type View = 'courses' | 'categories' | 'lessons' | 'lesson-detail'
 
 export function LMS() {
+  const { canCreate, canUpdate, canDelete } = useAuth()
   const [view, setView] = useState<View>('courses')
   const [courses, setCourses] = useState<Course[]>([])
   const [categories, setCategories] = useState<Category[]>([])
