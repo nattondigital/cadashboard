@@ -26,6 +26,10 @@ const MCP_SERVERS = {
       { id: 'create_task', name: 'Create Task', description: 'Create new tasks' },
       { id: 'update_task', name: 'Update Task', description: 'Modify existing tasks' },
       { id: 'delete_task', name: 'Delete Task', description: 'Remove tasks' },
+      { id: 'get_recurring_tasks', name: 'Get Recurring Tasks', description: 'View and search recurring task templates' },
+      { id: 'create_recurring_task', name: 'Create Recurring Task', description: 'Create new recurring task templates' },
+      { id: 'update_recurring_task', name: 'Update Recurring Task', description: 'Modify recurring task templates' },
+      { id: 'delete_recurring_task', name: 'Delete Recurring Task', description: 'Remove recurring task templates' },
     ],
   },
   'contacts-server': {
