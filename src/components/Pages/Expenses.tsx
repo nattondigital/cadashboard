@@ -931,7 +931,7 @@ export function Expenses() {
                   </div>
                 )}
 
-                {selectedExpense.status === 'Pending' && (
+                {canUpdate('expenses') && selectedExpense.status === 'Pending' && (
                   <div className="flex items-center gap-3 pt-4 border-t pt-6">
                     <Button
                       onClick={() => setShowApproveModal(true)}
@@ -951,24 +951,28 @@ export function Expenses() {
                 )}
 
                 <div className="flex items-center gap-3 pt-4">
-                  <Button
-                    onClick={() => handleEditClick(selectedExpense)}
-                    className="flex-1"
-                  >
-                    <Edit className="w-4 h-4 mr-2" />
-                    Edit
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      handleDeleteExpense(selectedExpense.id, selectedExpense.expense_id)
-                      setView('list')
-                    }}
-                    className="flex-1 text-red-600 hover:text-red-700 hover:border-red-600"
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Delete
-                  </Button>
+                  {canUpdate('expenses') && (
+                    <Button
+                      onClick={() => handleEditClick(selectedExpense)}
+                      className="flex-1"
+                    >
+                      <Edit className="w-4 h-4 mr-2" />
+                      Edit
+                    </Button>
+                  )}
+                  {canDelete('expenses') && (
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        handleDeleteExpense(selectedExpense.id, selectedExpense.expense_id)
+                        setView('list')
+                      }}
+                      className="flex-1 text-red-600 hover:text-red-700 hover:border-red-600"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -1215,7 +1219,7 @@ export function Expenses() {
               </div>
 
               {/* Approve/Reject Buttons for Pending Expenses */}
-              {selectedExpense.status === 'Pending' && (
+              {canUpdate('expenses') && selectedExpense.status === 'Pending' && (
                 <div className="px-4 pb-4">
                   <div className="bg-white rounded-2xl shadow-lg p-4">
                     <p className="text-sm text-gray-600 mb-4 text-center font-medium">Review this expense</p>
@@ -1249,28 +1253,32 @@ export function Expenses() {
 
               {/* Action Buttons */}
               <div className="px-4 pb-4 flex gap-3">
-                <motion.button
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => {
-                    setShowViewModal(false)
-                    handleEditClick(selectedExpense)
-                  }}
-                  className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl py-4 font-semibold shadow-lg flex items-center justify-center gap-2"
-                >
-                  <Edit className="w-5 h-5" />
-                  Edit
-                </motion.button>
-                <motion.button
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => {
-                    setShowViewModal(false)
-                    handleDeleteExpense(selectedExpense.id, selectedExpense.expense_id)
-                  }}
-                  className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-2xl py-4 font-semibold shadow-lg flex items-center justify-center gap-2"
+                {canUpdate('expenses') && (
+                  <motion.button
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => {
+                      setShowViewModal(false)
+                      handleEditClick(selectedExpense)
+                    }}
+                    className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl py-4 font-semibold shadow-lg flex items-center justify-center gap-2"
+                  >
+                    <Edit className="w-5 h-5" />
+                    Edit
+                  </motion.button>
+                )}
+                {canDelete('expenses') && (
+                  <motion.button
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => {
+                      setShowViewModal(false)
+                      handleDeleteExpense(selectedExpense.id, selectedExpense.expense_id)
+                    }}
+                    className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-2xl py-4 font-semibold shadow-lg flex items-center justify-center gap-2"
                 >
                   <Trash2 className="w-5 h-5" />
                   Delete
                 </motion.button>
+                )}
               </div>
             </div>
           </motion.div>
