@@ -43,7 +43,7 @@ const categoryColors: Record<string, string> = {
 type ViewType = 'list' | 'add' | 'edit' | 'view'
 
 export function Support() {
-  const { canCreate, canUpdate, canDelete } = useAuth()
+  const { canCreate, canUpdate, canDelete, shouldFilterByUser, userProfile } = useAuth()
   const [view, setView] = useState<ViewType>('list')
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
@@ -105,10 +105,16 @@ export function Support() {
 
       if (adminUsersError) throw adminUsersError
 
-      const { data: ticketsData, error: ticketsError } = await supabase
+      let ticketsQuery = supabase
         .from('support_tickets')
         .select('*')
         .order('created_at', { ascending: false })
+
+      if (shouldFilterByUser() && userProfile?.id) {
+        ticketsQuery = ticketsQuery.eq('assigned_to', userProfile.id)
+      }
+
+      const { data: ticketsData, error: ticketsError } = await ticketsQuery
 
       if (ticketsError) throw ticketsError
 

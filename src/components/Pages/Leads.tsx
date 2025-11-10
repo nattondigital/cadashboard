@@ -156,7 +156,7 @@ interface ImportResult {
 export function Leads() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { canCreate, canUpdate, canDelete, canRead } = useAuth()
+  const { canCreate, canUpdate, canDelete, canRead, shouldFilterByUser, userProfile } = useAuth()
   const [view, setView] = useState<ViewType>('list')
   const [displayMode, setDisplayMode] = useState<DisplayMode>('kanban')
   const [detailTab, setDetailTab] = useState<TabType>('lead-details')
@@ -289,10 +289,16 @@ export function Leads() {
   const fetchLeads = async () => {
     setLoading(true)
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('leads')
         .select('*')
         .order('created_at', { ascending: false })
+
+      if (shouldFilterByUser() && userProfile?.id) {
+        query = query.eq('assigned_to', userProfile.id)
+      }
+
+      const { data, error } = await query
 
       if (error) throw error
       console.log('📊 Fetched leads:', data?.length || 0)

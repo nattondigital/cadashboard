@@ -107,7 +107,7 @@ type ViewType = 'list' | 'add' | 'edit' | 'view'
 export function Appointments() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { userMobile, canCreate, canUpdate, canDelete } = useAuth()
+  const { userMobile, canCreate, canUpdate, canDelete, shouldFilterByUser, userProfile } = useAuth()
   const [view, setView] = useState<ViewType>('list')
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
@@ -147,14 +147,41 @@ export function Appointments() {
     setIsLoading(true)
     setError(null)
     try {
-      const { data, error: fetchError } = await supabase
-        .from('appointments')
-        .select('*')
-        .order('appointment_date', { ascending: true })
-        .order('appointment_time', { ascending: true })
+      if (shouldFilterByUser() && userProfile?.id) {
+        const { data: userCalendars, error: calendarError } = await supabase
+          .from('calendars')
+          .select('id')
+          .eq('assigned_user_id', userProfile.id)
 
-      if (fetchError) throw fetchError
-      setAppointments(data || [])
+        if (calendarError) throw calendarError
+
+        const calendarIds = (userCalendars || []).map(cal => cal.id)
+
+        if (calendarIds.length === 0) {
+          setAppointments([])
+          setIsLoading(false)
+          return
+        }
+
+        const { data, error: fetchError } = await supabase
+          .from('appointments')
+          .select('*')
+          .in('calendar_id', calendarIds)
+          .order('appointment_date', { ascending: true })
+          .order('appointment_time', { ascending: true })
+
+        if (fetchError) throw fetchError
+        setAppointments(data || [])
+      } else {
+        const { data, error: fetchError } = await supabase
+          .from('appointments')
+          .select('*')
+          .order('appointment_date', { ascending: true })
+          .order('appointment_time', { ascending: true })
+
+        if (fetchError) throw fetchError
+        setAppointments(data || [])
+      }
     } catch (error) {
       console.error('Error fetching appointments:', error)
       setError(error instanceof Error ? error.message : 'Failed to fetch appointments')
@@ -339,11 +366,17 @@ export function Appointments() {
 
   const fetchCalendars = async () => {
     try {
-      const { data, error: fetchError } = await supabase
+      let query = supabase
         .from('calendars')
         .select('id, calendar_id, title, description, slot_duration, meeting_type, default_location, color, is_active, availability, buffer_time, max_bookings_per_slot')
         .eq('is_active', true)
         .order('title', { ascending: true })
+
+      if (shouldFilterByUser() && userProfile?.id) {
+        query = query.eq('assigned_user_id', userProfile.id)
+      }
+
+      const { data, error: fetchError } = await query
 
       if (fetchError) throw fetchError
       setCalendars(data || [])
