@@ -790,13 +790,7 @@ export const Tasks: React.FC = () => {
                   onClick: () => activeTab === 'active' ? setView('add') : setShowRecurringModal(true),
                   variant: 'default' as const,
                   icon: Plus
-                }] : []),
-                {
-                  label: 'Refresh',
-                  onClick: () => activeTab === 'active' ? fetchTasks() : fetchRecurringTasks(),
-                  variant: 'outline' as const,
-                  icon: RefreshCw
-                }
+                }] : [])
               ]}
             />
 
@@ -817,42 +811,6 @@ export const Tasks: React.FC = () => {
                 <Repeat className="w-4 h-4" />
                 Recurring Tasks
               </Button>
-
-              {activeTab === 'recurring' && (
-                <Button
-                  variant="outline"
-                  onClick={async () => {
-                    try {
-                      const response = await fetch(
-                        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-recurring-tasks`,
-                        {
-                          method: 'POST',
-                          headers: {
-                            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-                            'Content-Type': 'application/json',
-                          },
-                        }
-                      )
-                      const result = await response.json()
-                      if (result.success) {
-                        alert(`Successfully created ${result.tasksCreated} task(s) from recurring templates!\n\nSwitch to "Active Tasks" tab to see them.`)
-                        await fetchTasks()
-                        // Auto-switch to Active Tasks tab to show the newly created tasks
-                        setActiveTab('active')
-                      } else {
-                        alert('Error generating tasks: ' + result.error)
-                      }
-                    } catch (error) {
-                      console.error('Error:', error)
-                      alert('Failed to generate tasks')
-                    }
-                  }}
-                  className="flex items-center gap-2 ml-auto"
-                >
-                  <Target className="w-4 h-4" />
-                  Generate Tasks Now
-                </Button>
-              )}
             </div>
           </>
         )}
