@@ -1967,16 +1967,18 @@ export const Tasks: React.FC = () => {
                 </div>
               </div>
 
-              <div className="px-4 mb-4">
-                <motion.button
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setView('add')}
-                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl py-4 px-6 shadow-lg flex items-center justify-center gap-3 font-semibold"
-                >
-                  <Plus className="w-5 h-5" />
-                  Add New Task
-                </motion.button>
-              </div>
+              <PermissionGuard module="tasks" action="insert">
+                <div className="px-4 mb-4">
+                  <motion.button
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setView('add')}
+                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl py-4 px-6 shadow-lg flex items-center justify-center gap-3 font-semibold"
+                  >
+                    <Plus className="w-5 h-5" />
+                    Add New Task
+                  </motion.button>
+                </div>
+              </PermissionGuard>
 
               <div className="px-4 mb-4">
                 <div className="space-y-2">
