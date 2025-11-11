@@ -10,6 +10,8 @@ import { Input } from '@/components/ui/input'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { supabase } from '@/lib/supabase'
 import { formatDate } from '@/lib/utils'
+import { useAuth } from '@/contexts/AuthContext'
+import { PermissionGuard } from '@/components/Common/PermissionGuard'
 
 interface MediaFolder {
   id: string
@@ -37,6 +39,7 @@ interface MediaFile {
 }
 
 export function MediaStorage() {
+  const { canCreate, canDelete } = useAuth()
   const [folders, setFolders] = useState<MediaFolder[]>([])
   const [files, setFiles] = useState<MediaFile[]>([])
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null)
@@ -499,19 +502,23 @@ export function MediaStorage() {
                     >
                       {viewMode === 'grid' ? <List className="w-4 h-4" /> : <Grid className="w-4 h-4" />}
                     </Button>
-                    <Button
-                      onClick={() => setShowUploadFileModal(true)}
-                      variant="outline"
-                      disabled={currentFolderId === null}
-                      title={currentFolderId === null ? "Please navigate to a folder to upload files" : "Upload a file to this folder"}
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      Upload File
-                    </Button>
-                    <Button onClick={() => setShowCreateFolderModal(true)}>
-                      <FolderPlus className="w-4 h-4 mr-2" />
-                      New Folder
-                    </Button>
+                    {canCreate('media_storage') && (
+                      <Button
+                        onClick={() => setShowUploadFileModal(true)}
+                        variant="outline"
+                        disabled={currentFolderId === null}
+                        title={currentFolderId === null ? "Please navigate to a folder to upload files" : "Upload a file to this folder"}
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload File
+                      </Button>
+                    )}
+                    {canCreate('media_storage') && (
+                      <Button onClick={() => setShowCreateFolderModal(true)}>
+                        <FolderPlus className="w-4 h-4 mr-2" />
+                        New Folder
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -561,23 +568,25 @@ export function MediaStorage() {
                                 <Folder className="w-12 h-12 text-yellow-500 mb-2" />
                                 <p className="text-sm font-medium text-center truncate w-full">{folder.folder_name}</p>
                               </div>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                                  >
-                                    <MoreVertical className="w-4 h-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent>
-                                  <DropdownMenuItem onClick={() => deleteFolder(folder)}>
-                                    <Trash2 className="w-4 h-4 mr-2" />
-                                    Delete
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
+                              {canDelete('media_storage') && (
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                      <MoreVertical className="w-4 h-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent>
+                                    <DropdownMenuItem onClick={() => deleteFolder(folder)}>
+                                      <Trash2 className="w-4 h-4 mr-2" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              )}
                             </motion.div>
                           ))}
 
@@ -620,10 +629,12 @@ export function MediaStorage() {
                                     <Download className="w-4 h-4 mr-2" />
                                     Download
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => deleteFile(file)}>
-                                    <Trash2 className="w-4 h-4 mr-2" />
-                                    Delete
-                                  </DropdownMenuItem>
+                                  {canDelete('media_storage') && (
+                                    <DropdownMenuItem onClick={() => deleteFile(file)}>
+                                      <Trash2 className="w-4 h-4 mr-2" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  )}
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </motion.div>
@@ -644,19 +655,21 @@ export function MediaStorage() {
                                   <p className="text-sm text-gray-500">Folder • {formatDate(folder.created_at)}</p>
                                 </div>
                               </div>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                                  <Button variant="ghost" size="icon">
-                                    <MoreVertical className="w-4 h-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent>
-                                  <DropdownMenuItem onClick={() => deleteFolder(folder)}>
-                                    <Trash2 className="w-4 h-4 mr-2" />
-                                    Delete
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
+                              {canDelete('media_storage') && (
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                    <Button variant="ghost" size="icon">
+                                      <MoreVertical className="w-4 h-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent>
+                                    <DropdownMenuItem onClick={() => deleteFolder(folder)}>
+                                      <Trash2 className="w-4 h-4 mr-2" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              )}
                             </div>
                           ))}
 
@@ -697,10 +710,12 @@ export function MediaStorage() {
                                     <Download className="w-4 h-4 mr-2" />
                                     Download
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => deleteFile(file)}>
-                                    <Trash2 className="w-4 h-4 mr-2" />
-                                    Delete
-                                  </DropdownMenuItem>
+                                  {canDelete('media_storage') && (
+                                    <DropdownMenuItem onClick={() => deleteFile(file)}>
+                                      <Trash2 className="w-4 h-4 mr-2" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  )}
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </div>
@@ -963,10 +978,12 @@ export function MediaStorage() {
                           <Download className="w-4 h-4 mr-2" />
                           Download
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => deleteFile(file)}>
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
+                        {canDelete('media_storage') && (
+                          <DropdownMenuItem onClick={() => deleteFile(file)}>
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
@@ -977,32 +994,34 @@ export function MediaStorage() {
         </div>
 
         {/* Fixed Bottom Action Buttons */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg z-20">
-          <div className="flex gap-3">
-            <motion.button
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setShowCreateFolderModal(true)}
-              className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-2xl py-4 font-bold text-sm shadow-lg flex items-center justify-center gap-2"
-            >
-              <FolderPlus className="w-5 h-5" />
-              New Folder
-            </motion.button>
-            <motion.button
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setShowUploadFileModal(true)}
-              disabled={currentFolderId === null}
-              className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-2xl py-4 font-bold text-sm shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Upload className="w-5 h-5" />
-              Upload File
-            </motion.button>
+        {canCreate('media_storage') && (
+          <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg z-20">
+            <div className="flex gap-3">
+              <motion.button
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setShowCreateFolderModal(true)}
+                className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-2xl py-4 font-bold text-sm shadow-lg flex items-center justify-center gap-2"
+              >
+                <FolderPlus className="w-5 h-5" />
+                New Folder
+              </motion.button>
+              <motion.button
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setShowUploadFileModal(true)}
+                disabled={currentFolderId === null}
+                className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-2xl py-4 font-bold text-sm shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Upload className="w-5 h-5" />
+                Upload File
+              </motion.button>
+            </div>
+            {currentFolderId === null && (
+              <p className="text-xs text-center text-gray-500 mt-2">
+                Navigate to a folder to upload files
+              </p>
+            )}
           </div>
-          {currentFolderId === null && (
-            <p className="text-xs text-center text-gray-500 mt-2">
-              Navigate to a folder to upload files
-            </p>
-          )}
-        </div>
+        )}
 
         {/* Mobile Menu Dropdown */}
         <AnimatePresence>
