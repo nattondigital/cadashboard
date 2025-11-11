@@ -899,16 +899,16 @@ export function Billing() {
         title="Billing & Payments"
         subtitle="Manage Estimates, Invoices, Subscriptions & Receipts"
         actions={[
-          {
+          ...(canCreate('billing') ? [{
             label: `Create ${activeTab.charAt(0).toUpperCase() + activeTab.slice(1, -1)}`,
             onClick: openCreateModal,
-            variant: 'default',
+            variant: 'default' as const,
             icon: Plus
-          },
+          }] : []),
           {
             label: 'Export Reports',
             onClick: () => {},
-            variant: 'outline',
+            variant: 'outline' as const,
             icon: Download
           }
         ]}
@@ -990,19 +990,19 @@ export function Billing() {
       </motion.div>
 
       {activeTab === 'estimates' && (
-        <EstimatesTable data={filteredData} onView={handleView} onEdit={handleEdit} onDelete={handleDelete} onCreateInvoice={handleCreateInvoice} onViewPDF={handleViewEstimatePDF} loading={loading} />
+        <EstimatesTable data={filteredData} onView={handleView} onEdit={handleEdit} onDelete={handleDelete} onCreateInvoice={handleCreateInvoice} onViewPDF={handleViewEstimatePDF} loading={loading} canUpdate={canUpdate('billing')} canDelete={canDelete('billing')} />
       )}
 
       {activeTab === 'invoices' && (
-        <InvoicesTable data={filteredData} onView={handleView} onEdit={handleEdit} onDelete={handleDelete} onRecordReceipt={handleRecordReceipt} onViewPDF={handleViewPDF} onGeneratePaymentLink={handleGeneratePaymentLink} onCopyPaymentLink={handleCopyPaymentLink} loading={loading} />
+        <InvoicesTable data={filteredData} onView={handleView} onEdit={handleEdit} onDelete={handleDelete} onRecordReceipt={handleRecordReceipt} onViewPDF={handleViewPDF} onGeneratePaymentLink={handleGeneratePaymentLink} onCopyPaymentLink={handleCopyPaymentLink} loading={loading} canUpdate={canUpdate('billing')} canDelete={canDelete('billing')} />
       )}
 
       {activeTab === 'subscriptions' && (
-        <SubscriptionsTable data={filteredData} onView={handleView} onEdit={handleEdit} onDelete={handleDelete} loading={loading} />
+        <SubscriptionsTable data={filteredData} onView={handleView} onEdit={handleEdit} onDelete={handleDelete} loading={loading} canUpdate={canUpdate('billing')} canDelete={canDelete('billing')} />
       )}
 
       {activeTab === 'receipts' && (
-        <ReceiptsTable data={filteredData} onView={handleView} onEdit={handleEdit} onDelete={handleDelete} loading={loading} />
+        <ReceiptsTable data={filteredData} onView={handleView} onEdit={handleEdit} onDelete={handleDelete} loading={loading} canUpdate={canUpdate('billing')} canDelete={canDelete('billing')} />
       )}
 
       {showInvoicePDF && selectedItem && (
@@ -1134,16 +1134,18 @@ export function Billing() {
               </div>
 
               {/* Add Button */}
-              <div className="px-4 mb-4">
-                <motion.button
-                  whileTap={{ scale: 0.98 }}
-                  onClick={openCreateModal}
-                  className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-2xl py-4 px-6 shadow-lg flex items-center justify-center gap-3 font-semibold"
-                >
-                  <Plus className="w-5 h-5" />
-                  Create {activeTab.charAt(0).toUpperCase() + activeTab.slice(1, -1)}
-                </motion.button>
-              </div>
+              {canCreate('billing') && (
+                <div className="px-4 mb-4">
+                  <motion.button
+                    whileTap={{ scale: 0.98 }}
+                    onClick={openCreateModal}
+                    className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-2xl py-4 px-6 shadow-lg flex items-center justify-center gap-3 font-semibold"
+                  >
+                    <Plus className="w-5 h-5" />
+                    Create {activeTab.charAt(0).toUpperCase() + activeTab.slice(1, -1)}
+                  </motion.button>
+                </div>
+              )}
 
               {/* List Items */}
               <div className="px-4 pb-20">
@@ -1221,23 +1223,29 @@ export function Billing() {
                       {activeTab.charAt(0).toUpperCase() + activeTab.slice(1, -1)} Details
                     </h1>
                   </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button size="sm" variant="ghost" className="text-white hover:bg-white/20">
-                        <MoreVertical className="w-5 h-5" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={handleEditFromView}>
-                        <Edit className="w-4 h-4 mr-2" />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleDelete(selectedItem.id)}>
-                        <Trash2 className="w-4 h-4 mr-2 text-red-600" />
-                        <span className="text-red-600">Delete</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  {(canUpdate('billing') || canDelete('billing')) && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button size="sm" variant="ghost" className="text-white hover:bg-white/20">
+                          <MoreVertical className="w-5 h-5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {canUpdate('billing') && (
+                          <DropdownMenuItem onClick={handleEditFromView}>
+                            <Edit className="w-4 h-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                        )}
+                        {canDelete('billing') && (
+                          <DropdownMenuItem onClick={() => handleDelete(selectedItem.id)}>
+                            <Trash2 className="w-4 h-4 mr-2 text-red-600" />
+                            <span className="text-red-600">Delete</span>
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
                 </div>
 
                 <div className="flex items-center justify-between">
@@ -1711,7 +1719,7 @@ export function Billing() {
   )
 }
 
-function EstimatesTable({ data, onView, onEdit, onDelete, onCreateInvoice, onViewPDF, loading }: any) {
+function EstimatesTable({ data, onView, onEdit, onDelete, onCreateInvoice, onViewPDF, loading, canUpdate, canDelete }: any) {
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
       <Card className="shadow-xl">
@@ -1775,22 +1783,24 @@ function EstimatesTable({ data, onView, onEdit, onDelete, onCreateInvoice, onVie
                               <Download className="w-4 h-4 mr-2" />
                               View PDF
                             </DropdownMenuItem>
-                            {item.status !== 'Invoiced' && (
+                            {canUpdate && item.status !== 'Invoiced' && (
                               <DropdownMenuItem onClick={() => onEdit(item)}>
                                 <Edit className="w-4 h-4 mr-2" />
                                 Edit
                               </DropdownMenuItem>
                             )}
-                            {item.status !== 'Invoiced' && (
+                            {canUpdate && item.status !== 'Invoiced' && (
                               <DropdownMenuItem onClick={() => onCreateInvoice(item)}>
                                 <FileText className="w-4 h-4 mr-2" />
                                 Create Invoice
                               </DropdownMenuItem>
                             )}
-                            <DropdownMenuItem onClick={() => onDelete(item.id)} className="text-red-600">
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              Delete
-                            </DropdownMenuItem>
+                            {canDelete && (
+                              <DropdownMenuItem onClick={() => onDelete(item.id)} className="text-red-600">
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </td>
@@ -1806,7 +1816,7 @@ function EstimatesTable({ data, onView, onEdit, onDelete, onCreateInvoice, onVie
   )
 }
 
-function InvoicesTable({ data, onView, onEdit, onDelete, onRecordReceipt, onViewPDF, onGeneratePaymentLink, onCopyPaymentLink, loading }: any) {
+function InvoicesTable({ data, onView, onEdit, onDelete, onRecordReceipt, onViewPDF, onGeneratePaymentLink, onCopyPaymentLink, loading, canUpdate, canDelete }: any) {
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
       <Card className="shadow-xl">
@@ -1893,7 +1903,7 @@ function InvoicesTable({ data, onView, onEdit, onDelete, onRecordReceipt, onView
                               <Eye className="w-4 h-4 mr-2" />
                               View Details
                             </DropdownMenuItem>
-                            {!item.payment_link_url && ['Draft', 'Sent', 'Pending', 'Partially Paid'].includes(item.status) && (
+                            {canUpdate && !item.payment_link_url && ['Draft', 'Sent', 'Pending', 'Partially Paid'].includes(item.status) && (
                               <>
                                 <DropdownMenuItem onClick={() => onGeneratePaymentLink(item)}>
                                   <Link2 className="w-4 h-4 mr-2" />
@@ -1907,18 +1917,24 @@ function InvoicesTable({ data, onView, onEdit, onDelete, onRecordReceipt, onView
                                 Copy Payment Link
                               </DropdownMenuItem>
                             )}
-                            <DropdownMenuItem onClick={() => onEdit(item)}>
-                              <Edit className="w-4 h-4 mr-2" />
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => onRecordReceipt(item)}>
-                              <Receipt className="w-4 h-4 mr-2" />
-                              Record Receipt
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => onDelete(item.id)} className="text-red-600">
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              Delete
-                            </DropdownMenuItem>
+                            {canUpdate && (
+                              <DropdownMenuItem onClick={() => onEdit(item)}>
+                                <Edit className="w-4 h-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                            )}
+                            {canUpdate && (
+                              <DropdownMenuItem onClick={() => onRecordReceipt(item)}>
+                                <Receipt className="w-4 h-4 mr-2" />
+                                Record Receipt
+                              </DropdownMenuItem>
+                            )}
+                            {canDelete && (
+                              <DropdownMenuItem onClick={() => onDelete(item.id)} className="text-red-600">
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </td>
@@ -1934,7 +1950,7 @@ function InvoicesTable({ data, onView, onEdit, onDelete, onRecordReceipt, onView
   )
 }
 
-function SubscriptionsTable({ data, onView, onEdit, onDelete, loading }: any) {
+function SubscriptionsTable({ data, onView, onEdit, onDelete, loading, canUpdate, canDelete }: any) {
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
       <Card className="shadow-xl">
@@ -2008,14 +2024,18 @@ function SubscriptionsTable({ data, onView, onEdit, onDelete, loading }: any) {
                               <Eye className="w-4 h-4 mr-2" />
                               View
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => onEdit(item)}>
-                              <Edit className="w-4 h-4 mr-2" />
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => onDelete(item.id)} className="text-red-600 focus:text-red-600">
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              Cancel
-                            </DropdownMenuItem>
+                            {canUpdate && (
+                              <DropdownMenuItem onClick={() => onEdit(item)}>
+                                <Edit className="w-4 h-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                            )}
+                            {canDelete && (
+                              <DropdownMenuItem onClick={() => onDelete(item.id)} className="text-red-600 focus:text-red-600">
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Cancel
+                              </DropdownMenuItem>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </td>
@@ -2031,7 +2051,7 @@ function SubscriptionsTable({ data, onView, onEdit, onDelete, loading }: any) {
   )
 }
 
-function ReceiptsTable({ data, onView, onEdit, onDelete, loading }: any) {
+function ReceiptsTable({ data, onView, onEdit, onDelete, loading, canUpdate, canDelete }: any) {
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
       <Card className="shadow-xl">
@@ -2102,14 +2122,18 @@ function ReceiptsTable({ data, onView, onEdit, onDelete, loading }: any) {
                               <Download className="w-4 h-4 mr-2" />
                               Download
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => onEdit(item)}>
-                              <Edit className="w-4 h-4 mr-2" />
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => onDelete(item.id)} className="text-red-600 focus:text-red-600">
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              Delete
-                            </DropdownMenuItem>
+                            {canUpdate && (
+                              <DropdownMenuItem onClick={() => onEdit(item)}>
+                                <Edit className="w-4 h-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                            )}
+                            {canDelete && (
+                              <DropdownMenuItem onClick={() => onDelete(item.id)} className="text-red-600 focus:text-red-600">
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </td>
