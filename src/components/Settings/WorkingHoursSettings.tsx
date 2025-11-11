@@ -368,7 +368,7 @@ export function WorkingHoursSettings() {
                   <div>
                     <p className="font-medium text-gray-900">Half Day</p>
                     <p className="text-gray-600">
-                      Employee Attendance Status will be marked as <span className="font-semibold text-yellow-700">"HALF DAY"</span> if Actual Working Hours <span className="font-semibold">&lt;</span> Half Day Hours
+                      Employee Attendance Status will be marked as <span className="font-semibold text-yellow-700">"HALF DAY"</span> if Actual Working Hours <span className="font-semibold">&gt;=</span> Half Day Hours
                     </p>
                   </div>
                 </div>
