@@ -9,11 +9,11 @@ const corsHeaders = {
 interface LeadPayload {
   name: string
   phone: string
+  pipeline_id: string
   email?: string
   source?: string
   interest?: string
   stage?: string
-  pipeline_id?: string
   contact_id?: string
   owner?: string
   address?: string
@@ -21,6 +21,8 @@ interface LeadPayload {
   notes?: string
   lead_score?: number
   affiliate_id?: string
+  assigned_to?: string
+  custom_fields?: Record<string, any>
 }
 
 Deno.serve(async (req: Request) => {
@@ -51,11 +53,11 @@ Deno.serve(async (req: Request) => {
 
     const payload: LeadPayload = await req.json()
 
-    if (!payload.name || !payload.phone) {
+    if (!payload.name || !payload.phone || !payload.pipeline_id) {
       return new Response(
         JSON.stringify({
           error: 'Missing required fields',
-          required: ['name', 'phone'],
+          required: ['name', 'phone', 'pipeline_id'],
         }),
         {
           status: 400,
@@ -87,32 +89,59 @@ Deno.serve(async (req: Request) => {
       )
     }
 
+    let pipelineUuid = null
+    if (payload.pipeline_id) {
+      const { data: pipeline } = await supabase
+        .from('pipelines')
+        .select('id')
+        .eq('pipeline_id', payload.pipeline_id)
+        .maybeSingle()
+
+      pipelineUuid = pipeline?.id || null
+    }
+
+    if (!pipelineUuid) {
+      return new Response(
+        JSON.stringify({
+          error: 'Invalid pipeline_id',
+          details: 'Pipeline not found with the provided pipeline_id',
+        }),
+        {
+          status: 400,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json',
+          },
+        }
+      )
+    }
+
+    let contactUuid = null
+    if (payload.contact_id) {
+      const { data: contact } = await supabase
+        .from('contacts_master')
+        .select('id')
+        .eq('contact_id', payload.contact_id)
+        .maybeSingle()
+
+      contactUuid = contact?.id || null
+    }
+
+    let assignedToUuid = null
+    if (payload.assigned_to) {
+      const { data: teamMember } = await supabase
+        .from('admin_users')
+        .select('id')
+        .eq('phone', payload.assigned_to)
+        .maybeSingle()
+
+      assignedToUuid = teamMember?.id || null
+    }
+
     let leadData
     let operationType
 
     if (existingLead) {
-      let pipelineUuid = null
-      if (payload.pipeline_id) {
-        const { data: pipeline } = await supabase
-          .from('pipelines')
-          .select('id')
-          .eq('pipeline_id', payload.pipeline_id)
-          .maybeSingle()
-
-        pipelineUuid = pipeline?.id || null
-      }
-
-      let contactUuid = null
-      if (payload.contact_id) {
-        const { data: contact } = await supabase
-          .from('contacts_master')
-          .select('id')
-          .eq('contact_id', payload.contact_id)
-          .maybeSingle()
-
-        contactUuid = contact?.id || null
-      }
-
       const { data: updatedLead, error: updateError } = await supabase
         .from('leads')
         .update({
@@ -129,6 +158,7 @@ Deno.serve(async (req: Request) => {
           notes: payload.notes || null,
           lead_score: payload.lead_score || 50,
           affiliate_id: payload.affiliate_id || null,
+          assigned_to: assignedToUuid,
           updated_at: new Date().toISOString(),
         })
         .eq('phone', payload.phone)
@@ -151,40 +181,11 @@ Deno.serve(async (req: Request) => {
 
       leadData = updatedLead
       operationType = 'updated'
+
+      if (payload.custom_fields && Object.keys(payload.custom_fields).length > 0) {
+        await upsertCustomFields(supabase, updatedLead.id, pipelineUuid, payload.custom_fields)
+      }
     } else {
-      let pipelineUuid = null
-      if (payload.pipeline_id) {
-        const { data: pipeline } = await supabase
-          .from('pipelines')
-          .select('id')
-          .eq('pipeline_id', payload.pipeline_id)
-          .maybeSingle()
-
-        pipelineUuid = pipeline?.id || null
-      }
-
-      if (!pipelineUuid) {
-        const { data: defaultPipeline } = await supabase
-          .from('pipelines')
-          .select('id')
-          .eq('entity_type', 'lead')
-          .eq('is_default', true)
-          .maybeSingle()
-
-        pipelineUuid = defaultPipeline?.id || null
-      }
-
-      let contactUuid = null
-      if (payload.contact_id) {
-        const { data: contact } = await supabase
-          .from('contacts_master')
-          .select('id')
-          .eq('contact_id', payload.contact_id)
-          .maybeSingle()
-
-        contactUuid = contact?.id || null
-      }
-
       const { data: newLead, error: insertError } = await supabase
         .from('leads')
         .insert({
@@ -202,6 +203,7 @@ Deno.serve(async (req: Request) => {
           notes: payload.notes || null,
           lead_score: payload.lead_score || 50,
           affiliate_id: payload.affiliate_id || null,
+          assigned_to: assignedToUuid,
         })
         .select()
         .single()
@@ -222,6 +224,10 @@ Deno.serve(async (req: Request) => {
 
       leadData = newLead
       operationType = 'created'
+
+      if (payload.custom_fields && Object.keys(payload.custom_fields).length > 0) {
+        await upsertCustomFields(supabase, newLead.id, pipelineUuid, payload.custom_fields)
+      }
     }
 
     const n8nWebhookUrl = 'https://n8n.srv825961.hstgr.cloud/webhook/b9306df2-26cc-447e-abb4-b2cfe8e1acdd'
@@ -271,3 +277,119 @@ Deno.serve(async (req: Request) => {
     )
   }
 })
+
+async function upsertCustomFields(
+  supabase: any,
+  leadId: string,
+  pipelineId: string,
+  customFields: Record<string, any>
+): Promise<void> {
+  try {
+    const { data: allCustomFields, error: fieldsError } = await supabase
+      .from('custom_fields')
+      .select('id, field_key, field_type, custom_tab_id')
+      .eq('is_active', true)
+
+    if (fieldsError) {
+      console.error('Error fetching custom fields:', fieldsError)
+      return
+    }
+
+    const { data: tabs, error: tabsError } = await supabase
+      .from('custom_lead_tabs')
+      .select('id, pipeline_id')
+      .eq('pipeline_id', pipelineId)
+
+    if (tabsError) {
+      console.error('Error fetching tabs:', tabsError)
+      return
+    }
+
+    const tabIds = tabs?.map((tab: any) => tab.id) || []
+    const pipelineCustomFields = allCustomFields?.filter((field: any) =>
+      tabIds.includes(field.custom_tab_id)
+    ) || []
+
+    const fieldKeyToIdMap: Record<string, { id: string; type: string }> = {}
+    pipelineCustomFields.forEach((field: any) => {
+      fieldKeyToIdMap[field.field_key] = {
+        id: field.id,
+        type: field.field_type,
+      }
+    })
+
+    for (const [fieldKey, fieldValue] of Object.entries(customFields)) {
+      const fieldInfo = fieldKeyToIdMap[fieldKey]
+
+      if (!fieldInfo) {
+        console.warn(`Custom field with key "${fieldKey}" not found for this pipeline`)
+        continue
+      }
+
+      let formattedValue: string
+
+      switch (fieldInfo.type) {
+        case 'dropdown_multiple':
+          formattedValue = Array.isArray(fieldValue)
+            ? fieldValue.join(',')
+            : String(fieldValue)
+          break
+
+        case 'file_upload':
+          formattedValue = Array.isArray(fieldValue)
+            ? fieldValue.join(',')
+            : String(fieldValue)
+          break
+
+        case 'number':
+        case 'currency':
+          formattedValue = String(fieldValue)
+          break
+
+        case 'date':
+          formattedValue = String(fieldValue)
+          break
+
+        case 'checkbox':
+          formattedValue = fieldValue === true || fieldValue === 'true' ? 'true' : 'false'
+          break
+
+        case 'range':
+          formattedValue = String(fieldValue)
+          break
+
+        default:
+          formattedValue = String(fieldValue)
+      }
+
+      const { data: existingValue } = await supabase
+        .from('custom_field_values')
+        .select('id')
+        .eq('custom_field_id', fieldInfo.id)
+        .eq('lead_id', leadId)
+        .maybeSingle()
+
+      if (existingValue) {
+        await supabase
+          .from('custom_field_values')
+          .update({
+            field_value: formattedValue,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', existingValue.id)
+      } else {
+        await supabase
+          .from('custom_field_values')
+          .insert({
+            custom_field_id: fieldInfo.id,
+            lead_id: leadId,
+            field_value: formattedValue,
+          })
+      }
+    }
+
+    console.log(`Successfully upserted custom fields for lead ${leadId}`)
+  } catch (error) {
+    console.error('Error upserting custom fields:', error)
+  }
+}
