@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { RecurringTaskModal } from '@/components/Tasks/RecurringTaskModal'
+import { RecurringTaskForms } from '@/components/Tasks/RecurringTaskForms'
 import { supabase } from '@/lib/supabase'
 import { formatDate, formatDateTime, convertISTToUTC, convertUTCToISTForInput } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
@@ -109,9 +109,9 @@ export const Tasks: React.FC = () => {
   const { canCreate, canUpdate, canDelete, shouldFilterByUser, userProfile } = useAuth()
   const [activeTab, setActiveTab] = useState<'active' | 'recurring'>('active')
   const [view, setView] = useState<'list' | 'add' | 'edit' | 'view'>('list')
+  const [recurringView, setRecurringView] = useState<'list' | 'add' | 'edit' | 'view'>('list')
   const [tasks, setTasks] = useState<Task[]>([])
   const [recurringTasks, setRecurringTasks] = useState<any[]>([])
-  const [showRecurringModal, setShowRecurringModal] = useState(false)
   const [selectedRecurringTask, setSelectedRecurringTask] = useState<any | null>(null)
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
   const [contacts, setContacts] = useState<Contact[]>([])
@@ -153,6 +153,26 @@ export const Tasks: React.FC = () => {
     progressPercentage: 0,
     supportingDocuments: [] as string[]
   })
+
+  const [recurringFormData, setRecurringFormData] = useState({
+    title: '',
+    description: '',
+    contactId: null as string | null,
+    assignedTo: null as string | null,
+    priority: 'medium',
+    recurrenceType: 'daily' as 'daily' | 'weekly' | 'monthly',
+    startTime: '09:00',
+    startDays: [] as string[],
+    startDayOfMonth: 1,
+    dueTime: '17:00',
+    dueDays: [] as string[],
+    dueDayOfMonth: 1,
+    supportingDocs: [] as string[],
+    isActive: true
+  })
+
+  const [recurringContactSearchTerm, setRecurringContactSearchTerm] = useState('')
+  const [showRecurringContactDropdown, setShowRecurringContactDropdown] = useState(false)
 
   useEffect(() => {
     fetchTasks()
@@ -776,6 +796,244 @@ export const Tasks: React.FC = () => {
   const inProgressTasks = tasks.filter(t => t.status === 'In Progress').length
   const completedTasks = tasks.filter(t => t.status === 'Completed').length
 
+  const daysOfWeek = [
+    { value: 'mon', label: 'Mon' },
+    { value: 'tue', label: 'Tue' },
+    { value: 'wed', label: 'Wed' },
+    { value: 'thu', label: 'Thu' },
+    { value: 'fri', label: 'Fri' },
+    { value: 'sat', label: 'Sat' },
+    { value: 'sun', label: 'Sun' }
+  ]
+
+  const daysOfMonth = [
+    ...Array.from({ length: 31 }, (_, i) => ({ value: i + 1, label: `${i + 1}` })),
+    { value: 0, label: 'Last Day' }
+  ]
+
+  function calculateInitialNextRecurrence(task: typeof recurringFormData): string {
+    const now = new Date()
+    const kolkataTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }))
+    let nextRecurrence = new Date(kolkataTime)
+
+    const [startHour, startMinute] = task.startTime.split(':').map(Number)
+
+    if (task.recurrenceType === 'daily') {
+      nextRecurrence.setHours(startHour, startMinute, 0, 0)
+      if (nextRecurrence <= kolkataTime) {
+        nextRecurrence.setDate(nextRecurrence.getDate() + 1)
+      }
+    } else if (task.recurrenceType === 'weekly') {
+      const startDays = task.startDays || []
+      const daysOfWeekMap = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
+      const currentDayIndex = daysOfWeekMap.indexOf(
+        nextRecurrence.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'Asia/Kolkata' }).toLowerCase()
+      )
+
+      let daysToAdd = 7
+      for (const startDay of startDays) {
+        const startDayIndex = daysOfWeekMap.indexOf(startDay)
+        let diff = startDayIndex - currentDayIndex
+        if (diff < 0) diff += 7
+        if (diff === 0) {
+          nextRecurrence.setHours(startHour, startMinute, 0, 0)
+          if (nextRecurrence <= kolkataTime) {
+            diff = 7
+          }
+        }
+        if (diff < daysToAdd) {
+          daysToAdd = diff
+        }
+      }
+
+      if (daysToAdd > 0) {
+        nextRecurrence.setDate(nextRecurrence.getDate() + daysToAdd)
+      }
+      nextRecurrence.setHours(startHour, startMinute, 0, 0)
+    } else if (task.recurrenceType === 'monthly') {
+      let startDay = task.startDayOfMonth || 1
+
+      if (startDay === 0) {
+        const lastDay = new Date(nextRecurrence.getFullYear(), nextRecurrence.getMonth() + 1, 0).getDate()
+        startDay = lastDay
+      }
+
+      nextRecurrence.setDate(Math.min(startDay, new Date(nextRecurrence.getFullYear(), nextRecurrence.getMonth() + 1, 0).getDate()))
+      nextRecurrence.setHours(startHour, startMinute, 0, 0)
+
+      if (nextRecurrence <= kolkataTime) {
+        nextRecurrence.setMonth(nextRecurrence.getMonth() + 1)
+        const lastDay = new Date(nextRecurrence.getFullYear(), nextRecurrence.getMonth() + 1, 0).getDate()
+        nextRecurrence.setDate(Math.min(startDay, lastDay))
+      }
+    }
+
+    return nextRecurrence.toISOString()
+  }
+
+  const handleAddRecurringTask = async () => {
+    if (!recurringFormData.title.trim()) {
+      alert('Please enter a task title')
+      return
+    }
+
+    if (recurringFormData.recurrenceType === 'weekly') {
+      if (!recurringFormData.startDays || recurringFormData.startDays.length === 0) {
+        alert('Please select a start day for weekly recurrence')
+        return
+      }
+      if (!recurringFormData.dueDays || recurringFormData.dueDays.length === 0) {
+        alert('Please select a due day for weekly recurrence')
+        return
+      }
+    }
+
+    try {
+      const nextRecurrence = calculateInitialNextRecurrence(recurringFormData)
+
+      const { error } = await supabase
+        .from('recurring_tasks')
+        .insert([{
+          title: recurringFormData.title,
+          description: recurringFormData.description,
+          contact_id: recurringFormData.contactId,
+          assigned_to: recurringFormData.assignedTo,
+          priority: recurringFormData.priority,
+          recurrence_type: recurringFormData.recurrenceType,
+          start_time: recurringFormData.startTime,
+          start_days: recurringFormData.recurrenceType === 'weekly' ? recurringFormData.startDays : null,
+          start_day_of_month: recurringFormData.recurrenceType === 'monthly' ? recurringFormData.startDayOfMonth : null,
+          due_time: recurringFormData.dueTime,
+          due_days: recurringFormData.recurrenceType === 'weekly' ? recurringFormData.dueDays : null,
+          due_day_of_month: recurringFormData.recurrenceType === 'monthly' ? recurringFormData.dueDayOfMonth : null,
+          supporting_docs: recurringFormData.supportingDocs,
+          is_active: recurringFormData.isActive,
+          next_recurrence: nextRecurrence
+        }])
+
+      if (error) throw error
+      await fetchRecurringTasks()
+      setRecurringView('list')
+      resetRecurringForm()
+    } catch (error) {
+      console.error('Error adding recurring task:', error)
+      alert('Failed to add recurring task')
+    }
+  }
+
+  const handleEditRecurringTask = async () => {
+    if (!selectedRecurringTask?.id) return
+
+    if (!recurringFormData.title.trim()) {
+      alert('Please enter a task title')
+      return
+    }
+
+    if (recurringFormData.recurrenceType === 'weekly') {
+      if (!recurringFormData.startDays || recurringFormData.startDays.length === 0) {
+        alert('Please select a start day for weekly recurrence')
+        return
+      }
+      if (!recurringFormData.dueDays || recurringFormData.dueDays.length === 0) {
+        alert('Please select a due day for weekly recurrence')
+        return
+      }
+    }
+
+    try {
+      const { error } = await supabase
+        .from('recurring_tasks')
+        .update({
+          title: recurringFormData.title,
+          description: recurringFormData.description,
+          contact_id: recurringFormData.contactId,
+          assigned_to: recurringFormData.assignedTo,
+          priority: recurringFormData.priority,
+          recurrence_type: recurringFormData.recurrenceType,
+          start_time: recurringFormData.startTime,
+          start_days: recurringFormData.recurrenceType === 'weekly' ? recurringFormData.startDays : null,
+          start_day_of_month: recurringFormData.recurrenceType === 'monthly' ? recurringFormData.startDayOfMonth : null,
+          due_time: recurringFormData.dueTime,
+          due_days: recurringFormData.recurrenceType === 'weekly' ? recurringFormData.dueDays : null,
+          due_day_of_month: recurringFormData.recurrenceType === 'monthly' ? recurringFormData.dueDayOfMonth : null,
+          supporting_docs: recurringFormData.supportingDocs,
+          is_active: recurringFormData.isActive
+        })
+        .eq('id', selectedRecurringTask.id)
+
+      if (error) throw error
+      await fetchRecurringTasks()
+      setRecurringView('list')
+      resetRecurringForm()
+    } catch (error) {
+      console.error('Error updating recurring task:', error)
+      alert('Failed to update recurring task')
+    }
+  }
+
+  const resetRecurringForm = () => {
+    setRecurringFormData({
+      title: '',
+      description: '',
+      contactId: null,
+      assignedTo: null,
+      priority: 'medium',
+      recurrenceType: 'daily',
+      startTime: '09:00',
+      startDays: [],
+      startDayOfMonth: 1,
+      dueTime: '17:00',
+      dueDays: [],
+      dueDayOfMonth: 1,
+      supportingDocs: [],
+      isActive: true
+    })
+    setSelectedRecurringTask(null)
+    setRecurringContactSearchTerm('')
+    setShowRecurringContactDropdown(false)
+  }
+
+  const handleRecurringFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return
+
+    setUploadingFiles(true)
+    const uploadedUrls: string[] = []
+
+    for (const file of Array.from(e.target.files)) {
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Math.random()}.${fileExt}`
+      const filePath = `recurring-task-docs/${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('media-files')
+        .upload(filePath, file)
+
+      if (uploadError) {
+        console.error('Error uploading file:', uploadError)
+        continue
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('media-files')
+        .getPublicUrl(filePath)
+
+      uploadedUrls.push(publicUrl)
+    }
+
+    setRecurringFormData(prev => ({
+      ...prev,
+      supportingDocs: [...prev.supportingDocs, ...uploadedUrls]
+    }))
+    setUploadingFiles(false)
+  }
+
+  const filteredRecurringContacts = contacts.filter(contact =>
+    contact.full_name.toLowerCase().includes(recurringContactSearchTerm.toLowerCase()) ||
+    contact.phone.includes(recurringContactSearchTerm)
+  )
+
+  const selectedRecurringContact = contacts.find(c => c.id === recurringFormData.contactId)
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="hidden md:block ppt-slide p-6">
@@ -787,7 +1045,30 @@ export const Tasks: React.FC = () => {
               actions={[
                 ...(canCreate('tasks') ? [{
                   label: activeTab === 'active' ? 'Add Task' : 'Add Recurring Task',
-                  onClick: () => activeTab === 'active' ? setView('add') : setShowRecurringModal(true),
+                  onClick: () => {
+                    if (activeTab === 'active') {
+                      setView('add')
+                    } else {
+                      setRecurringFormData({
+                        title: '',
+                        description: '',
+                        contactId: null,
+                        assignedTo: null,
+                        priority: 'medium',
+                        recurrenceType: 'daily',
+                        startTime: '09:00',
+                        startDays: [],
+                        startDayOfMonth: 1,
+                        dueTime: '17:00',
+                        dueDays: [],
+                        dueDayOfMonth: 1,
+                        supportingDocs: [],
+                        isActive: true
+                      })
+                      setSelectedRecurringTask(null)
+                      setRecurringView('add')
+                    }
+                  },
                   variant: 'default' as const,
                   icon: Plus
                 }] : [])
@@ -1184,7 +1465,23 @@ export const Tasks: React.FC = () => {
                                             <DropdownMenuItem
                                               onClick={() => {
                                                 setSelectedRecurringTask(task)
-                                                setShowRecurringModal(true)
+                                                setRecurringFormData({
+                                                  title: task.title,
+                                                  description: task.description || '',
+                                                  contactId: task.contact_id,
+                                                  assignedTo: task.assigned_to,
+                                                  priority: task.priority,
+                                                  recurrenceType: task.recurrence_type,
+                                                  startTime: task.start_time,
+                                                  startDays: task.start_days || [],
+                                                  startDayOfMonth: task.start_day_of_month || 1,
+                                                  dueTime: task.due_time,
+                                                  dueDays: task.due_days || [],
+                                                  dueDayOfMonth: task.due_day_of_month || 1,
+                                                  supportingDocs: task.supporting_docs || [],
+                                                  isActive: task.is_active
+                                                })
+                                                setRecurringView('view')
                                               }}
                                               className="cursor-pointer"
                                             >
@@ -1195,7 +1492,23 @@ export const Tasks: React.FC = () => {
                                               <DropdownMenuItem
                                                 onClick={() => {
                                                   setSelectedRecurringTask(task)
-                                                  setShowRecurringModal(true)
+                                                  setRecurringFormData({
+                                                    title: task.title,
+                                                    description: task.description || '',
+                                                    contactId: task.contact_id,
+                                                    assignedTo: task.assigned_to,
+                                                    priority: task.priority,
+                                                    recurrenceType: task.recurrence_type,
+                                                    startTime: task.start_time,
+                                                    startDays: task.start_days || [],
+                                                    startDayOfMonth: task.start_day_of_month || 1,
+                                                    dueTime: task.due_time,
+                                                    dueDays: task.due_days || [],
+                                                    dueDayOfMonth: task.due_day_of_month || 1,
+                                                    supportingDocs: task.supporting_docs || [],
+                                                    isActive: task.is_active
+                                                  })
+                                                  setRecurringView('edit')
                                                 }}
                                                 className="cursor-pointer"
                                               >
@@ -1244,20 +1557,6 @@ export const Tasks: React.FC = () => {
             )}
           </>
         )}
-
-        <RecurringTaskModal
-          isOpen={showRecurringModal}
-          onClose={() => {
-            setShowRecurringModal(false)
-            setSelectedRecurringTask(null)
-          }}
-          onSave={() => {
-            fetchRecurringTasks()
-          }}
-          task={selectedRecurringTask}
-          teamMembers={teamMembers}
-          contacts={contacts}
-        />
 
         {/* Desktop Add/Edit Form */}
           {(view === 'add' || view === 'edit') && (
@@ -2517,6 +2816,36 @@ export const Tasks: React.FC = () => {
             </motion.div>
           )}
         </AnimatePresence>
+      </div>
+
+      {/* Recurring Task Forms */}
+      <div className="hidden md:block ppt-slide p-6">
+        {activeTab === 'recurring' && recurringView !== 'list' && (
+          <RecurringTaskForms
+            view={recurringView}
+            formData={recurringFormData}
+            setFormData={setRecurringFormData}
+            selectedTask={selectedRecurringTask}
+            teamMembers={teamMembers}
+            contacts={contacts}
+            contactSearchTerm={recurringContactSearchTerm}
+            setContactSearchTerm={setRecurringContactSearchTerm}
+            showContactDropdown={showRecurringContactDropdown}
+            setShowRecurringContactDropdown={setShowRecurringContactDropdown}
+            selectedContact={selectedRecurringContact}
+            uploadingFiles={uploadingFiles}
+            daysOfWeek={daysOfWeek}
+            daysOfMonth={daysOfMonth}
+            filteredContacts={filteredRecurringContacts}
+            onSave={recurringView === 'add' ? handleAddRecurringTask : handleEditRecurringTask}
+            onBack={() => {
+              setRecurringView('list')
+              resetRecurringForm()
+            }}
+            onFileUpload={handleRecurringFileUpload}
+            onEdit={() => setRecurringView('edit')}
+          />
+        )}
       </div>
     </div>
   )
