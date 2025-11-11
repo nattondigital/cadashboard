@@ -2408,7 +2408,7 @@ export const Tasks: React.FC = () => {
           )}
 
           {/* Recurring Task Forms - Desktop */}
-          {recurringView !== 'list' && (
+          {view === 'list' && recurringView !== 'list' && (
             <RecurringTaskForms
               view={recurringView}
               formData={recurringFormData}
