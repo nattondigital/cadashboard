@@ -830,11 +830,14 @@ export const Tasks: React.FC = () => {
                 ...(canCreate('tasks') ? [{
                   label: activeTab === 'active' ? 'Add Task' : 'Add Recurring Task',
                   onClick: () => {
+                    console.log('Button clicked! activeTab:', activeTab, 'view:', view, 'recurringView:', recurringView)
                     if (activeTab === 'active') {
                       setView('add')
                     } else {
+                      console.log('Setting recurringView to add')
                       setSelectedRecurringTask(null)
                       setRecurringView('add')
+                      console.log('After setState - should trigger re-render')
                     }
                   },
                   variant: 'default' as const,
@@ -1119,6 +1122,10 @@ export const Tasks: React.FC = () => {
                     transition={{ delay: 0.2 }}
                     className="mb-8"
                   >
+                    {(() => {
+                      console.log('Rendering recurring section. recurringView:', recurringView)
+                      return null
+                    })()}
                     {recurringView === 'list' ? (
                       <Card className="shadow-xl">
                         <CardHeader>
@@ -1279,22 +1286,18 @@ export const Tasks: React.FC = () => {
                         </CardContent>
                       </Card>
                     ) : (
-                      <RecurringTaskForm
-                        mode={recurringView as 'add' | 'edit' | 'view'}
-                        task={selectedRecurringTask}
-                        teamMembers={teamMembers}
-                        contacts={contacts}
-                        onBack={() => {
-                          setRecurringView('list')
-                          setSelectedRecurringTask(null)
-                        }}
-                        onSave={() => {
-                          fetchRecurringTasks()
-                        }}
-                        onEdit={() => {
-                          setRecurringView('edit')
-                        }}
-                      />
+                      <Card className="shadow-xl">
+                        <CardContent className="p-6">
+                          <Button onClick={() => setRecurringView('list')}>Back to List</Button>
+                          <div className="mt-4">
+                            <h2>Recurring View: {recurringView}</h2>
+                            <p>Mode: {recurringView}</p>
+                            <p>Selected Task: {selectedRecurringTask ? 'Yes' : 'No'}</p>
+                            <p>Team Members: {teamMembers.length}</p>
+                            <p>Contacts: {contacts.length}</p>
+                          </div>
+                        </CardContent>
+                      </Card>
                     )}
                   </motion.div>
                 )}
