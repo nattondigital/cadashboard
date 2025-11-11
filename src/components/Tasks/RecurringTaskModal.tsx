@@ -156,26 +156,17 @@ export const RecurringTaskModal: React.FC<RecurringTaskModalProps> = ({
   useEffect(() => {
     if (task) {
       setFormData(task)
-      setContactSearchTerm('')
       if (task.start_days) {
         setSelectedStartDays(task.start_days)
-      } else {
-        setSelectedStartDays([])
       }
       if (task.start_day_of_month !== null) {
         setSelectedStartDayOfMonth(task.start_day_of_month)
-      } else {
-        setSelectedStartDayOfMonth(1)
       }
       if (task.due_days) {
         setSelectedDueDays(task.due_days)
-      } else {
-        setSelectedDueDays([])
       }
       if (task.due_day_of_month !== null) {
         setSelectedDueDayOfMonth(task.due_day_of_month)
-      } else {
-        setSelectedDueDayOfMonth(1)
       }
     } else {
       setFormData({
@@ -194,13 +185,12 @@ export const RecurringTaskModal: React.FC<RecurringTaskModalProps> = ({
         supporting_docs: [],
         is_active: true
       })
-      setContactSearchTerm('')
       setSelectedStartDays([])
       setSelectedStartDayOfMonth(1)
       setSelectedDueDays([])
       setSelectedDueDayOfMonth(1)
     }
-  }, [task, isOpen])
+  }, [task])
 
   const handleRecurrenceTypeChange = (type: 'daily' | 'weekly' | 'monthly') => {
     setFormData(prev => ({
@@ -430,56 +420,31 @@ export const RecurringTaskModal: React.FC<RecurringTaskModalProps> = ({
 
           <div className="relative">
             <label className="block text-sm font-medium text-gray-700 mb-2">Contact</label>
-            <div className="relative">
-              <Input
-                value={selectedContact ? `${selectedContact.full_name} (${selectedContact.phone})` : contactSearchTerm}
-                onChange={e => {
-                  if (!selectedContact) {
-                    setContactSearchTerm(e.target.value)
-                    setShowContactDropdown(true)
-                  }
-                }}
-                onFocus={() => {
-                  if (!selectedContact) {
-                    setShowContactDropdown(true)
-                  }
-                }}
-                placeholder="Search contact by name or phone"
-                className="pr-10"
-              />
-              {selectedContact && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFormData(prev => ({ ...prev, contact_id: null }))
-                    setContactSearchTerm('')
-                  }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-            {showContactDropdown && !selectedContact && (
+            <Input
+              value={selectedContact ? `${selectedContact.full_name} (${selectedContact.phone})` : contactSearchTerm}
+              onChange={e => {
+                setContactSearchTerm(e.target.value)
+                setShowContactDropdown(true)
+              }}
+              onFocus={() => setShowContactDropdown(true)}
+              placeholder="Search contact by name or phone"
+            />
+            {showContactDropdown && (
               <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                {filteredContacts.length > 0 ? (
-                  filteredContacts.map(contact => (
-                    <div
-                      key={contact.id}
-                      onClick={() => {
-                        setFormData(prev => ({ ...prev, contact_id: contact.id }))
-                        setContactSearchTerm('')
-                        setShowContactDropdown(false)
-                      }}
-                      className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                    >
-                      <div className="font-medium">{contact.full_name}</div>
-                      <div className="text-sm text-gray-500">{contact.phone}</div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="px-4 py-2 text-sm text-gray-500">No contacts found</div>
-                )}
+                {filteredContacts.map(contact => (
+                  <div
+                    key={contact.id}
+                    onClick={() => {
+                      setFormData(prev => ({ ...prev, contact_id: contact.id }))
+                      setContactSearchTerm('')
+                      setShowContactDropdown(false)
+                    }}
+                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                  >
+                    <div className="font-medium">{contact.full_name}</div>
+                    <div className="text-sm text-gray-500">{contact.phone}</div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
