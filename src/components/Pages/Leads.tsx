@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, ArrowLeft, Eye, CreditCard as Edit, Trash2, X, Save, User, Mail, Phone, MapPin, Building, Calendar, MoreVertical, GripVertical, Users, RefreshCw, AlertCircle, ChevronRight, Clock, CheckSquare, Flag, StickyNote, Download, Upload, FileSpreadsheet, CheckCircle, XCircle, LayoutGrid, List, Layers } from 'lucide-react'
+import { Plus, ArrowLeft, Eye, CreditCard as Edit, Trash2, X, Save, User, Mail, Phone, MapPin, Building, Calendar, MoreVertical, GripVertical, Users, RefreshCw, AlertCircle, ChevronRight, Clock, CheckSquare, Flag, StickyNote, Download, Upload, FileSpreadsheet, CheckCircle, XCircle, LayoutGrid, List, Layers, FileText, Paperclip } from 'lucide-react'
 import { PageHeader } from '@/components/Common/PageHeader'
 import { KPICard } from '@/components/Common/KPICard'
 import { Button } from '@/components/ui/button'
@@ -199,6 +199,7 @@ export function Leads() {
   const [customFieldErrors, setCustomFieldErrors] = useState<Record<string, string>>({})
   const [isSavingCustomFields, setIsSavingCustomFields] = useState(false)
   const [customFieldsMessage, setCustomFieldsMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+  const [uploadingFiles, setUploadingFiles] = useState<Record<string, boolean>>({})
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -404,6 +405,97 @@ export function Leads() {
     }
 
     return null
+  }
+
+  const handleFileUploadForCustomField = async (fieldId: string, files: File[]): Promise<string[]> => {
+    const FOLDER_ID = 'ab34900f-9e5d-439d-b3d3-07ccf89d4c3d'
+    const uploadedUrls: string[] = []
+
+    try {
+      const { data: integration, error: integrationError } = await supabase
+        .from('integrations')
+        .select('config')
+        .eq('integration_type', 'ghl_api')
+        .maybeSingle()
+
+      if (integrationError) {
+        console.error('Integration fetch error:', integrationError)
+        throw new Error('Failed to fetch integration settings')
+      }
+
+      if (!integration) {
+        alert('GHL API integration not found. Please configure it in Settings > Integrations first.')
+        return []
+      }
+
+      const accessToken = integration?.config?.accessToken
+      if (!accessToken || accessToken.trim() === '') {
+        alert('GHL Access Token is not configured. Please add your access token in Settings > Integrations > GHL API.')
+        return []
+      }
+
+      const locationId = integration?.config?.locationId || 'iDIRFjdZBWH7SqBzTowc'
+      if (!locationId || locationId.trim() === '') {
+        alert('GHL Location ID is not configured. Please add your Location ID in Settings > Integrations > GHL API.')
+        return []
+      }
+
+      const ghlParentId = '6903be3bf2b1f977961030a9'
+
+      for (const file of files) {
+        try {
+          const formData = new FormData()
+          formData.append('file', file)
+          formData.append('name', file.name)
+          if (ghlParentId) {
+            formData.append('parentId', ghlParentId)
+          }
+
+          const response = await fetch('https://services.leadconnectorhq.com/medias/upload-file', {
+            method: 'POST',
+            headers: {
+              'Accept': 'application/json',
+              'Version': '2021-07-28',
+              'Authorization': `Bearer ${accessToken.trim()}`
+            },
+            body: formData
+          })
+
+          if (!response.ok) {
+            let errorMessage = 'Failed to upload file to GHL'
+            try {
+              const errorData = await response.json()
+              errorMessage = errorData.message || errorData.error || errorMessage
+              console.error('GHL API Error:', errorData)
+            } catch (e) {
+              const errorText = await response.text()
+              console.error('GHL API Error (text):', errorText)
+              errorMessage = errorText || errorMessage
+            }
+            throw new Error(errorMessage)
+          }
+
+          const data = await response.json()
+          console.log('GHL Upload Response:', data)
+
+          const fileUrl = data.fileUrl || data.url
+          if (fileUrl) {
+            uploadedUrls.push(fileUrl)
+          } else {
+            throw new Error('No file URL returned from GHL')
+          }
+        } catch (fileError) {
+          console.error(`Error uploading file ${file.name}:`, fileError)
+          alert(`Failed to upload ${file.name}: ${fileError instanceof Error ? fileError.message : 'Unknown error'}`)
+          throw fileError
+        }
+      }
+
+      return uploadedUrls
+    } catch (error) {
+      console.error('Error in handleFileUploadForCustomField:', error)
+      return []
+    }
   }
 
   const handleCustomFieldChange = (fieldId: string, value: string, fieldType: string) => {
@@ -2511,6 +2603,112 @@ export function Leads() {
                                       placeholder={`Enter ${field.field_name.toLowerCase()}`}
                                       rows={4}
                                     />
+                                  )}
+                                  {field.field_type === 'range' && (
+                                    <div className="space-y-2">
+                                      <Input
+                                        type="range"
+                                        min="0"
+                                        max="100"
+                                        value={customFieldValues[field.id] || '0'}
+                                        onChange={(e) => handleCustomFieldChange(field.id, e.target.value, 'range')}
+                                        className="w-full"
+                                      />
+                                      <div className="flex justify-between text-xs text-gray-500">
+                                        <span>0</span>
+                                        <span className="font-semibold text-brand-primary">{customFieldValues[field.id] || '0'}</span>
+                                        <span>100</span>
+                                      </div>
+                                    </div>
+                                  )}
+                                  {field.field_type === 'file_upload' && (
+                                    <div>
+                                      <div
+                                        className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-brand-primary transition-colors"
+                                        onClick={() => {
+                                          const input = document.createElement('input')
+                                          input.type = 'file'
+                                          input.multiple = true
+                                          input.accept = '.pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg'
+                                          input.onchange = async (e) => {
+                                            const files = Array.from((e.target as HTMLInputElement).files || [])
+
+                                            const currentFiles = customFieldValues[field.id]
+                                              ? customFieldValues[field.id].split(',').filter(f => f.trim())
+                                              : []
+
+                                            if (currentFiles.length + files.length > 3) {
+                                              alert('Maximum 3 files allowed per field')
+                                              return
+                                            }
+
+                                            const invalidFiles = files.filter(f => f.size > 10 * 1024 * 1024)
+                                            if (invalidFiles.length > 0) {
+                                              alert(`Files exceed 10MB limit: ${invalidFiles.map(f => f.name).join(', ')}`)
+                                              return
+                                            }
+
+                                            setUploadingFiles(prev => ({ ...prev, [field.id]: true }))
+                                            try {
+                                              const uploadedUrls = await handleFileUploadForCustomField(field.id, files)
+                                              if (uploadedUrls.length > 0) {
+                                                const allUrls = [...currentFiles, ...uploadedUrls]
+                                                handleCustomFieldChange(field.id, allUrls.join(','), 'file_upload')
+                                              }
+                                            } catch (error) {
+                                              console.error('Error uploading files:', error)
+                                            } finally {
+                                              setUploadingFiles(prev => ({ ...prev, [field.id]: false }))
+                                            }
+                                          }
+                                          input.click()
+                                        }}
+                                      >
+                                        <Paperclip className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                                        {uploadingFiles[field.id] ? (
+                                          <p className="text-sm text-brand-primary flex items-center justify-center gap-2">
+                                            <div className="w-4 h-4 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
+                                            Uploading...
+                                          </p>
+                                        ) : (
+                                          <p className="text-sm text-gray-500">
+                                            Upload supporting documents (PDF, DOC, XLS, Images) - Max 3 files, 10MB each
+                                          </p>
+                                        )}
+                                      </div>
+                                      {customFieldValues[field.id] && customFieldValues[field.id].split(',').filter(f => f.trim()).length > 0 && (
+                                        <div className="mt-3">
+                                          <p className="text-xs font-medium text-gray-700 mb-2">Supporting Documents</p>
+                                          <div className="flex flex-wrap gap-2">
+                                            {customFieldValues[field.id].split(',').filter(f => f.trim()).map((fileUrl, index) => (
+                                              <Badge key={index} variant="secondary" className="flex items-center gap-1 pr-1">
+                                                <FileText className="w-3 h-3" />
+                                                <a
+                                                  href={fileUrl}
+                                                  target="_blank"
+                                                  rel="noopener noreferrer"
+                                                  className="hover:underline"
+                                                >
+                                                  Document {index + 1}
+                                                </a>
+                                                <button
+                                                  type="button"
+                                                  onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    const files = customFieldValues[field.id].split(',').filter(f => f.trim())
+                                                    files.splice(index, 1)
+                                                    handleCustomFieldChange(field.id, files.join(','), 'file_upload')
+                                                  }}
+                                                  className="ml-1 hover:bg-white/20 rounded-full p-0.5"
+                                                >
+                                                  <X className="w-3 h-3" />
+                                                </button>
+                                              </Badge>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
                                   )}
                                 </div>
                               ))}
