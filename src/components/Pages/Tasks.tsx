@@ -10,11 +10,11 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { RecurringTaskModal } from '@/components/Tasks/RecurringTaskModal'
 import { supabase } from '@/lib/supabase'
 import { formatDate, formatDateTime, convertISTToUTC, convertUTCToISTForInput } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { PermissionGuard } from '@/components/Common/PermissionGuard'
+import { RecurringTaskForm } from '@/components/Tasks/RecurringTaskForm'
 
 interface Task {
   id: string
@@ -71,6 +71,24 @@ interface TaskReminder {
   is_sent?: boolean
 }
 
+interface RecurringTask {
+  id?: string
+  title: string
+  description: string
+  contact_id: string | null
+  assigned_to: string | null
+  priority: string
+  recurrence_type: 'daily' | 'weekly' | 'monthly'
+  start_time: string
+  start_days: string[] | null
+  start_day_of_month: number | null
+  due_time: string
+  due_days: string[] | null
+  due_day_of_month: number | null
+  supporting_docs: string[]
+  is_active: boolean
+}
+
 const statusColors: Record<string, string> = {
   'To Do': 'bg-gray-100 text-gray-800',
   'In Progress': 'bg-blue-100 text-blue-800',
@@ -109,9 +127,9 @@ export const Tasks: React.FC = () => {
   const { canCreate, canUpdate, canDelete, shouldFilterByUser, userProfile } = useAuth()
   const [activeTab, setActiveTab] = useState<'active' | 'recurring'>('active')
   const [view, setView] = useState<'list' | 'add' | 'edit' | 'view'>('list')
+  const [recurringView, setRecurringView] = useState<'list' | 'add' | 'edit' | 'view'>('list')
   const [tasks, setTasks] = useState<Task[]>([])
   const [recurringTasks, setRecurringTasks] = useState<any[]>([])
-  const [showRecurringModal, setShowRecurringModal] = useState(false)
   const [selectedRecurringTask, setSelectedRecurringTask] = useState<any | null>(null)
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
   const [contacts, setContacts] = useState<Contact[]>([])
@@ -153,6 +171,30 @@ export const Tasks: React.FC = () => {
     progressPercentage: 0,
     supportingDocuments: [] as string[]
   })
+
+  const [recurringFormData, setRecurringFormData] = useState<RecurringTask>({
+    title: '',
+    description: '',
+    contact_id: null,
+    assigned_to: null,
+    priority: 'medium',
+    recurrence_type: 'daily',
+    start_time: '09:00',
+    start_days: null,
+    start_day_of_month: null,
+    due_time: '17:00',
+    due_days: null,
+    due_day_of_month: null,
+    supporting_docs: [],
+    is_active: true
+  })
+
+  const [selectedStartDays, setSelectedStartDays] = useState<string[]>([])
+  const [selectedStartDayOfMonth, setSelectedStartDayOfMonth] = useState<number>(1)
+  const [selectedDueDays, setSelectedDueDays] = useState<string[]>([])
+  const [selectedDueDayOfMonth, setSelectedDueDayOfMonth] = useState<number>(1)
+  const [recurringContactSearchTerm, setRecurringContactSearchTerm] = useState('')
+  const [showRecurringContactDropdown, setShowRecurringContactDropdown] = useState(false)
 
   useEffect(() => {
     fetchTasks()
@@ -787,7 +829,7 @@ export const Tasks: React.FC = () => {
               actions={[
                 ...(canCreate('tasks') ? [{
                   label: activeTab === 'active' ? 'Add Task' : 'Add Recurring Task',
-                  onClick: () => activeTab === 'active' ? setView('add') : setShowRecurringModal(true),
+                  onClick: () => activeTab === 'active' ? setView('add') : setRecurringView('add'),
                   variant: 'default' as const,
                   icon: Plus
                 }] : [])
@@ -1070,17 +1112,18 @@ export const Tasks: React.FC = () => {
                     transition={{ delay: 0.2 }}
                     className="mb-8"
                   >
-                    <Card className="shadow-xl">
-                      <CardHeader>
-                        <CardTitle>Recurring Tasks</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        {recurringTasks.length === 0 ? (
-                          <div className="text-center py-12">
-                            <Repeat className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                            <p className="text-gray-500">No recurring tasks found</p>
-                          </div>
-                        ) : (
+                    {recurringView === 'list' ? (
+                      <Card className="shadow-xl">
+                        <CardHeader>
+                          <CardTitle>Recurring Tasks</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {recurringTasks.length === 0 ? (
+                            <div className="text-center py-12">
+                              <Repeat className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                              <p className="text-gray-500">No recurring tasks found</p>
+                            </div>
+                          ) : (
                           <div className="overflow-x-auto">
                             <table className="w-full">
                               <thead>
@@ -1172,11 +1215,21 @@ export const Tasks: React.FC = () => {
                                       </td>
                                       <td className="py-3 px-4">
                                         <div className="flex items-center gap-2">
+                                          <button
+                                            onClick={() => {
+                                              setSelectedRecurringTask(task)
+                                              setRecurringView('view')
+                                            }}
+                                            className="text-blue-600 hover:text-blue-800"
+                                            title="View"
+                                          >
+                                            <Eye className="w-4 h-4" />
+                                          </button>
                                           {canUpdate('tasks') && (
                                             <button
                                               onClick={() => {
                                                 setSelectedRecurringTask(task)
-                                                setShowRecurringModal(true)
+                                                setRecurringView('edit')
                                               }}
                                               className="text-blue-600 hover:text-blue-800"
                                               title="Edit"
@@ -1215,9 +1268,27 @@ export const Tasks: React.FC = () => {
                               </tbody>
                             </table>
                           </div>
-                        )}
-                      </CardContent>
-                    </Card>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <RecurringTaskForm
+                        mode={recurringView as 'add' | 'edit' | 'view'}
+                        task={selectedRecurringTask}
+                        teamMembers={teamMembers}
+                        contacts={contacts}
+                        onBack={() => {
+                          setRecurringView('list')
+                          setSelectedRecurringTask(null)
+                        }}
+                        onSave={() => {
+                          fetchRecurringTasks()
+                        }}
+                        onEdit={() => {
+                          setRecurringView('edit')
+                        }}
+                      />
+                    )}
                   </motion.div>
                 )}
               </>
@@ -1225,19 +1296,6 @@ export const Tasks: React.FC = () => {
           </>
         )}
 
-        <RecurringTaskModal
-          isOpen={showRecurringModal}
-          onClose={() => {
-            setShowRecurringModal(false)
-            setSelectedRecurringTask(null)
-          }}
-          onSave={() => {
-            fetchRecurringTasks()
-          }}
-          task={selectedRecurringTask}
-          teamMembers={teamMembers}
-          contacts={contacts}
-        />
 
         {/* Desktop Add/Edit Form */}
           {(view === 'add' || view === 'edit') && (
