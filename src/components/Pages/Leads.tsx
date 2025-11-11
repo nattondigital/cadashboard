@@ -408,7 +408,7 @@ export function Leads() {
   }
 
   const handleFileUploadForCustomField = async (fieldId: string, files: File[]): Promise<string[]> => {
-    const FOLDER_ID = 'ab34900f-9e5d-439d-b3d3-07ccf89d4c3d'
+    const FOLDER_ID = '34610cce-9ffd-4650-9a3d-7599c320e999'
     const uploadedUrls: string[] = []
 
     try {
@@ -440,7 +440,13 @@ export function Leads() {
         return []
       }
 
-      const ghlParentId = '6903be3bf2b1f977961030a9'
+      const { data: folderData } = await supabase
+        .from('media_folders')
+        .select('ghl_folder_id')
+        .eq('id', FOLDER_ID)
+        .maybeSingle()
+
+      const ghlParentId = folderData?.ghl_folder_id || '691329cf9bbd7d8179f72926'
 
       for (const file of files) {
         try {
@@ -481,6 +487,19 @@ export function Leads() {
           const fileUrl = data.fileUrl || data.url
           if (fileUrl) {
             uploadedUrls.push(fileUrl)
+
+            await supabase
+              .from('media_files')
+              .insert([{
+                file_name: file.name,
+                file_url: fileUrl,
+                file_type: file.type,
+                file_size: file.size,
+                ghl_file_id: data._id || data.id,
+                folder_id: FOLDER_ID,
+                location_id: locationId,
+                thumbnail_url: data.thumbnailUrl || null
+              }])
           } else {
             throw new Error('No file URL returned from GHL')
           }
