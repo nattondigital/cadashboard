@@ -3075,27 +3075,92 @@ function ViewModal({ item, type, onClose, onEdit, canUpdate }: any) {
           )}
 
           {type === 'subscriptions' && (
-            <div>
-              <h4 className="text-lg font-semibold text-brand-text mb-3">Subscription Details</h4>
-              <div className="grid grid-cols-2 gap-4">
+            <>
+              {item.items && item.items.length > 0 && (
                 <div>
-                  <div className="text-sm text-gray-600">Plan Name</div>
-                  <div className="font-medium">{item.plan_name}</div>
+                  <h4 className="text-lg font-semibold text-brand-text mb-3">Products/Services</h4>
+                  <div className="overflow-x-auto">
+                    <table className="w-full border border-gray-200 rounded-lg">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Product</th>
+                          <th className="text-center py-3 px-4 text-sm font-semibold text-gray-700">Qty</th>
+                          <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700">Unit Price</th>
+                          <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {item.items.map((productItem: any, idx: number) => (
+                          <tr key={idx} className="border-t border-gray-200">
+                            <td className="py-3 px-4">
+                              <div>
+                                <div className="font-medium">{productItem.product_name || productItem.description}</div>
+                                {productItem.description && productItem.product_name && (
+                                  <div className="text-sm text-gray-600">{productItem.description}</div>
+                                )}
+                              </div>
+                            </td>
+                            <td className="py-3 px-4 text-center">{productItem.quantity}</td>
+                            <td className="py-3 px-4 text-right">{formatCurrency(productItem.unit_price || productItem.rate || productItem.price || 0)}</td>
+                            <td className="py-3 px-4 text-right font-medium">{formatCurrency(productItem.total || (productItem.quantity * (productItem.unit_price || productItem.rate || productItem.price || 0)))}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-                <div>
-                  <div className="text-sm text-gray-600">Plan Type</div>
-                  <div className="font-medium">{item.plan_type}</div>
-                </div>
-                <div>
-                  <div className="text-sm text-gray-600">Amount</div>
-                  <div className="font-medium">{formatCurrency(item.amount)}</div>
-                </div>
-                <div>
-                  <div className="text-sm text-gray-600">Next Billing</div>
-                  <div className="font-medium">{item.next_billing_date ? formatDate(item.next_billing_date) : '-'}</div>
+              )}
+
+              <div>
+                <h4 className="text-lg font-semibold text-brand-text mb-3">Amount Details</h4>
+                <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Subtotal</span>
+                    <span className="font-medium">{formatCurrency(item.subtotal || 0)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Tax ({item.tax_rate || 0}%)</span>
+                    <span className="font-medium">{formatCurrency(item.tax_amount || 0)}</span>
+                  </div>
+                  {item.discount > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Discount</span>
+                      <span className="font-medium text-green-600">-{formatCurrency(item.discount || 0)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center pt-3 border-t border-gray-200">
+                    <span className="font-semibold text-brand-text">Total Amount</span>
+                    <span className="font-bold text-lg text-brand-primary">{formatCurrency(item.amount || 0)}</span>
+                  </div>
                 </div>
               </div>
-            </div>
+
+              <div>
+                <h4 className="text-lg font-semibold text-brand-text mb-3">Subscription Details</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-sm text-gray-600">Plan Name</div>
+                    <div className="font-medium">{item.plan_name}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-600">Plan Type</div>
+                    <div className="font-medium">{item.plan_type}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-600">Payment Method</div>
+                    <div className="font-medium">{item.payment_method || '-'}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-600">Next Billing</div>
+                    <div className="font-medium">{item.next_billing_date ? formatDate(item.next_billing_date) : '-'}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-600">Auto Renew</div>
+                    <div className="font-medium">{item.auto_renew ? 'Yes' : 'No'}</div>
+                  </div>
+                </div>
+              </div>
+            </>
           )}
 
           {type === 'receipts' && (
