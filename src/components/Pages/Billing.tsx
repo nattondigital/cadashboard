@@ -2283,7 +2283,8 @@ function FormModal({ title, formData, setFormData, onSave, onCancel, type, loadi
       ...prev,
       subtotal: Math.round(subtotal * 100) / 100,
       taxAmount: Math.round(taxAmount * 100) / 100,
-      totalAmount: Math.round(totalAmount * 100) / 100
+      totalAmount: Math.round(totalAmount * 100) / 100,
+      amount: Math.round(totalAmount * 100) / 100
     }))
   }
 
