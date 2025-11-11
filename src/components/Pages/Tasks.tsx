@@ -2214,6 +2214,34 @@ export const Tasks: React.FC = () => {
               </CardContent>
             </Card>
           )}
+
+        {/* Recurring Task Forms - Desktop */}
+        {view === 'list' && recurringView !== 'list' && (
+          <RecurringTaskForms
+            view={recurringView}
+            formData={recurringFormData}
+            setFormData={setRecurringFormData}
+            selectedTask={selectedRecurringTask}
+            teamMembers={teamMembers}
+            contacts={contacts}
+            contactSearchTerm={recurringContactSearchTerm}
+            setContactSearchTerm={setRecurringContactSearchTerm}
+            showContactDropdown={showRecurringContactDropdown}
+            setShowContactDropdown={setShowRecurringContactDropdown}
+            selectedContact={selectedRecurringContact}
+            uploadingFiles={uploadingFiles}
+            daysOfWeek={daysOfWeek}
+            daysOfMonth={daysOfMonth}
+            filteredContacts={filteredRecurringContacts}
+            onSave={recurringView === 'add' ? handleAddRecurringTask : handleEditRecurringTask}
+            onBack={() => {
+              setRecurringView('list')
+              resetRecurringForm()
+            }}
+            onFileUpload={handleRecurringFileUpload}
+            onEdit={() => setRecurringView('edit')}
+          />
+        )}
       </div>
 
       <div className="md:hidden min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
@@ -2405,34 +2433,6 @@ export const Tasks: React.FC = () => {
                 )}
               </div>
             </motion.div>
-          )}
-
-          {/* Recurring Task Forms - Desktop */}
-          {view === 'list' && recurringView !== 'list' && (
-            <RecurringTaskForms
-              view={recurringView}
-              formData={recurringFormData}
-              setFormData={setRecurringFormData}
-              selectedTask={selectedRecurringTask}
-              teamMembers={teamMembers}
-              contacts={contacts}
-              contactSearchTerm={recurringContactSearchTerm}
-              setContactSearchTerm={setRecurringContactSearchTerm}
-              showContactDropdown={showRecurringContactDropdown}
-              setShowContactDropdown={setShowRecurringContactDropdown}
-              selectedContact={selectedRecurringContact}
-              uploadingFiles={uploadingFiles}
-              daysOfWeek={daysOfWeek}
-              daysOfMonth={daysOfMonth}
-              filteredContacts={filteredRecurringContacts}
-              onSave={recurringView === 'add' ? handleAddRecurringTask : handleEditRecurringTask}
-              onBack={() => {
-                setRecurringView('list')
-                resetRecurringForm()
-              }}
-              onFileUpload={handleRecurringFileUpload}
-              onEdit={() => setRecurringView('edit')}
-            />
           )}
 
           {(view === 'add' || view === 'edit') && (
