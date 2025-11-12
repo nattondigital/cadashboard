@@ -214,7 +214,7 @@ export function Expenses() {
                   folder_id: expenseFolder?.id || null,
                   location_id: locationId,
                   thumbnail_url: ghlFile.thumbnailUrl || null,
-                  uploaded_by: 'c4489fab-966b-4465-bb68-cf5bc43310f9'
+                  uploaded_by: userProfile?.id || null
                 })
               }
             }
@@ -227,7 +227,7 @@ export function Expenses() {
       const { data, error } = await supabase
         .from('expenses')
         .insert([{
-          admin_user_id: 'c4489fab-966b-4465-bb68-cf5bc43310f9',
+          admin_user_id: userProfile?.id || null,
           category: formData.category,
           amount: parseFloat(formData.amount),
           description: formData.description,
@@ -345,7 +345,7 @@ export function Expenses() {
                   folder_id: expenseFolder?.id || null,
                   location_id: locationId,
                   thumbnail_url: ghlFile.thumbnailUrl || null,
-                  uploaded_by: 'c4489fab-966b-4465-bb68-cf5bc43310f9'
+                  uploaded_by: userProfile?.id || null
                 })
               }
             }
