@@ -401,7 +401,7 @@ export function PipelineSettings() {
                         {pipeline.entity_type}
                       </div>
                       <div className={`text-xs mt-1 font-mono flex items-center gap-1 ${selectedPipeline?.id === pipeline.id ? 'text-white/70' : 'text-gray-400'}`}>
-                        ID: {pipeline.pipeline_id}
+                        UUID: {pipeline.id.substring(0, 8)}...
                       </div>
                     </div>
                     <div className="flex items-center gap-1 ml-2">
@@ -441,26 +441,20 @@ export function PipelineSettings() {
                 <div className="flex items-center gap-3">
                   <CardTitle>{selectedPipeline?.name || 'Select a Pipeline'}</CardTitle>
                   {selectedPipeline && (
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-md">
-                        <span className="text-xs text-gray-500">ID:</span>
-                        <span className="text-xs font-mono text-gray-600">{selectedPipeline.pipeline_id}</span>
-                      </div>
-                      <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-md">
-                        <span className="text-xs text-gray-500">UUID:</span>
-                        <span className="text-xs font-mono text-gray-600 truncate max-w-[200px]" title={selectedPipeline.id}>{selectedPipeline.id}</span>
-                        <button
-                          onClick={() => copyPipelineId(selectedPipeline.id)}
-                          className="p-0.5 rounded hover:bg-blue-100 transition-colors flex-shrink-0"
-                          title="Copy Pipeline UUID"
-                        >
-                          {copiedId === selectedPipeline.id ? (
-                            <Check className="w-3 h-3 text-green-600" />
-                          ) : (
-                            <Copy className="w-3 h-3 text-gray-600" />
-                          )}
-                        </button>
-                      </div>
+                    <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-md">
+                      <span className="text-xs text-gray-500">UUID:</span>
+                      <span className="text-xs font-mono text-gray-600 truncate max-w-[200px]" title={selectedPipeline.id}>{selectedPipeline.id}</span>
+                      <button
+                        onClick={() => copyPipelineId(selectedPipeline.id)}
+                        className="p-0.5 rounded hover:bg-blue-100 transition-colors flex-shrink-0"
+                        title="Copy Pipeline UUID"
+                      >
+                        {copiedId === selectedPipeline.id ? (
+                          <Check className="w-3 h-3 text-green-600" />
+                        ) : (
+                          <Copy className="w-3 h-3 text-gray-600" />
+                        )}
+                      </button>
                     </div>
                   )}
                 </div>
