@@ -83,8 +83,7 @@ export function Expenses() {
     description: '',
     expense_date: new Date().toISOString().split('T')[0],
     payment_method: '',
-    receipt_url: '',
-    notes: ''
+    receipt_url: ''
   })
   const [receiptFile, setReceiptFile] = useState<File | null>(null)
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null)
@@ -364,8 +363,7 @@ export function Expenses() {
           description: formData.description,
           expense_date: formData.expense_date,
           payment_method: formData.payment_method,
-          receipt_url: receiptUrl || null,
-          notes: formData.notes || null
+          receipt_url: receiptUrl || null
         })
         .eq('id', selectedExpense.id)
 
@@ -463,8 +461,7 @@ export function Expenses() {
       description: expense.description,
       expense_date: expense.expense_date,
       payment_method: expense.payment_method,
-      receipt_url: expense.receipt_url || '',
-      notes: expense.notes || ''
+      receipt_url: expense.receipt_url || ''
     })
     setView('edit')
     setShowEditModal(true)
@@ -489,8 +486,7 @@ export function Expenses() {
       description: '',
       expense_date: new Date().toISOString().split('T')[0],
       payment_method: '',
-      receipt_url: '',
-      notes: ''
+      receipt_url: ''
     })
     setSelectedExpense(null)
     setReceiptFile(null)
