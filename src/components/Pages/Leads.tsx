@@ -1969,13 +1969,13 @@ export function Leads() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Assigned To</label>
-                  <Select value={formData.assigned_to} onValueChange={(value) => setFormData(prev => ({ ...prev, owner: value }))}>
+                  <Select value={formData.assigned_to || undefined} onValueChange={(value) => setFormData(prev => ({ ...prev, assigned_to: value }))}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select team member" />
                     </SelectTrigger>
                     <SelectContent>
                       {teamMembers.map((member) => (
-                        <SelectItem key={member.id} value={member.full_name}>
+                        <SelectItem key={member.id} value={member.id}>
                           {member.full_name} ({member.role})
                         </SelectItem>
                       ))}
@@ -2199,13 +2199,13 @@ export function Leads() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Assigned To</label>
-                  <Select value={formData.assigned_to} onValueChange={(value) => setFormData(prev => ({ ...prev, owner: value }))}>
+                  <Select value={formData.assigned_to || undefined} onValueChange={(value) => setFormData(prev => ({ ...prev, assigned_to: value }))}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select team member" />
                     </SelectTrigger>
                     <SelectContent>
                       {teamMembers.map((member) => (
-                        <SelectItem key={member.id} value={member.full_name}>
+                        <SelectItem key={member.id} value={member.id}>
                           {member.full_name} ({member.role})
                         </SelectItem>
                       ))}
