@@ -69,6 +69,17 @@ Deno.serve(async (req: Request) => {
       if (contact_name) {
         receiverPhone = receiverPhone.replace(/\{\{contact_name\}\}/g, contact_name)
       }
+
+      // Check if receiver_phone still contains unreplaced variables or null/undefined
+      if (receiverPhone.includes('{{') || receiverPhone.includes('null') || receiverPhone.includes('undefined')) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            message: `Receiver phone contains invalid values: ${receiverPhone}. Variable not resolved or null.`
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
     }
 
     // Get WhatsApp Business API credentials from integrations
