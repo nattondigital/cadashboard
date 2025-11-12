@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Edit, Trash2, Save, X, GripVertical, Palette } from 'lucide-react'
+import { Plus, Edit, Trash2, Save, X, GripVertical, Palette, Copy, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -52,6 +52,7 @@ export function PipelineSettings() {
   const [editingStage, setEditingStage] = useState<PipelineStage | null>(null)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [copiedId, setCopiedId] = useState<string | null>(null)
 
   const [pipelineForm, setPipelineForm] = useState({
     name: '',
@@ -345,6 +346,16 @@ export function PipelineSettings() {
     setStageForm({ name: '', description: '', color: 'bg-blue-100' })
   }
 
+  const copyPipelineId = async (pipelineId: string) => {
+    try {
+      await navigator.clipboard.writeText(pipelineId)
+      setCopiedId(pipelineId)
+      setTimeout(() => setCopiedId(null), 2000)
+    } catch (error) {
+      console.error('Failed to copy pipeline ID:', error)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -377,23 +388,45 @@ export function PipelineSettings() {
                 <motion.div
                   key={pipeline.id}
                   whileHover={{ scale: 1.02 }}
-                  className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                  className={`p-3 rounded-lg border transition-colors ${
                     selectedPipeline?.id === pipeline.id
                       ? 'bg-brand-primary text-white border-brand-primary'
                       : 'bg-white hover:bg-gray-50 border-gray-200'
                   }`}
-                  onClick={() => setSelectedPipeline(pipeline)}
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 cursor-pointer" onClick={() => setSelectedPipeline(pipeline)}>
                       <div className="font-medium">{pipeline.name}</div>
                       <div className={`text-sm ${selectedPipeline?.id === pipeline.id ? 'text-white/80' : 'text-gray-500'}`}>
                         {pipeline.entity_type}
                       </div>
+                      <div className={`text-xs mt-1 font-mono flex items-center gap-1 ${selectedPipeline?.id === pipeline.id ? 'text-white/70' : 'text-gray-400'}`}>
+                        ID: {pipeline.pipeline_id}
+                      </div>
                     </div>
-                    {pipeline.is_default && (
-                      <Badge variant="secondary" className="ml-2">Default</Badge>
-                    )}
+                    <div className="flex items-center gap-1 ml-2">
+                      {pipeline.is_default && (
+                        <Badge variant="secondary" className="text-xs">Default</Badge>
+                      )}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          copyPipelineId(pipeline.pipeline_id)
+                        }}
+                        className={`p-1 rounded transition-colors ${
+                          selectedPipeline?.id === pipeline.id
+                            ? 'hover:bg-white/20'
+                            : 'hover:bg-gray-200'
+                        }`}
+                        title="Copy Pipeline ID"
+                      >
+                        {copiedId === pipeline.pipeline_id ? (
+                          <Check className={`w-3 h-3 ${selectedPipeline?.id === pipeline.id ? 'text-white' : 'text-green-600'}`} />
+                        ) : (
+                          <Copy className={`w-3 h-3 ${selectedPipeline?.id === pipeline.id ? 'text-white' : 'text-gray-600'}`} />
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </motion.div>
               ))}
@@ -405,7 +438,25 @@ export function PipelineSettings() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>{selectedPipeline?.name || 'Select a Pipeline'}</CardTitle>
+                <div className="flex items-center gap-3">
+                  <CardTitle>{selectedPipeline?.name || 'Select a Pipeline'}</CardTitle>
+                  {selectedPipeline && (
+                    <div className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-md">
+                      <span className="text-xs font-mono text-gray-600">{selectedPipeline.pipeline_id}</span>
+                      <button
+                        onClick={() => copyPipelineId(selectedPipeline.pipeline_id)}
+                        className="p-0.5 rounded hover:bg-gray-200 transition-colors"
+                        title="Copy Pipeline ID"
+                      >
+                        {copiedId === selectedPipeline.pipeline_id ? (
+                          <Check className="w-3 h-3 text-green-600" />
+                        ) : (
+                          <Copy className="w-3 h-3 text-gray-600" />
+                        )}
+                      </button>
+                    </div>
+                  )}
+                </div>
                 {selectedPipeline?.description && (
                   <p className="text-sm text-gray-600 mt-1">{selectedPipeline.description}</p>
                 )}
