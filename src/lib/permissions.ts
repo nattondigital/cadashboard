@@ -122,12 +122,14 @@ export function canPerformAction(
 }
 
 export function isTeamMember(role: string | null | undefined): boolean {
-  return role === 'Team Member'
+  if (!role) return false
+  const normalizedRole = role.toLowerCase().replace(/\s+/g, '_')
+  return normalizedRole === 'team_member'
 }
 
 export function canAccessAllEntries(role: string | null | undefined): boolean {
   if (!role) return false
-  return role !== 'Team Member'
+  return !isTeamMember(role)
 }
 
 export function shouldFilterByUser(role: string | null | undefined): boolean {
