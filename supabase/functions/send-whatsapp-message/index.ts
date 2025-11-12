@@ -59,6 +59,18 @@ Deno.serve(async (req: Request) => {
       throw new Error('WhatsApp template not found')
     }
 
+    // Determine the actual receiver phone number
+    let receiverPhone = contact_phone
+    if (template.receiver_phone) {
+      // Replace variables in receiver_phone with actual values from trigger_data
+      receiverPhone = replacePlaceholders(template.receiver_phone, trigger_data || {})
+
+      // Also handle legacy contact_name replacement if needed
+      if (contact_name) {
+        receiverPhone = receiverPhone.replace(/\{\{contact_name\}\}/g, contact_name)
+      }
+    }
+
     // Get WhatsApp Business API credentials from integrations
     const { data: integration, error: integrationError } = await supabase
       .from('integrations')
@@ -79,7 +91,7 @@ Deno.serve(async (req: Request) => {
     }
 
     // Format phone number: remove +, spaces, dashes, and add 91 if needed
-    let formattedPhone = contact_phone.replace(/[\+\s\-]/g, '')
+    let formattedPhone = receiverPhone.replace(/[\+\s\-]/g, '')
 
     // Add country code 91 if phone is 10 digits (Indian number without country code)
     if (formattedPhone.length === 10) {
@@ -157,7 +169,7 @@ Deno.serve(async (req: Request) => {
     // Log the API request and response
     await supabase.from('whatsapp_api_logs').insert({
       trigger_event,
-      contact_phone,
+      contact_phone: formattedPhone,
       contact_name,
       template_id: template.id,
       template_name: template.name,

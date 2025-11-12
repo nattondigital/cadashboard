@@ -183,7 +183,8 @@ export function Templates() {
     features: '',
     type: 'Text',
     mediaUrl: '',
-    bodyText: ''
+    bodyText: '',
+    receiverPhone: ''
   })
   const [uploadingFile, setUploadingFile] = useState(false)
   const [fileError, setFileError] = useState('')
@@ -219,6 +220,7 @@ export function Templates() {
         type: template.type,
         mediaUrl: template.media_url,
         bodyText: template.body_text,
+        receiverPhone: template.receiver_phone,
         status: template.status,
         createdBy: template.created_by,
         createdAt: template.created_at
@@ -290,7 +292,8 @@ export function Templates() {
         features: '',
         type: template.type || 'Text',
         mediaUrl: template.mediaUrl || '',
-        bodyText: template.bodyText || ''
+        bodyText: template.bodyText || '',
+        receiverPhone: template.receiverPhone || ''
       })
     } else {
       setFormData({
@@ -322,6 +325,7 @@ export function Templates() {
             type: formData.type,
             media_url: formData.mediaUrl || null,
             body_text: formData.bodyText,
+            receiver_phone: formData.receiverPhone || null,
             status: formData.status,
             created_by: 'Admin User'
           })
@@ -375,6 +379,7 @@ export function Templates() {
             type: formData.type,
             media_url: formData.mediaUrl || null,
             body_text: formData.bodyText,
+            receiver_phone: formData.receiverPhone || null,
             status: formData.status
           })
           .eq('id', selectedTemplate.id)
@@ -1187,6 +1192,18 @@ export function Templates() {
                   </div>
 
                   <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Receiver Phone (Optional)</label>
+                    <Input
+                      value={formData.receiverPhone}
+                      onChange={(e) => setFormData(prev => ({ ...prev, receiverPhone: e.target.value }))}
+                      placeholder="e.g., +918076175528 or {{contact_phone}} or {{assigned_to_phone}}"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Can be a fixed number (+918076175528), variable ({"{{contact_phone}}"}, {"{{assigned_to_phone}}"}, {"{{assigned_by_phone}}"}), or combination (+91{"{{phone_number}}"}).
+                    </p>
+                  </div>
+
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
                     <Select value={formData.status} onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}>
                       <SelectTrigger>
@@ -1384,6 +1401,18 @@ export function Templates() {
                       placeholder="Enter message body text"
                       rows={5}
                     />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Receiver Phone (Optional)</label>
+                    <Input
+                      value={formData.receiverPhone}
+                      onChange={(e) => setFormData(prev => ({ ...prev, receiverPhone: e.target.value }))}
+                      placeholder="e.g., +918076175528 or {{contact_phone}} or {{assigned_to_phone}}"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Can be a fixed number (+918076175528), variable ({"{{contact_phone}}"}, {"{{assigned_to_phone}}"}, {"{{assigned_by_phone}}"}), or combination (+91{"{{phone_number}}"}).
+                    </p>
                   </div>
 
                   <div>
