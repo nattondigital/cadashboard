@@ -15,7 +15,6 @@ interface LeadPayload {
   interest?: string
   stage?: string
   contact_id?: string
-  owner?: string
   address?: string
   company?: string
   notes?: string
@@ -100,7 +99,6 @@ Deno.serve(async (req: Request) => {
       if (payload.source !== undefined) updateData.source = payload.source
       if (payload.interest !== undefined) updateData.interest = payload.interest
       if (payload.stage !== undefined) updateData.stage = payload.stage
-      if (payload.owner !== undefined) updateData.owner = payload.owner
       if (payload.address !== undefined) updateData.address = payload.address
       if (payload.company !== undefined) updateData.company = payload.company
       if (payload.notes !== undefined) updateData.notes = payload.notes
@@ -273,7 +271,6 @@ Deno.serve(async (req: Request) => {
           stage: stageToUse,
           pipeline_id: pipelineUuid,
           contact_id: contactUuid,
-          owner: payload.owner || 'Sales Team',
           address: payload.address || null,
           company: payload.company || null,
           notes: payload.notes || null,

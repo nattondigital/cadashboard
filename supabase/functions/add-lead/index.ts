@@ -15,7 +15,6 @@ interface LeadPayload {
   interest?: string
   stage?: string
   contact_id?: string
-  owner?: string
   address?: string
   company?: string
   notes?: string
@@ -152,7 +151,6 @@ Deno.serve(async (req: Request) => {
           stage: payload.stage || 'New',
           pipeline_id: pipelineUuid,
           contact_id: contactUuid,
-          owner: payload.owner || 'Sales Team',
           address: payload.address || null,
           company: payload.company || null,
           notes: payload.notes || null,
@@ -197,7 +195,6 @@ Deno.serve(async (req: Request) => {
           stage: payload.stage || 'New',
           pipeline_id: pipelineUuid,
           contact_id: contactUuid,
-          owner: payload.owner || 'Sales Team',
           address: payload.address || null,
           company: payload.company || null,
           notes: payload.notes || null,
