@@ -11,6 +11,7 @@ interface ChatPayload {
   phone_number: string
   message: string
   user_context?: string
+  imageUrl?: string
 }
 
 interface MCPMessage {
@@ -378,7 +379,21 @@ Deno.serve(async (req: Request) => {
 
         if (existingMemory && existingMemory.length > 0) {
           existingMemory.forEach(msg => {
-            conversationMessages.push({ role: msg.role, content: msg.message })
+            // Check if message has an image URL in metadata
+            const hasImage = msg.metadata?.imageUrl
+            if (hasImage) {
+              // Multi-part content for messages with images
+              conversationMessages.push({
+                role: msg.role,
+                content: [
+                  { type: 'text', text: msg.message },
+                  { type: 'image_url', image_url: { url: msg.metadata.imageUrl } }
+                ]
+              })
+            } else {
+              // Simple text content for messages without images
+              conversationMessages.push({ role: msg.role, content: msg.message })
+            }
           })
           console.log(`Loaded ${existingMemory.length} previous messages in chronological order`)
         }
@@ -408,7 +423,21 @@ Deno.serve(async (req: Request) => {
 
         if (existingMemory && existingMemory.length > 0) {
           existingMemory.forEach(msg => {
-            conversationMessages.push({ role: msg.role, content: msg.message })
+            // Check if message has an image URL in metadata
+            const hasImage = msg.metadata?.imageUrl
+            if (hasImage) {
+              // Multi-part content for messages with images
+              conversationMessages.push({
+                role: msg.role,
+                content: [
+                  { type: 'text', text: msg.message },
+                  { type: 'image_url', image_url: { url: msg.metadata.imageUrl } }
+                ]
+              })
+            } else {
+              // Simple text content for messages without images
+              conversationMessages.push({ role: msg.role, content: msg.message })
+            }
           })
           console.log(`Loaded ${existingMemory.length} previous messages in chronological order for task context`)
         }
@@ -417,7 +446,18 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    conversationMessages.push({ role: 'user', content: payload.message })
+    // Add current user message (with image if provided)
+    if (payload.imageUrl) {
+      conversationMessages.push({
+        role: 'user',
+        content: [
+          { type: 'text', text: payload.message },
+          { type: 'image_url', image_url: { url: payload.imageUrl } }
+        ]
+      })
+    } else {
+      conversationMessages.push({ role: 'user', content: payload.message })
+    }
 
     const { data: agentPerms } = await supabase
       .from('ai_agent_permissions')
@@ -578,6 +618,12 @@ RIGHT: due_time: "04:30" (UTC) ✅`
       ...conversationMessages
     ]
 
+    // Log image handling for debugging
+    if (payload.imageUrl) {
+      console.log('📷 Image message detected:', payload.imageUrl)
+      console.log('📷 Message structure:', JSON.stringify(messages[messages.length - 1], null, 2))
+    }
+
     const requestBody: any = {
       model: agent.model,
       messages: messages
@@ -737,13 +783,20 @@ RIGHT: due_time: "04:30" (UTC) ✅`
     const memoryRecords = []
 
     if (cleanedUserMessage) {
-      memoryRecords.push({
+      const userRecord: any = {
         agent_id: payload.agent_id,
         phone_number: payload.phone_number,
         role: 'user',
         message: cleanedUserMessage,
         created_at: userTimestamp,
-      })
+      }
+
+      // Store imageUrl in metadata if provided
+      if (payload.imageUrl) {
+        userRecord.metadata = { imageUrl: payload.imageUrl }
+      }
+
+      memoryRecords.push(userRecord)
     }
 
     if (cleanedAssistantMessage) {
