@@ -411,7 +411,7 @@ async function handleMCPRequest(
             },
             {
               name: 'get_custom_fields',
-              description: 'Get custom fields for a specific pipeline. Use this to see what custom fields exist for a lead\'s pipeline before updating custom field values.',
+              description: 'Get custom fields for lead pipelines. If pipeline_id is provided, returns custom fields for that pipeline only. If pipeline_id is omitted, returns custom fields for ALL lead pipelines. Use this before updating custom field values.',
               inputSchema: {
                 type: 'object',
                 properties: {
@@ -425,10 +425,14 @@ async function handleMCPRequest(
                   },
                   pipeline_id: {
                     type: 'string',
-                    description: 'Pipeline ID to get custom fields for',
+                    description: 'Pipeline ID to get custom fields for (OPTIONAL). If omitted, returns custom fields for ALL lead pipelines. Get pipeline_id from get_pipelines output.',
+                  },
+                  pipeline_name: {
+                    type: 'string',
+                    description: 'Pipeline name to search for (OPTIONAL). If provided, will find the pipeline by name and return its custom fields. Example: "Ai Automation 2.0" or "ITR FILING".',
                   },
                 },
-                required: ['pipeline_id'],
+                required: [],
               },
             },
             {
@@ -1023,17 +1027,39 @@ async function handleMCPRequest(
               throw new Error('Agent does not have permission to view custom fields')
             }
 
-            if (!args.pipeline_id) {
-              throw new Error('pipeline_id is required')
+            let targetPipelineId = args.pipeline_id
+
+            // If pipeline_name provided, find the pipeline ID
+            if (!targetPipelineId && args.pipeline_name) {
+              const { data: pipelineData, error: pipelineError } = await supabase
+                .from('pipelines')
+                .select('pipeline_id, name')
+                .eq('entity_type', 'lead')
+                .eq('is_active', true)
+                .ilike('name', `%${args.pipeline_name}%`)
+                .maybeSingle()
+
+              if (pipelineError) throw pipelineError
+              if (pipelineData) {
+                targetPipelineId = pipelineData.pipeline_id
+              } else {
+                throw new Error(`Pipeline not found with name: ${args.pipeline_name}`)
+              }
             }
 
-            // Get custom tabs for the pipeline
-            const { data: tabs, error: tabsError } = await supabase
+            // Get custom tabs - either for specific pipeline or all pipelines
+            let tabsQuery = supabase
               .from('custom_lead_tabs')
-              .select('id, tab_id, tab_name, tab_order')
-              .eq('pipeline_id', args.pipeline_id)
+              .select('id, tab_id, tab_name, tab_order, pipeline_id, pipelines!inner(name)')
               .eq('is_active', true)
-              .order('tab_order')
+
+            if (targetPipelineId) {
+              tabsQuery = tabsQuery.eq('pipeline_id', targetPipelineId)
+            }
+
+            tabsQuery = tabsQuery.order('pipeline_id').order('tab_order')
+
+            const { data: tabs, error: tabsError } = await tabsQuery
 
             if (tabsError) {
               await supabase.from('ai_agent_logs').insert({
@@ -1043,7 +1069,7 @@ async function handleMCPRequest(
                 action: 'get_custom_fields',
                 result: 'Error',
                 user_context: args.phone_number || null,
-                details: { error: tabsError.message, pipeline_id: args.pipeline_id },
+                details: { error: tabsError.message, pipeline_id: targetPipelineId || 'all' },
               })
               throw tabsError
             }
@@ -1068,12 +1094,63 @@ async function handleMCPRequest(
                   action: 'get_custom_fields',
                   result: 'Error',
                   user_context: args.phone_number || null,
-                  details: { error: fieldsError.message, pipeline_id: args.pipeline_id },
+                  details: { error: fieldsError.message, pipeline_id: targetPipelineId || 'all' },
                 })
                 throw fieldsError
               }
 
               fields = fieldsData || []
+            }
+
+            // Build response - group by pipeline if fetching all
+            const result: any = {
+              success: true,
+              tabs_count: tabs?.length || 0,
+              fields_count: fields.length,
+            }
+
+            if (targetPipelineId) {
+              // Single pipeline response
+              result.pipeline_id = targetPipelineId
+              result.tabs = tabs
+              result.fields = fields
+            } else {
+              // All pipelines response - group by pipeline
+              const pipelineMap: Record<string, any> = {}
+
+              tabs?.forEach((tab: any) => {
+                const pipelineId = tab.pipeline_id
+                const pipelineName = tab.pipelines?.name || 'Unknown'
+
+                if (!pipelineMap[pipelineId]) {
+                  pipelineMap[pipelineId] = {
+                    pipeline_id: pipelineId,
+                    pipeline_name: pipelineName,
+                    tabs: [],
+                    fields: []
+                  }
+                }
+
+                pipelineMap[pipelineId].tabs.push({
+                  tab_id: tab.tab_id,
+                  tab_name: tab.tab_name,
+                  tab_order: tab.tab_order
+                })
+              })
+
+              // Add fields to their respective pipelines
+              fields.forEach((field: any) => {
+                const tab = tabs?.find((t: any) => t.id === field.custom_tab_id)
+                if (tab) {
+                  const pipelineId = tab.pipeline_id
+                  if (pipelineMap[pipelineId]) {
+                    pipelineMap[pipelineId].fields.push(field)
+                  }
+                }
+              })
+
+              result.pipelines = Object.values(pipelineMap)
+              result.total_pipelines = Object.keys(pipelineMap).length
             }
 
             await supabase.from('ai_agent_logs').insert({
@@ -1083,21 +1160,20 @@ async function handleMCPRequest(
               action: 'get_custom_fields',
               result: 'Success',
               user_context: args.phone_number || null,
-              details: { pipeline_id: args.pipeline_id, tabs_count: tabs?.length || 0, fields_count: fields.length },
+              details: {
+                pipeline_id: targetPipelineId || 'all',
+                pipeline_name: args.pipeline_name || null,
+                tabs_count: tabs?.length || 0,
+                fields_count: fields.length,
+                total_pipelines: result.total_pipelines || 1
+              },
             })
 
             response.result = {
               content: [
                 {
                   type: 'text',
-                  text: JSON.stringify({
-                    success: true,
-                    pipeline_id: args.pipeline_id,
-                    tabs,
-                    fields,
-                    tabs_count: tabs?.length || 0,
-                    fields_count: fields.length
-                  }, null, 2),
+                  text: JSON.stringify(result, null, 2),
                 },
               ],
             }
