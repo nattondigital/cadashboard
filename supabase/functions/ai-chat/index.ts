@@ -169,6 +169,64 @@ function convertMCPToolToOpenRouterFunction(mcpTool: MCPTool): any {
   }
 }
 
+function cleanMessageForMemory(message: string): string {
+  if (!message || typeof message !== 'string') {
+    return ''
+  }
+
+  let cleaned = message
+
+  // Remove JSON code blocks
+  cleaned = cleaned.replace(/```json\s*\n[\s\S]*?\n```/gi, '')
+
+  // Remove all code blocks (any language)
+  cleaned = cleaned.replace(/```[\s\S]*?```/g, '')
+
+  // Remove inline code with JSON-like content
+  cleaned = cleaned.replace(/`\{[\s\S]*?\}`/g, '')
+
+  // Remove tool execution markers and their lines
+  cleaned = cleaned.replace(/^[\s]*[✅❌⚠️🔧⚡🔌]\s*.*/gm, '')
+
+  // Remove "Data:" sections with JSON
+  cleaned = cleaned.replace(/\n\s*Data:\s*\n\{[\s\S]*?\}/gi, '')
+
+  // Remove technical execution logs
+  cleaned = cleaned.replace(/\(via MCP\)/gi, '')
+  cleaned = cleaned.replace(/MCP Server:/gi, '')
+  cleaned = cleaned.replace(/Tool execution:/gi, '')
+
+  // Remove markdown tables (often contain raw data)
+  // Match lines that start with | or contain multiple | characters
+  cleaned = cleaned.replace(/^.*\|.*\|.*$/gm, '')
+  cleaned = cleaned.replace(/^[\s]*[-:| ]+$/gm, '') // Remove table separator lines
+
+  // Remove excessive headers and formatting
+  cleaned = cleaned.replace(/^#{1,6}\s+/gm, '')
+
+  // Remove excessive bullet points with technical data
+  cleaned = cleaned.replace(/^\s*[-*+]\s+\*\*[^:]+:\*\*\s+`[^`]+`\s*$/gm, '')
+
+  // Remove empty lines and excessive whitespace
+  cleaned = cleaned.replace(/\n\s*\n\s*\n/g, '\n\n')
+
+  // Remove leading/trailing whitespace
+  cleaned = cleaned.trim()
+
+  // If the message is too short or looks like just data, return empty
+  if (cleaned.length < 10 || /^[\s\{\}\[\],:"']+$/.test(cleaned)) {
+    return ''
+  }
+
+  // If message contains only technical keywords, filter it out
+  const technicalOnlyPattern = /^(success|error|failed|null|undefined|true|false|\d+)$/i
+  if (technicalOnlyPattern.test(cleaned)) {
+    return ''
+  }
+
+  return cleaned
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, {
@@ -595,22 +653,48 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    await supabase
-      .from('ai_agent_chat_memory')
-      .insert([
-        {
-          agent_id: payload.agent_id,
-          phone_number: payload.phone_number,
-          role: 'user',
-          message: payload.message,
-        },
-        {
-          agent_id: payload.agent_id,
-          phone_number: payload.phone_number,
-          role: 'assistant',
-          message: aiResponse,
-        }
-      ])
+    // Clean messages before storing to memory
+    const cleanedUserMessage = payload.message.trim()
+    const cleanedAssistantMessage = cleanMessageForMemory(aiResponse)
+
+    // Log cleaning results for debugging
+    if (aiResponse.length !== cleanedAssistantMessage.length) {
+      console.log(`Message cleaned: ${aiResponse.length} chars → ${cleanedAssistantMessage.length} chars`)
+      console.log(`Original preview: ${aiResponse.substring(0, 100)}...`)
+      console.log(`Cleaned preview: ${cleanedAssistantMessage.substring(0, 100)}...`)
+    }
+
+    // Only save to memory if both messages are valid
+    const memoryRecords = []
+
+    if (cleanedUserMessage) {
+      memoryRecords.push({
+        agent_id: payload.agent_id,
+        phone_number: payload.phone_number,
+        role: 'user',
+        message: cleanedUserMessage,
+      })
+    }
+
+    if (cleanedAssistantMessage) {
+      memoryRecords.push({
+        agent_id: payload.agent_id,
+        phone_number: payload.phone_number,
+        role: 'assistant',
+        message: cleanedAssistantMessage,
+      })
+    }
+
+    // Save to memory only if we have valid messages
+    if (memoryRecords.length > 0) {
+      await supabase
+        .from('ai_agent_chat_memory')
+        .insert(memoryRecords)
+
+      console.log(`✅ Saved ${memoryRecords.length} clean messages to memory`)
+    } else {
+      console.log('⚠️ Skipped saving to memory: no clean messages to store (likely only technical data)')
+    }
 
     return new Response(
       JSON.stringify({ response: aiResponse }),
