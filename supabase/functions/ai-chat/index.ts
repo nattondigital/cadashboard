@@ -6,6 +6,60 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, Apikey',
 }
 
+// In-memory cache with TTL for agent config and permissions
+interface CacheEntry<T> {
+  data: T
+  timestamp: number
+}
+
+class SimpleCache {
+  private cache = new Map<string, CacheEntry<any>>()
+  private ttl: number
+
+  constructor(ttlMinutes: number = 15) {
+    this.ttl = ttlMinutes * 60 * 1000 // Convert to milliseconds
+  }
+
+  get<T>(key: string): T | null {
+    const entry = this.cache.get(key)
+    if (!entry) return null
+
+    const now = Date.now()
+    if (now - entry.timestamp > this.ttl) {
+      // Cache expired
+      this.cache.delete(key)
+      return null
+    }
+
+    return entry.data as T
+  }
+
+  set<T>(key: string, data: T): void {
+    this.cache.set(key, {
+      data,
+      timestamp: Date.now()
+    })
+  }
+
+  delete(key: string): void {
+    this.cache.delete(key)
+  }
+
+  clear(): void {
+    this.cache.clear()
+  }
+
+  getStats(): { size: number, keys: string[] } {
+    return {
+      size: this.cache.size,
+      keys: Array.from(this.cache.keys())
+    }
+  }
+}
+
+// Global cache instance (persists across invocations in same isolate)
+const agentCache = new SimpleCache(15) // 15 minute TTL
+
 interface ChatPayload {
   agent_id: string
   phone_number: string
@@ -256,6 +310,49 @@ Deno.serve(async (req: Request) => {
     })
   }
 
+  // Cache management endpoints
+  const url = new URL(req.url)
+
+  if (url.pathname.endsWith('/cache/clear')) {
+    try {
+      const { agent_id } = await req.json()
+
+      if (agent_id) {
+        // Clear specific agent cache
+        agentCache.delete(`agent:${agent_id}`)
+        agentCache.delete(`perms:${agent_id}`)
+        console.log(`🗑️ Cleared cache for agent ${agent_id}`)
+
+        return new Response(
+          JSON.stringify({ message: `Cache cleared for agent ${agent_id}` }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      } else {
+        // Clear all cache
+        agentCache.clear()
+        console.log(`🗑️ Cleared all cache`)
+
+        return new Response(
+          JSON.stringify({ message: 'All cache cleared' }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+    } catch (error: any) {
+      return new Response(
+        JSON.stringify({ error: error.message }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+  }
+
+  if (url.pathname.endsWith('/cache/stats')) {
+    const stats = agentCache.getStats()
+    return new Response(
+      JSON.stringify(stats),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+  }
+
   try {
     if (req.method !== 'POST') {
       return new Response(
@@ -292,23 +389,36 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    const { data: agent, error: agentError } = await supabase
-      .from('ai_agents')
-      .select('*')
-      .eq('id', payload.agent_id)
-      .single()
+    // Check cache first for agent config
+    const agentCacheKey = `agent:${payload.agent_id}`
+    let agent = agentCache.get(agentCacheKey)
 
-    if (agentError || !agent) {
-      return new Response(
-        JSON.stringify({ error: 'Agent not found' }),
-        {
-          status: 404,
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json',
-          },
-        }
-      )
+    if (!agent) {
+      console.log(`🔍 Cache MISS for agent ${payload.agent_id} - fetching from DB`)
+      const { data: agentData, error: agentError } = await supabase
+        .from('ai_agents')
+        .select('*')
+        .eq('id', payload.agent_id)
+        .single()
+
+      if (agentError || !agentData) {
+        return new Response(
+          JSON.stringify({ error: 'Agent not found' }),
+          {
+            status: 404,
+            headers: {
+              ...corsHeaders,
+              'Content-Type': 'application/json',
+            },
+          }
+        )
+      }
+
+      agent = agentData
+      agentCache.set(agentCacheKey, agent)
+      console.log(`✅ Cached agent ${agent.name}`)
+    } else {
+      console.log(`⚡ Cache HIT for agent ${payload.agent_id}`)
     }
 
     console.log(`Agent ${agent.name} - Type: ${agent.agent_type || 'BACKEND'} - Status: ${agent.status} - MCP Architecture: Enabled`)
@@ -459,13 +569,24 @@ Deno.serve(async (req: Request) => {
       conversationMessages.push({ role: 'user', content: payload.message })
     }
 
-    const { data: agentPerms } = await supabase
-      .from('ai_agent_permissions')
-      .select('permissions')
-      .eq('agent_id', payload.agent_id)
-      .maybeSingle()
+    // Check cache first for agent permissions
+    const permsCacheKey = `perms:${payload.agent_id}`
+    let permissions = agentCache.get<Record<string, any>>(permsCacheKey)
 
-    const permissions: Record<string, any> = agentPerms?.permissions || {}
+    if (!permissions) {
+      console.log(`🔍 Cache MISS for permissions ${payload.agent_id} - fetching from DB`)
+      const { data: agentPerms } = await supabase
+        .from('ai_agent_permissions')
+        .select('permissions')
+        .eq('agent_id', payload.agent_id)
+        .maybeSingle()
+
+      permissions = agentPerms?.permissions || {}
+      agentCache.set(permsCacheKey, permissions)
+      console.log(`✅ Cached permissions for agent ${payload.agent_id}`)
+    } else {
+      console.log(`⚡ Cache HIT for permissions ${payload.agent_id}`)
+    }
 
     console.log(`Agent permissions loaded: ${Object.keys(permissions).length} modules`)
 
@@ -820,6 +941,10 @@ RIGHT: due_time: "04:30" (UTC) ✅`
     } else {
       console.log('⚠️ Skipped saving to memory: no clean messages to store (likely only technical data)')
     }
+
+    // Log cache stats
+    const cacheStats = agentCache.getStats()
+    console.log(`📊 Cache Stats: ${cacheStats.size} entries`)
 
     return new Response(
       JSON.stringify({ response: aiResponse }),
