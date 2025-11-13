@@ -1048,6 +1048,12 @@ Provide a natural, conversational response describing what you actually DID (not
         console.log('✅ Second pass: Minimal 3-message format (system + tool results + instruction)')
         console.log(`📉 Cost optimization: Saved ${conversationMessages.length} messages from second pass`)
 
+        if (!finalResponse.ok) {
+          const errorText = await finalResponse.text()
+          console.error('Second pass OpenRouter error:', errorText)
+          throw new Error(`OpenRouter API error (second pass): ${finalResponse.status} - ${errorText}`)
+        }
+
         const finalData = await finalResponse.json()
         aiResponse = finalData.choices[0].message.content
       } else {

@@ -220,7 +220,7 @@ async function handleMCPRequest(
             },
             {
               name: 'get_pipeline_stages',
-              description: 'Get all valid stages for a specific pipeline. ALWAYS use this before updating a lead stage to ensure you use a valid stage name.',
+              description: 'Get stages for pipelines. If pipeline_id is provided, returns stages for that specific pipeline. If pipeline_id is omitted, returns stages for ALL active pipelines grouped by pipeline. Use this before updating lead stages.',
               inputSchema: {
                 type: 'object',
                 properties: {
@@ -234,10 +234,10 @@ async function handleMCPRequest(
                   },
                   pipeline_id: {
                     type: 'string',
-                    description: 'Pipeline ID to get stages for (get from lead.pipeline_id or use get_pipelines first)',
+                    description: 'Pipeline ID to get stages for (OPTIONAL). If omitted, returns stages for ALL pipelines. Get this from get_pipelines output (id field) or from a lead.pipeline_id field.',
                   },
                 },
-                required: ['pipeline_id'],
+                required: [],
               },
             },
             {
@@ -592,16 +592,22 @@ async function handleMCPRequest(
               throw new Error('Agent does not have permission to view pipeline stages')
             }
 
-            if (!args.pipeline_id) {
-              throw new Error('pipeline_id is required')
+            // If pipeline_id provided, get stages for that pipeline only
+            // If not provided, get stages for ALL pipelines
+            let query = supabase
+              .from('pipeline_stages')
+              .select('*, pipelines!inner(pipeline_id, name, entity_type)')
+              .eq('is_active', true)
+              .eq('pipelines.entity_type', 'lead')
+              .eq('pipelines.is_active', true)
+
+            if (args.pipeline_id) {
+              query = query.eq('pipeline_id', args.pipeline_id)
             }
 
-            const { data, error } = await supabase
-              .from('pipeline_stages')
-              .select('*')
-              .eq('pipeline_id', args.pipeline_id)
-              .eq('is_active', true)
-              .order('display_order')
+            query = query.order('pipeline_id').order('display_order')
+
+            const { data, error } = await query
 
             if (error) {
               await supabase.from('ai_agent_logs').insert({
@@ -611,9 +617,50 @@ async function handleMCPRequest(
                 action: 'get_pipeline_stages',
                 result: 'Error',
                 user_context: args.phone_number || null,
-                details: { error: error.message, pipeline_id: args.pipeline_id },
+                details: { error: error.message, pipeline_id: args.pipeline_id || 'all' },
               })
               throw error
+            }
+
+            // Group stages by pipeline if fetching all
+            const result: any = {
+              success: true,
+              count: data?.length || 0,
+            }
+
+            if (args.pipeline_id) {
+              // Single pipeline response
+              result.pipeline_id = args.pipeline_id
+              result.stages = data
+              result.stage_names = data?.map((s: any) => s.name) || []
+            } else {
+              // All pipelines response - group by pipeline
+              const groupedByPipeline: Record<string, any> = {}
+              data?.forEach((stage: any) => {
+                const pipelineId = stage.pipeline_id
+                const pipelineName = stage.pipelines?.name || 'Unknown'
+
+                if (!groupedByPipeline[pipelineId]) {
+                  groupedByPipeline[pipelineId] = {
+                    pipeline_id: pipelineId,
+                    pipeline_name: pipelineName,
+                    stages: [],
+                    stage_names: []
+                  }
+                }
+
+                groupedByPipeline[pipelineId].stages.push({
+                  stage_id: stage.stage_id,
+                  name: stage.name,
+                  description: stage.description,
+                  display_order: stage.display_order,
+                  color: stage.color
+                })
+                groupedByPipeline[pipelineId].stage_names.push(stage.name)
+              })
+
+              result.pipelines = Object.values(groupedByPipeline)
+              result.total_pipelines = Object.keys(groupedByPipeline).length
             }
 
             await supabase.from('ai_agent_logs').insert({
@@ -623,20 +670,18 @@ async function handleMCPRequest(
               action: 'get_pipeline_stages',
               result: 'Success',
               user_context: args.phone_number || null,
-              details: { pipeline_id: args.pipeline_id, stage_count: data?.length || 0 },
+              details: {
+                pipeline_id: args.pipeline_id || 'all',
+                stage_count: data?.length || 0,
+                pipeline_count: args.pipeline_id ? 1 : result.total_pipelines || 0
+              },
             })
 
             response.result = {
               content: [
                 {
                   type: 'text',
-                  text: JSON.stringify({
-                    success: true,
-                    pipeline_id: args.pipeline_id,
-                    stages: data,
-                    count: data?.length || 0,
-                    stage_names: data?.map((s: any) => s.name) || []
-                  }, null, 2),
+                  text: JSON.stringify(result, null, 2),
                 },
               ],
             }
