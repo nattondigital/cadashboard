@@ -410,56 +410,64 @@ export function Appointments() {
   }
 
   const getDateRange = () => {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
+    // Get current date in IST timezone
+    const now = new Date()
+    const istDate = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }))
+
+    const formatISTDate = (date: Date) => {
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      return `${year}-${month}-${day}`
+    }
 
     switch (periodFilter) {
       case 'today': {
-        const start = today.toISOString().split('T')[0]
-        return { start, end: start }
+        const dateStr = formatISTDate(istDate)
+        return { start: dateStr, end: dateStr }
       }
       case 'tomorrow': {
-        const tomorrow = new Date(today)
+        const tomorrow = new Date(istDate)
         tomorrow.setDate(tomorrow.getDate() + 1)
-        const date = tomorrow.toISOString().split('T')[0]
-        return { start: date, end: date }
+        const dateStr = formatISTDate(tomorrow)
+        return { start: dateStr, end: dateStr }
       }
       case 'this_week': {
-        const start = new Date(today)
-        const end = new Date(today)
-        const dayOfWeek = today.getDay()
-        start.setDate(today.getDate() - dayOfWeek)
-        end.setDate(today.getDate() + (6 - dayOfWeek))
+        const dayOfWeek = istDate.getDay()
+        const startDate = new Date(istDate)
+        startDate.setDate(istDate.getDate() - dayOfWeek)
+        const endDate = new Date(istDate)
+        endDate.setDate(istDate.getDate() + (6 - dayOfWeek))
         return {
-          start: start.toISOString().split('T')[0],
-          end: end.toISOString().split('T')[0]
+          start: formatISTDate(startDate),
+          end: formatISTDate(endDate)
         }
       }
       case 'next_week': {
-        const start = new Date(today)
-        const end = new Date(today)
-        const dayOfWeek = today.getDay()
-        start.setDate(today.getDate() + (7 - dayOfWeek))
-        end.setDate(start.getDate() + 6)
+        const dayOfWeek = istDate.getDay()
+        const startDate = new Date(istDate)
+        startDate.setDate(istDate.getDate() + (7 - dayOfWeek))
+        const endDate = new Date(startDate)
+        endDate.setDate(startDate.getDate() + 6)
         return {
-          start: start.toISOString().split('T')[0],
-          end: end.toISOString().split('T')[0]
+          start: formatISTDate(startDate),
+          end: formatISTDate(endDate)
         }
       }
       case 'this_month': {
-        const start = new Date(today.getFullYear(), today.getMonth(), 1)
-        const end = new Date(today.getFullYear(), today.getMonth() + 1, 0)
+        const startDate = new Date(istDate.getFullYear(), istDate.getMonth(), 1)
+        const endDate = new Date(istDate.getFullYear(), istDate.getMonth() + 1, 0)
         return {
-          start: start.toISOString().split('T')[0],
-          end: end.toISOString().split('T')[0]
+          start: formatISTDate(startDate),
+          end: formatISTDate(endDate)
         }
       }
       case 'next_month': {
-        const start = new Date(today.getFullYear(), today.getMonth() + 1, 1)
-        const end = new Date(today.getFullYear(), today.getMonth() + 2, 0)
+        const startDate = new Date(istDate.getFullYear(), istDate.getMonth() + 1, 1)
+        const endDate = new Date(istDate.getFullYear(), istDate.getMonth() + 2, 0)
         return {
-          start: start.toISOString().split('T')[0],
-          end: end.toISOString().split('T')[0]
+          start: formatISTDate(startDate),
+          end: formatISTDate(endDate)
         }
       }
       case 'custom': {
