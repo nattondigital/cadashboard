@@ -660,6 +660,9 @@ Deno.serve(async (req: Request) => {
 
         console.log(`Tool execution completed. Results: ${toolResults.length} items`)
 
+        // Second pass: Convert tool results to natural language
+        // CRITICAL: Only send 3 messages (system, assistant with tool results, user instruction)
+        // DO NOT send full conversation history again (doubles cost + increases hallucination)
         const finalResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
           headers: {
@@ -670,12 +673,14 @@ Deno.serve(async (req: Request) => {
             model: agent.model,
             messages: [
               { role: 'system', content: enhancedSystemPrompt },
-              ...conversationMessages,
               { role: 'assistant', content: toolResults.join('\n\n') },
               { role: 'user', content: 'Based on the tool execution results above, provide a natural, conversational response to the user. Keep it concise and friendly.' }
             ]
           }),
         })
+
+        console.log('✅ Second pass: Minimal 3-message format (system + tool results + instruction)')
+        console.log(`📉 Cost optimization: Saved ${conversationMessages.length} messages from second pass`)
 
         const finalData = await finalResponse.json()
         aiResponse = finalData.choices[0].message.content
