@@ -324,40 +324,18 @@ export function Attendance() {
 
           const { data: folderAssignment } = await supabase
             .from('media_folder_assignments')
-            .select('media_folder_id, media_folders!inner(ghl_folder_id, folder_name)')
+            .select('media_folder_id, media_folders!inner(id, ghl_folder_id, folder_name)')
             .eq('trigger_event', 'ATTENDANCE_CHECKIN')
             .eq('module', 'Attendance')
             .maybeSingle()
 
           const ghlFolderId = folderAssignment?.media_folders?.ghl_folder_id
+          const folderId = folderAssignment?.media_folders?.id
 
           if (!ghlFolderId) {
             console.log('No GHL folder configured for attendance check-ins, using data URL')
           } else {
             try {
-              let { data: attendanceFolder } = await supabase
-                .from('media_folders')
-                .select('id')
-                .eq('ghl_folder_id', ghlFolderId)
-                .maybeSingle()
-
-              if (!attendanceFolder) {
-                const { data: newFolder, error: folderError } = await supabase
-                  .from('media_folders')
-                  .insert({
-                    folder_name: folderAssignment?.media_folders?.folder_name || 'Attendance',
-                    ghl_folder_id: ghlFolderId,
-                    parent_id: null,
-                    location_id: locationId
-                  })
-                  .select('id')
-                  .single()
-
-                if (!folderError && newFolder) {
-                  attendanceFolder = newFolder
-                }
-              }
-
               const response = await fetch(selfieDataUrl)
               const blob = await response.blob()
 
@@ -390,7 +368,7 @@ export function Attendance() {
                   file_type: 'image/jpeg',
                   file_size: file.size,
                   ghl_file_id: ghlFile._id || ghlFile.id,
-                  folder_id: attendanceFolder?.id || null,
+                  folder_id: folderId || null,
                   location_id: locationId,
                   thumbnail_url: ghlFile.thumbnailUrl || null,
                   uploaded_by: selectedMember
@@ -505,12 +483,13 @@ export function Attendance() {
 
           const { data: folderAssignment } = await supabase
             .from('media_folder_assignments')
-            .select('media_folder_id, media_folders!inner(ghl_folder_id, folder_name)')
+            .select('media_folder_id, media_folders!inner(id, ghl_folder_id, folder_name)')
             .eq('trigger_event', 'ATTENDANCE_CHECKOUT')
             .eq('module', 'Attendance')
             .maybeSingle()
 
           const ghlFolderId = folderAssignment?.media_folders?.ghl_folder_id
+          const folderId = folderAssignment?.media_folders?.id
 
           if (ghlFolderId) {
             try {
@@ -544,7 +523,7 @@ export function Attendance() {
                   file_type: 'image/jpeg',
                   file_size: file.size,
                   ghl_file_id: ghlFile._id || ghlFile.id,
-                  folder_id: folderAssignment?.media_folders?.id || null,
+                  folder_id: folderId || null,
                   location_id: locationId,
                   thumbnail_url: ghlFile.thumbnailUrl || null,
                   uploaded_by: selectedMember
