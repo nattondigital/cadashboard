@@ -553,12 +553,18 @@ Deno.serve(async (req: Request) => {
     const systemPromptData = await systemPromptResponse.json()
     const baseSystemPrompt = systemPromptData.system_prompt || agent.system_prompt || 'You are a helpful AI assistant.'
 
-    // Add agent type specific context
+    // Add agent type and date/time context (optimized)
     const agentTypeContext = agentType === 'FRONTEND'
-      ? `\n\n**AGENT TYPE: FRONTEND (Customer-Facing)**\nYou are interacting with customers/clients. You have access to the full conversation history with this user. Provide personalized, conversational assistance. Remember context from previous messages. Focus on:\n- Answering product queries\n- Booking appointments\n- Providing customer support\n- Building rapport with the customer\n- Maintaining conversational continuity`
-      : `\n\n**AGENT TYPE: BACKEND (Internal CRM Assistant)**\nYou are assisting internal staff members with CRM operations. You have access to the last few messages for immediate context (for multi-turn tasks like clarifying questions). Focus on:\n- Executing tasks accurately\n- Creating/updating records\n- Processing data operations efficiently\n- Being precise and actionable\n- Completing multi-step requests that require follow-up questions\n- Using recent context to understand clarifications and confirmations`
+      ? `\n\n**Context**: Customer-facing agent. Use full conversation history for personalized assistance.`
+      : `\n\n**Context**: Internal CRM assistant. Use recent messages for multi-turn task clarifications.`
 
-    const enhancedSystemPrompt = `${baseSystemPrompt}${agentTypeContext}\n\n**CURRENT DATE & TIME CONTEXT (Asia/Kolkata IST - UTC+5:30):**\n- Today's date: ${todayDate}\n- Tomorrow's date: ${tomorrowDate}\n- Current time: ${currentTime} IST\n- Next Sunday: ${sundayDate}\n- Current day: ${istDate.toLocaleDateString('en-US', { weekday: 'long' })}\n\n## Date/Time Handling:\n\n**IMPORTANT:** When users provide times, they are in IST. You MUST convert to UTC (subtract 5:30) before passing to tools.\n\nExamples:\n- User says "tomorrow 10 AM" → due_date: "${tomorrowDate}", due_time: "04:30" (10:00 AM IST = 04:30 UTC)\n- User says "today 3 PM" → due_date: "${todayDate}", due_time: "09:30" (3:00 PM IST = 09:30 UTC)\n- User says "this Sunday 12 PM" → due_date: "${sundayDate}", due_time: "06:30" (12:00 PM IST = 06:30 UTC)\n\n**Common time conversions (IST to UTC):**\n- 12:00 AM IST = 18:30 UTC (previous day)\n- 6:00 AM IST = 00:30 UTC\n- 12:00 PM IST = 06:30 UTC\n- 6:00 PM IST = 12:30 UTC\n- 11:59 PM IST = 18:29 UTC`
+    const enhancedSystemPrompt = `${baseSystemPrompt}${agentTypeContext}
+
+**Date/Time (IST UTC+5:30)**
+Today: ${todayDate}, Tomorrow: ${tomorrowDate}, Time: ${currentTime}, Next Sunday: ${sundayDate}
+
+**Time Conversion Rule**: User times are IST. Convert to UTC (subtract 5:30) for tools.
+Examples: 10 AM IST = 04:30 UTC | 3 PM IST = 09:30 UTC | 9 AM IST = 03:30 UTC`
 
     const messages = [
       { role: 'system', content: enhancedSystemPrompt },
