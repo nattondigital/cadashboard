@@ -3882,7 +3882,7 @@ export function Leads() {
             </Card>
             </div>
             )}
-            {(displayMode === 'list' || true) && (
+            {displayMode === 'list' && (
             <Card className="shadow-xl">
               <CardHeader className="hidden md:block">
                 <CardTitle>{pipelines.find(p => p.id === pipelineFilter)?.name || 'Pipeline'} - List View</CardTitle>
