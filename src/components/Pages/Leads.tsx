@@ -2333,13 +2333,13 @@ export function Leads() {
         </div>
 
         {/* Desktop Header */}
-        <div className="hidden md:block p-6">
-          <div className="mb-6">
+        <div className="hidden md:block pt-6 px-6">
+          <div className="mb-4">
             <Button
               variant="ghost"
               size="sm"
               onClick={handleBackToList}
-              className="mb-4"
+              className="mb-3"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Leads
@@ -2363,7 +2363,7 @@ export function Leads() {
           </div>
 
           {/* Desktop Tabs */}
-          <div className="border-b border-gray-200 mb-6">
+          <div className="border-b border-gray-200">
             <div className="flex justify-start space-x-8 overflow-x-auto">
               {[
                 { id: 'lead-details', label: 'Lead Details', icon: Flag },
@@ -2376,7 +2376,7 @@ export function Leads() {
                 <button
                   key={tab.id}
                   onClick={() => setDetailTab(tab.id as TabType)}
-                  className={`flex items-center space-x-2 pb-4 px-1 border-b-2 transition-colors flex-shrink-0 ${
+                  className={`flex items-center space-x-2 pb-3 px-1 border-b-2 transition-colors flex-shrink-0 ${
                     detailTab === tab.id
                       ? 'border-brand-primary text-brand-primary'
                       : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -2390,7 +2390,7 @@ export function Leads() {
           </div>
         </div>
 
-        <div className="flex-1 md:flex-none overflow-y-auto md:overflow-visible p-4 md:p-6 space-y-6">
+        <div className="flex-1 md:flex-none overflow-y-auto md:overflow-visible p-4 md:pt-4 md:px-6 md:pb-6 space-y-6">
           {detailTab === 'lead-details' && (
             <div className="flex flex-col lg:flex-row gap-4 md:gap-6">
               <div className="lg:w-64 flex-shrink-0">
