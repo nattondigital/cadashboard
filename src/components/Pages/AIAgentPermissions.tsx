@@ -65,6 +65,8 @@ const MCP_SERVERS = {
       { id: 'create_appointment', name: 'Create Appointment', description: 'Schedule new appointments' },
       { id: 'update_appointment', name: 'Update Appointment', description: 'Modify appointment details' },
       { id: 'delete_appointment', name: 'Delete Appointment', description: 'Cancel appointments' },
+      { id: 'get_calendars', name: 'Get Calendars', description: 'View all calendars and their availability settings' },
+      { id: 'check_calendar_availability', name: 'Check Calendar Availability', description: 'Check available time slots for a calendar on a specific date' },
     ],
   },
   'support-server': {
