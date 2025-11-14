@@ -2304,26 +2304,6 @@ export function Leads() {
                 </div>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <PermissionGuard module="leads" action="update">
-                <Button onClick={() => handleEditClick(selectedLead)} size="sm" className="md:text-base">
-                  <Edit className="w-4 h-4 mr-2" />
-                  <span className="hidden md:inline">Edit Lead</span>
-                  <span className="md:hidden">Edit</span>
-                </Button>
-              </PermissionGuard>
-              <PermissionGuard module="leads" action="delete">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDeleteLead(selectedLead.id)}
-                  className="text-red-600 hover:text-red-700"
-                >
-                  <Trash2 className="w-4 h-4 md:mr-2" />
-                  <span className="hidden md:inline">Delete</span>
-                </Button>
-              </PermissionGuard>
-            </div>
           </div>
         </div>
 
@@ -2450,6 +2430,26 @@ export function Leads() {
                             <p className="font-medium mt-1">{formatDate(selectedLead.last_contact)}</p>
                           </div>
                         )}
+                      </div>
+                      <div className="flex items-center justify-end space-x-2 mt-6 pt-6 border-t border-gray-200">
+                        <PermissionGuard module="leads" action="update">
+                          <Button onClick={() => handleEditClick(selectedLead)} size="sm" className="md:text-base">
+                            <Edit className="w-4 h-4 mr-2" />
+                            <span className="hidden md:inline">Edit Lead</span>
+                            <span className="md:hidden">Edit</span>
+                          </Button>
+                        </PermissionGuard>
+                        <PermissionGuard module="leads" action="delete">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteLead(selectedLead.id)}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="w-4 h-4 md:mr-2" />
+                            <span className="hidden md:inline">Delete</span>
+                          </Button>
+                        </PermissionGuard>
                       </div>
                     </CardContent>
                   </Card>
