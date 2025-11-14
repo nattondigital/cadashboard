@@ -1172,11 +1172,13 @@ When users ask about expenses with time periods (like "this month", "today", "la
           Back to Agents
         </Button>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <PageHeader
-            title={`Chat with ${agent?.name}`}
-            subtitle={`Powered by ${agent?.model}`}
-            icon={Bot}
-          />
+          <div className="hidden md:block">
+            <PageHeader
+              title={`Chat with ${agent?.name}`}
+              subtitle={`Powered by ${agent?.model}`}
+              icon={Bot}
+            />
+          </div>
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Phone:</label>
