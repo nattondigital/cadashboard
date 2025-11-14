@@ -592,8 +592,8 @@ export function Sidebar({ collapsed = false, onClose }: SidebarProps) {
           })}
         </AnimatePresence>
 
-        {/* Settings Section */}
-        <div className="pt-4">
+        {/* Settings Section - Hidden on mobile, visible on desktop */}
+        <div className="pt-4 hidden md:block">
           {visibleSettingsNav.map((item) => {
             const isActive = location.pathname === item.to
             const Icon = item.icon
