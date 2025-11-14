@@ -227,13 +227,14 @@ Deno.serve(async (req: Request) => {
       if (!stageToUse) {
         const { data: firstStage } = await supabase
           .from('pipeline_stages')
-          .select('name')
+          .select('stage_id')
           .eq('pipeline_id', pipelineUuid)
+          .eq('is_active', true)
           .order('display_order', { ascending: true })
           .limit(1)
           .maybeSingle()
 
-        stageToUse = firstStage?.name || 'New'
+        stageToUse = firstStage?.stage_id || 'new'
       }
 
       let contactUuid = null

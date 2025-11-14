@@ -137,6 +137,21 @@ Deno.serve(async (req: Request) => {
       assignedToUuid = teamMember?.id || null
     }
 
+    // Get the first stage for the pipeline if no stage is provided
+    let stageToUse = payload.stage
+    if (!stageToUse) {
+      const { data: firstStage } = await supabase
+        .from('pipeline_stages')
+        .select('stage_id')
+        .eq('pipeline_id', pipelineUuid)
+        .eq('is_active', true)
+        .order('display_order', { ascending: true })
+        .limit(1)
+        .maybeSingle()
+
+      stageToUse = firstStage?.stage_id || 'new'
+    }
+
     let leadData
     let operationType
 
@@ -148,7 +163,7 @@ Deno.serve(async (req: Request) => {
           email: payload.email || null,
           source: payload.source || 'Website',
           interest: payload.interest || 'Warm',
-          stage: payload.stage || 'New',
+          stage: stageToUse,
           pipeline_id: pipelineUuid,
           contact_id: contactUuid,
           address: payload.address || null,
@@ -192,7 +207,7 @@ Deno.serve(async (req: Request) => {
           email: payload.email || null,
           source: payload.source || 'Website',
           interest: payload.interest || 'Warm',
-          stage: payload.stage || 'New',
+          stage: stageToUse,
           pipeline_id: pipelineUuid,
           contact_id: contactUuid,
           address: payload.address || null,
