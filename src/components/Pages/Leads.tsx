@@ -197,6 +197,7 @@ export function Leads() {
   const [customTabs, setCustomTabs] = useState<CustomTab[]>([])
   const [customFields, setCustomFields] = useState<Record<string, CustomField[]>>({})
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, string>>({})
+  const [customFieldValuesBackup, setCustomFieldValuesBackup] = useState<Record<string, string>>({})
   const [customFieldErrors, setCustomFieldErrors] = useState<Record<string, string>>({})
   const [isSavingCustomFields, setIsSavingCustomFields] = useState(false)
   const [customFieldsMessage, setCustomFieldsMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
@@ -2368,6 +2369,10 @@ export function Leads() {
                         <button
                           key={subTab.id}
                           onClick={() => {
+                            // If editing, restore backup values before switching tabs
+                            if (isEditingCustomFields) {
+                              setCustomFieldValues({ ...customFieldValuesBackup })
+                            }
                             setLeadDetailsSubTab(subTab.id)
                             setIsEditingCustomFields(false)
                             setCustomFieldErrors({})
@@ -2460,7 +2465,11 @@ export function Leads() {
                           </CardTitle>
                           {tabFields.length > 0 && !isEditingCustomFields && (
                             <Button
-                              onClick={() => setIsEditingCustomFields(true)}
+                              onClick={() => {
+                                // Create a backup of current values before editing
+                                setCustomFieldValuesBackup({ ...customFieldValues })
+                                setIsEditingCustomFields(true)
+                              }}
                               variant="outline"
                               size="sm"
                             >
@@ -2854,6 +2863,8 @@ export function Leads() {
                                   <Button
                                     variant="outline"
                                     onClick={() => {
+                                      // Restore the backup values (discard changes)
+                                      setCustomFieldValues({ ...customFieldValuesBackup })
                                       setIsEditingCustomFields(false)
                                       setCustomFieldErrors({})
                                     }}
