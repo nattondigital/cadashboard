@@ -2278,62 +2278,119 @@ export function Leads() {
 
   if (view === 'view' && selectedLead) {
     return (
-      <div className="p-4 md:p-6">
-        <div className="mb-4 md:mb-6">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleBackToList}
-            className="mb-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Leads
-          </Button>
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="flex items-center space-x-3 md:space-x-4">
-              <Avatar className="h-12 w-12 md:h-16 md:w-16">
-                <AvatarFallback className="bg-brand-primary text-white text-lg md:text-xl font-bold">
-                  {selectedLead.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2)}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <h1 className="text-xl md:text-3xl font-bold text-brand-text">{selectedLead.name}</h1>
-                <div className="flex items-center space-x-2 mt-1 flex-wrap">
-                  <Badge variant="secondary">{selectedLead.stage}</Badge>
-                  <Badge className={interestColors[selectedLead.interest]}>{selectedLead.interest}</Badge>
+      <div>
+        {/* Mobile Header with Back Button, Name, and Tabs */}
+        <div className="md:hidden bg-white border-b border-gray-200">
+          <div className="p-4 pb-0">
+            {/* Back Button and Lead Name */}
+            <div className="flex items-center space-x-3 mb-3">
+              <button
+                onClick={handleBackToList}
+                className="text-brand-text"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <div className="flex items-center space-x-3 flex-1">
+                <Avatar className="h-10 w-10">
+                  <AvatarFallback className="bg-brand-primary text-white text-sm font-bold">
+                    {selectedLead.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2)}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <h1 className="text-lg font-bold text-brand-text">{selectedLead.name}</h1>
+                  <div className="flex items-center space-x-2 mt-0.5">
+                    <Badge variant="secondary" className="text-xs">{selectedLead.stage}</Badge>
+                    <Badge className={`${interestColors[selectedLead.interest]} text-xs`}>{selectedLead.interest}</Badge>
+                  </div>
                 </div>
               </div>
+            </div>
+
+            {/* Icon Tabs */}
+            <div className="flex justify-around">
+              {[
+                { id: 'lead-details', label: 'Lead Details', icon: Flag },
+                { id: 'personal', label: 'Personal', icon: User },
+                { id: 'business', label: 'Business', icon: Building },
+                { id: 'notes', label: 'Notes', icon: StickyNote },
+                { id: 'appointments', label: 'Appointments', icon: Calendar },
+                { id: 'tasks', label: 'Tasks', icon: CheckSquare }
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setDetailTab(tab.id as TabType)}
+                  className={`flex items-center justify-center pb-3 px-3 border-b-2 transition-colors ${
+                    detailTab === tab.id
+                      ? 'border-brand-primary text-brand-primary'
+                      : 'border-transparent text-gray-500'
+                  }`}
+                >
+                  <tab.icon className="w-5 h-5" />
+                </button>
+              ))}
             </div>
           </div>
         </div>
 
-        <div className="border-b border-gray-200 mb-4 md:mb-6">
-          <div className="flex justify-around md:justify-start md:space-x-8 overflow-x-auto">
-            {[
-              { id: 'lead-details', label: 'Lead Details', icon: Flag },
-              { id: 'personal', label: 'Personal', icon: User },
-              { id: 'business', label: 'Business', icon: Building },
-              { id: 'notes', label: 'Notes', icon: StickyNote },
-              { id: 'appointments', label: 'Appointments', icon: Calendar },
-              { id: 'tasks', label: 'Tasks', icon: CheckSquare }
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setDetailTab(tab.id as TabType)}
-                className={`flex items-center justify-center md:space-x-2 pb-3 md:pb-4 px-3 md:px-1 border-b-2 transition-colors flex-shrink-0 ${
-                  detailTab === tab.id
-                    ? 'border-brand-primary text-brand-primary'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                <tab.icon className="w-5 h-5 md:w-4 md:h-4" />
-                <span className="hidden md:inline font-medium text-sm md:text-base">{tab.label}</span>
-              </button>
-            ))}
+        {/* Desktop Header */}
+        <div className="hidden md:block p-6">
+          <div className="mb-6">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleBackToList}
+              className="mb-4"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Leads
+            </Button>
+            <div className="flex flex-row items-center justify-between gap-4">
+              <div className="flex items-center space-x-4">
+                <Avatar className="h-16 w-16">
+                  <AvatarFallback className="bg-brand-primary text-white text-xl font-bold">
+                    {selectedLead.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2)}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <h1 className="text-3xl font-bold text-brand-text">{selectedLead.name}</h1>
+                  <div className="flex items-center space-x-2 mt-1 flex-wrap">
+                    <Badge variant="secondary">{selectedLead.stage}</Badge>
+                    <Badge className={interestColors[selectedLead.interest]}>{selectedLead.interest}</Badge>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop Tabs */}
+          <div className="border-b border-gray-200 mb-6">
+            <div className="flex justify-start space-x-8 overflow-x-auto">
+              {[
+                { id: 'lead-details', label: 'Lead Details', icon: Flag },
+                { id: 'personal', label: 'Personal', icon: User },
+                { id: 'business', label: 'Business', icon: Building },
+                { id: 'notes', label: 'Notes', icon: StickyNote },
+                { id: 'appointments', label: 'Appointments', icon: Calendar },
+                { id: 'tasks', label: 'Tasks', icon: CheckSquare }
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setDetailTab(tab.id as TabType)}
+                  className={`flex items-center space-x-2 pb-4 px-1 border-b-2 transition-colors flex-shrink-0 ${
+                    detailTab === tab.id
+                      ? 'border-brand-primary text-brand-primary'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <tab.icon className="w-4 h-4" />
+                  <span className="font-medium text-base">{tab.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="p-4 md:p-6 space-y-6">
           {detailTab === 'lead-details' && (
             <div className="flex flex-col lg:flex-row gap-4 md:gap-6">
               <div className="lg:w-64 flex-shrink-0">
