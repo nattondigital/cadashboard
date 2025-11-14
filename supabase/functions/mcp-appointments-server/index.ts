@@ -388,6 +388,57 @@ async function handleMCPRequest(
                 required: ['appointment_id'],
               },
             },
+            {
+              name: 'get_calendars',
+              description: 'Get list of all calendars with their availability settings',
+              inputSchema: {
+                type: 'object',
+                properties: {
+                  agent_id: {
+                    type: 'string',
+                    description: 'AI Agent ID for permission checking',
+                  },
+                  phone_number: {
+                    type: 'string',
+                    description: 'User phone number for logging',
+                  },
+                  calendar_id: {
+                    type: 'string',
+                    description: 'Optional: Get specific calendar by calendar_id (e.g., CAL-123456789)',
+                  },
+                  is_active: {
+                    type: 'boolean',
+                    description: 'Optional: Filter by active/inactive calendars',
+                  },
+                },
+              },
+            },
+            {
+              name: 'check_calendar_availability',
+              description: 'Check available time slots for a specific calendar on a given date. Returns slots that are not fully booked.',
+              inputSchema: {
+                type: 'object',
+                properties: {
+                  agent_id: {
+                    type: 'string',
+                    description: 'AI Agent ID for permission checking',
+                  },
+                  phone_number: {
+                    type: 'string',
+                    description: 'User phone number for logging',
+                  },
+                  calendar_id: {
+                    type: 'string',
+                    description: 'Calendar ID to check availability (e.g., CAL-123456789)',
+                  },
+                  date: {
+                    type: 'string',
+                    description: 'Date to check availability (YYYY-MM-DD format)',
+                  },
+                },
+                required: ['calendar_id', 'date'],
+              },
+            },
           ],
         }
         break
@@ -687,6 +738,242 @@ async function handleMCPRequest(
                 {
                   type: 'text',
                   text: JSON.stringify({ success: true, message: 'Appointment deleted successfully', appointment_id: args.appointment_id }, null, 2),
+                },
+              ],
+            }
+            break
+          }
+
+          case 'get_calendars': {
+            if (!enabledTools.includes('get_calendars')) {
+              await supabase.from('ai_agent_logs').insert({
+                agent_id: agentId,
+                agent_name: agentName,
+                module: 'Appointments',
+                action: 'get_calendars',
+                result: 'Denied',
+                user_context: args.phone_number || null,
+                details: { reason: 'No permission to view calendars' },
+              })
+              throw new Error('Agent does not have permission to view calendars')
+            }
+
+            let query = supabase
+              .from('calendars')
+              .select('*')
+              .order('created_at', { ascending: false })
+
+            if (args.calendar_id) {
+              query = query.eq('calendar_id', args.calendar_id)
+            }
+            if (args.is_active !== undefined) {
+              query = query.eq('is_active', args.is_active)
+            }
+
+            const { data: calendars, error } = await query
+
+            if (error) {
+              await supabase.from('ai_agent_logs').insert({
+                agent_id: agentId,
+                agent_name: agentName,
+                module: 'Appointments',
+                action: 'get_calendars',
+                result: 'Error',
+                user_context: args.phone_number || null,
+                details: { error: error.message },
+              })
+              throw error
+            }
+
+            await supabase.from('ai_agent_logs').insert({
+              agent_id: agentId,
+              agent_name: agentName,
+              module: 'Appointments',
+              action: 'get_calendars',
+              result: 'Success',
+              user_context: args.phone_number || null,
+              details: { count: calendars?.length || 0 },
+            })
+
+            response.result = {
+              content: [
+                {
+                  type: 'text',
+                  text: JSON.stringify({ success: true, calendars: calendars || [] }, null, 2),
+                },
+              ],
+            }
+            break
+          }
+
+          case 'check_calendar_availability': {
+            if (!enabledTools.includes('check_calendar_availability')) {
+              await supabase.from('ai_agent_logs').insert({
+                agent_id: agentId,
+                agent_name: agentName,
+                module: 'Appointments',
+                action: 'check_calendar_availability',
+                result: 'Denied',
+                user_context: args.phone_number || null,
+                details: { reason: 'No permission to check calendar availability' },
+              })
+              throw new Error('Agent does not have permission to check calendar availability')
+            }
+
+            // Get calendar details
+            const { data: calendar, error: calError } = await supabase
+              .from('calendars')
+              .select('*')
+              .eq('calendar_id', args.calendar_id)
+              .maybeSingle()
+
+            if (calError || !calendar) {
+              await supabase.from('ai_agent_logs').insert({
+                agent_id: agentId,
+                agent_name: agentName,
+                module: 'Appointments',
+                action: 'check_calendar_availability',
+                result: 'Error',
+                user_context: args.phone_number || null,
+                details: { error: 'Calendar not found', calendar_id: args.calendar_id },
+              })
+              throw new Error('Calendar not found')
+            }
+
+            if (!calendar.is_active) {
+              await supabase.from('ai_agent_logs').insert({
+                agent_id: agentId,
+                agent_name: agentName,
+                module: 'Appointments',
+                action: 'check_calendar_availability',
+                result: 'Error',
+                user_context: args.phone_number || null,
+                details: { error: 'Calendar is not active', calendar_id: args.calendar_id },
+              })
+              throw new Error('Calendar is not active')
+            }
+
+            // Get day of week from date
+            const requestedDate = new Date(args.date + 'T00:00:00Z')
+            const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+            const dayOfWeek = dayNames[requestedDate.getUTCDay()]
+
+            // Check if calendar is available on this day
+            const dayAvailability = calendar.availability[dayOfWeek]
+            if (!dayAvailability || !dayAvailability.enabled || !dayAvailability.slots || dayAvailability.slots.length === 0) {
+              await supabase.from('ai_agent_logs').insert({
+                agent_id: agentId,
+                agent_name: agentName,
+                module: 'Appointments',
+                action: 'check_calendar_availability',
+                result: 'Success',
+                user_context: args.phone_number || null,
+                details: { calendar_id: args.calendar_id, date: args.date, available_slots: 0 },
+              })
+
+              response.result = {
+                content: [
+                  {
+                    type: 'text',
+                    text: JSON.stringify({
+                      success: true,
+                      calendar_id: args.calendar_id,
+                      calendar_title: calendar.title,
+                      date: args.date,
+                      day_of_week: dayOfWeek,
+                      is_available: false,
+                      message: `Calendar is not available on ${dayOfWeek}s`,
+                      available_slots: []
+                    }, null, 2),
+                  },
+                ],
+              }
+              break
+            }
+
+            // Get existing appointments for this calendar on this date
+            const { data: existingAppointments } = await supabase
+              .from('appointments')
+              .select('appointment_time, duration_minutes')
+              .eq('calendar_id', calendar.id)
+              .eq('appointment_date', args.date)
+              .in('status', ['Scheduled', 'Confirmed'])
+
+            // Generate available slots
+            const availableSlots: any[] = []
+            const slotDuration = calendar.slot_duration
+            const bufferTime = calendar.buffer_time || 0
+            const maxBookingsPerSlot = calendar.max_bookings_per_slot || 1
+
+            for (const timeSlot of dayAvailability.slots) {
+              const [startHour, startMinute] = timeSlot.start.split(':').map(Number)
+              const [endHour, endMinute] = timeSlot.end.split(':').map(Number)
+
+              const slotStart = startHour * 60 + startMinute
+              const slotEnd = endHour * 60 + endMinute
+
+              let currentTime = slotStart
+
+              while (currentTime + slotDuration <= slotEnd) {
+                const slotHour = Math.floor(currentTime / 60).toString().padStart(2, '0')
+                const slotMinute = (currentTime % 60).toString().padStart(2, '0')
+                const slotTime = `${slotHour}:${slotMinute}`
+
+                // Count existing bookings at this time
+                const bookingsAtThisTime = (existingAppointments || []).filter((apt: any) => {
+                  return apt.appointment_time === slotTime
+                }).length
+
+                if (bookingsAtThisTime < maxBookingsPerSlot) {
+                  const endTime = currentTime + slotDuration
+                  const endHour = Math.floor(endTime / 60).toString().padStart(2, '0')
+                  const endMinute = (endTime % 60).toString().padStart(2, '0')
+
+                  availableSlots.push({
+                    start_time: slotTime,
+                    end_time: `${endHour}:${endMinute}`,
+                    duration_minutes: slotDuration,
+                    current_bookings: bookingsAtThisTime,
+                    max_bookings: maxBookingsPerSlot,
+                    available_spots: maxBookingsPerSlot - bookingsAtThisTime
+                  })
+                }
+
+                currentTime += slotDuration + bufferTime
+              }
+            }
+
+            await supabase.from('ai_agent_logs').insert({
+              agent_id: agentId,
+              agent_name: agentName,
+              module: 'Appointments',
+              action: 'check_calendar_availability',
+              result: 'Success',
+              user_context: args.phone_number || null,
+              details: {
+                calendar_id: args.calendar_id,
+                date: args.date,
+                available_slots: availableSlots.length
+              },
+            })
+
+            response.result = {
+              content: [
+                {
+                  type: 'text',
+                  text: JSON.stringify({
+                    success: true,
+                    calendar_id: args.calendar_id,
+                    calendar_title: calendar.title,
+                    date: args.date,
+                    day_of_week: dayOfWeek,
+                    is_available: true,
+                    slot_duration: slotDuration,
+                    buffer_time: bufferTime,
+                    meeting_types: calendar.meeting_type,
+                    available_slots: availableSlots,
+                    total_available_slots: availableSlots.length
+                  }, null, 2),
                 },
               ],
             }

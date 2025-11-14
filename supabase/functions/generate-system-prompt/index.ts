@@ -59,6 +59,8 @@ const MCP_SERVER_DESCRIPTIONS = {
       'create_appointment': 'Schedule new appointments with contacts and team members',
       'update_appointment': 'Modify appointment details, status, and reminders',
       'delete_appointment': 'Cancel and remove appointments',
+      'get_calendars': 'Get list of all calendars with availability settings',
+      'check_calendar_availability': 'Check available time slots for a specific calendar on a given date',
     }
   },
   'support-server': {
