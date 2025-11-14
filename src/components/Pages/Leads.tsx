@@ -2308,7 +2308,7 @@ export function Leads() {
         </div>
 
         <div className="border-b border-gray-200 mb-4 md:mb-6">
-          <div className="flex space-x-4 md:space-x-8 overflow-x-auto">
+          <div className="flex justify-around md:justify-start md:space-x-8 overflow-x-auto">
             {[
               { id: 'lead-details', label: 'Lead Details', icon: Flag },
               { id: 'personal', label: 'Personal', icon: User },
@@ -2320,14 +2320,14 @@ export function Leads() {
               <button
                 key={tab.id}
                 onClick={() => setDetailTab(tab.id as TabType)}
-                className={`flex items-center space-x-1 md:space-x-2 pb-3 md:pb-4 px-1 border-b-2 transition-colors flex-shrink-0 text-sm md:text-base ${
+                className={`flex items-center justify-center md:space-x-2 pb-3 md:pb-4 px-3 md:px-1 border-b-2 transition-colors flex-shrink-0 ${
                   detailTab === tab.id
                     ? 'border-brand-primary text-brand-primary'
                     : 'border-transparent text-gray-500 hover:text-gray-700'
                 }`}
               >
-                <tab.icon className="w-4 h-4" />
-                <span className="font-medium">{tab.label}</span>
+                <tab.icon className="w-5 h-5 md:w-4 md:h-4" />
+                <span className="hidden md:inline font-medium text-sm md:text-base">{tab.label}</span>
               </button>
             ))}
           </div>
