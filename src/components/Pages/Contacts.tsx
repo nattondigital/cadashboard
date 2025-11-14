@@ -635,13 +635,7 @@ export function Contacts() {
               onClick: () => setView('add'),
               variant: 'default' as const,
               icon: UserPlus
-            }] : []),
-            {
-              label: 'Refresh Data',
-              onClick: fetchContacts,
-              variant: 'outline' as const,
-              icon: RefreshCw
-            }
+            }] : [])
           ]}
         />
       )}
