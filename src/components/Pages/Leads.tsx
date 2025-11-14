@@ -912,6 +912,15 @@ export function Leads() {
       return
     }
 
+    // Validate that the stage exists in the selected pipeline
+    if (formData.pipeline_id && formData.stage) {
+      const validStage = availableStages[formData.pipeline_id]?.find(s => s.id === formData.stage)
+      if (!validStage) {
+        alert('Invalid stage selected. Please select a valid stage from the pipeline.')
+        return
+      }
+    }
+
     try {
       const leadData = {
         name: formData.name,
@@ -948,6 +957,15 @@ export function Leads() {
     if (!selectedLead || !formData.name || !formData.phone) {
       alert('Please fill in all required fields')
       return
+    }
+
+    // Validate that the stage exists in the selected pipeline
+    if (formData.pipeline_id && formData.stage) {
+      const validStage = availableStages[formData.pipeline_id]?.find(s => s.id === formData.stage)
+      if (!validStage) {
+        alert('Invalid stage selected. Please select a valid stage from the pipeline.')
+        return
+      }
     }
 
     try {
@@ -1995,7 +2013,7 @@ export function Leads() {
               </div>
 
               <div className="flex items-center space-x-3 pt-4">
-                <Button onClick={handleCreateLead} disabled={!formData.name || !formData.phone || !formData.source || !formData.interest}>
+                <Button onClick={handleCreateLead} disabled={!formData.name || !formData.phone || !formData.source || !formData.interest || !formData.pipeline_id || !formData.stage || (formData.pipeline_id && !availableStages[formData.pipeline_id]?.find(s => s.id === formData.stage))}>
                   <Save className="w-4 h-4 mr-2" />
                   Save Lead
                 </Button>
@@ -2226,7 +2244,7 @@ export function Leads() {
 
               <div className="flex items-center space-x-3 pt-4">
                 <PermissionGuard module="leads" action="update">
-                  <Button onClick={handleUpdateLead} disabled={!formData.name || !formData.phone}>
+                  <Button onClick={handleUpdateLead} disabled={!formData.name || !formData.phone || !formData.pipeline_id || !formData.stage || (formData.pipeline_id && !availableStages[formData.pipeline_id]?.find(s => s.id === formData.stage))}>
                     <Save className="w-4 h-4 mr-2" />
                     Update Lead
                   </Button>
