@@ -201,6 +201,7 @@ export function Leads() {
   const [isSavingCustomFields, setIsSavingCustomFields] = useState(false)
   const [customFieldsMessage, setCustomFieldsMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
   const [uploadingFiles, setUploadingFiles] = useState<Record<string, boolean>>({})
+  const [isEditingCustomFields, setIsEditingCustomFields] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -791,6 +792,8 @@ export function Leads() {
     setSelectedLead(lead)
     setView('view')
     setDetailTab('lead-details')
+    setIsEditingCustomFields(false)
+    setCustomFieldErrors({})
 
     const contact = await fetchLinkedContact(lead.phone)
     setLinkedContact(contact)
@@ -2364,7 +2367,11 @@ export function Leads() {
                       ].map((subTab) => (
                         <button
                           key={subTab.id}
-                          onClick={() => setLeadDetailsSubTab(subTab.id)}
+                          onClick={() => {
+                            setLeadDetailsSubTab(subTab.id)
+                            setIsEditingCustomFields(false)
+                            setCustomFieldErrors({})
+                          }}
                           className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors text-left ${
                             leadDetailsSubTab === subTab.id
                               ? 'bg-brand-primary text-white'
@@ -2446,10 +2453,22 @@ export function Leads() {
                   return leadDetailsSubTab === customTab.tab_id && (
                     <Card key={customTab.id}>
                       <CardHeader>
-                        <CardTitle className="flex items-center space-x-2">
-                          <Layers className="w-5 h-5" />
-                          <span>{customTab.tab_name}</span>
-                        </CardTitle>
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="flex items-center space-x-2">
+                            <Layers className="w-5 h-5" />
+                            <span>{customTab.tab_name}</span>
+                          </CardTitle>
+                          {tabFields.length > 0 && !isEditingCustomFields && (
+                            <Button
+                              onClick={() => setIsEditingCustomFields(true)}
+                              variant="outline"
+                              size="sm"
+                            >
+                              <Edit className="w-4 h-4 mr-2" />
+                              Edit Details
+                            </Button>
+                          )}
+                        </div>
                       </CardHeader>
                       <CardContent>
                         {tabFields.length === 0 ? (
@@ -2480,8 +2499,77 @@ export function Leads() {
                               </motion.div>
                             )}
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                              {tabFields.map((field) => (
+                            {!isEditingCustomFields ? (
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {tabFields.map((field) => (
+                                  <div key={field.id}>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                      {field.field_name}
+                                    </label>
+                                    <div className="text-gray-900 p-2 bg-gray-50 rounded-md min-h-[42px] flex items-center">
+                                      {field.field_type === 'checkbox' ? (
+                                        <span>{customFieldValues[field.id] === 'true' ? '✓ Yes' : '✗ No'}</span>
+                                      ) : field.field_type === 'dropdown_multiple' ? (
+                                        customFieldValues[field.id] ? (
+                                          <div className="flex flex-wrap gap-1">
+                                            {customFieldValues[field.id].split(',').map(v => v.trim()).filter(v => v).map((value, idx) => (
+                                              <Badge key={idx} variant="secondary">
+                                                {value}
+                                              </Badge>
+                                            ))}
+                                          </div>
+                                        ) : (
+                                          <span className="text-gray-400">-</span>
+                                        )
+                                      ) : field.field_type === 'file_upload' ? (
+                                        customFieldValues[field.id] ? (
+                                          <div className="flex flex-wrap gap-2">
+                                            {customFieldValues[field.id].split(',').filter(f => f.trim()).map((fileUrl, index) => (
+                                              <a
+                                                key={index}
+                                                href={fileUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-brand-primary hover:underline flex items-center gap-1"
+                                              >
+                                                <FileText className="w-3 h-3" />
+                                                Document {index + 1}
+                                              </a>
+                                            ))}
+                                          </div>
+                                        ) : (
+                                          <span className="text-gray-400">No files uploaded</span>
+                                        )
+                                      ) : field.field_type === 'currency' ? (
+                                        customFieldValues[field.id] ? (
+                                          <span>₹ {customFieldValues[field.id]}</span>
+                                        ) : (
+                                          <span className="text-gray-400">-</span>
+                                        )
+                                      ) : field.field_type === 'url' ? (
+                                        customFieldValues[field.id] ? (
+                                          <a
+                                            href={customFieldValues[field.id]}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-brand-primary hover:underline"
+                                          >
+                                            {customFieldValues[field.id]}
+                                          </a>
+                                        ) : (
+                                          <span className="text-gray-400">-</span>
+                                        )
+                                      ) : (
+                                        <span>{customFieldValues[field.id] || <span className="text-gray-400">-</span>}</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                  {tabFields.map((field) => (
                                 <div key={field.id}>
                                   <label className="block text-sm font-medium text-gray-700 mb-2">
                                     {field.field_name}
@@ -2759,28 +2847,43 @@ export function Leads() {
                                     </div>
                                   )}
                                 </div>
-                              ))}
-                            </div>
+                                  ))}
+                                </div>
 
-                            <div className="flex justify-end pt-4 border-t">
-                              <Button
-                                onClick={saveAllCustomFields}
-                                disabled={isSavingCustomFields}
-                                className="min-w-[150px]"
-                              >
-                                {isSavingCustomFields ? (
-                                  <>
-                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                                    Saving...
-                                  </>
-                                ) : (
-                                  <>
-                                    <Save className="w-4 h-4 mr-2" />
-                                    Save Changes
-                                  </>
-                                )}
-                              </Button>
-                            </div>
+                                <div className="flex justify-end gap-3 pt-4 border-t">
+                                  <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                      setIsEditingCustomFields(false)
+                                      setCustomFieldErrors({})
+                                    }}
+                                    disabled={isSavingCustomFields}
+                                  >
+                                    Cancel
+                                  </Button>
+                                  <Button
+                                    onClick={async () => {
+                                      await saveAllCustomFields()
+                                      setIsEditingCustomFields(false)
+                                    }}
+                                    disabled={isSavingCustomFields}
+                                    className="min-w-[150px]"
+                                  >
+                                    {isSavingCustomFields ? (
+                                      <>
+                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                                        Saving...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Save className="w-4 h-4 mr-2" />
+                                        Save Changes
+                                      </>
+                                    )}
+                                  </Button>
+                                </div>
+                              </>
+                            )}
                           </div>
                         )}
                       </CardContent>
