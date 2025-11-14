@@ -180,6 +180,7 @@ export function Sidebar({ collapsed = false, onClose }: SidebarProps) {
           {salesExpanded && visibleSalesNav.map((item) => {
             const isActive = location.pathname === item.to
             const Icon = item.icon
+            const isFollowups = item.to === '/followups'
 
             return (
               <motion.div
@@ -190,6 +191,7 @@ export function Sidebar({ collapsed = false, onClose }: SidebarProps) {
                 transition={{ duration: 0.2 }}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
+                className={cn(isFollowups && "hidden md:block")}
               >
                 <Link
                   to={item.to}
