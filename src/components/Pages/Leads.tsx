@@ -2278,9 +2278,9 @@ export function Leads() {
 
   if (view === 'view' && selectedLead) {
     return (
-      <div>
+      <div className="md:static fixed inset-0 z-50 bg-white md:bg-transparent flex flex-col">
         {/* Mobile Header with Back Button, Name, and Tabs */}
-        <div className="md:hidden bg-white border-b border-gray-200">
+        <div className="md:hidden bg-white border-b border-gray-200 flex-shrink-0">
           <div className="p-4 pb-0">
             {/* Back Button and Lead Name */}
             <div className="flex items-center space-x-3 mb-3">
@@ -2390,7 +2390,7 @@ export function Leads() {
           </div>
         </div>
 
-        <div className="p-4 md:p-6 space-y-6">
+        <div className="flex-1 md:flex-none overflow-y-auto md:overflow-visible p-4 md:p-6 space-y-6">
           {detailTab === 'lead-details' && (
             <div className="flex flex-col lg:flex-row gap-4 md:gap-6">
               <div className="lg:w-64 flex-shrink-0">
