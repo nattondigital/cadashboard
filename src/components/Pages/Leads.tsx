@@ -2327,161 +2327,192 @@ export function Leads() {
           </div>
         </div>
 
-        <div className="border-b border-gray-200 mb-4 md:mb-6">
-          <div className="flex space-x-4 md:space-x-8 overflow-x-auto">
-            {[
-              { id: 'lead-details', label: 'Lead Details', icon: Flag },
-              { id: 'personal', label: 'Personal', icon: User },
-              { id: 'business', label: 'Business', icon: Building },
-              { id: 'notes', label: 'Notes', icon: StickyNote },
-              { id: 'appointments', label: 'Appointments', icon: Calendar },
-              { id: 'tasks', label: 'Tasks', icon: CheckSquare }
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setDetailTab(tab.id as TabType)}
-                className={`flex items-center space-x-1 md:space-x-2 pb-3 md:pb-4 px-1 border-b-2 transition-colors flex-shrink-0 text-sm md:text-base ${
-                  detailTab === tab.id
-                    ? 'border-brand-primary text-brand-primary'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                <tab.icon className="w-4 h-4" />
-                <span className="font-medium">{tab.label}</span>
-              </button>
-            ))}
-          </div>
+        <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit mb-6 overflow-x-auto">
+          {[
+            { id: 'lead-details', label: 'Lead Details', icon: Flag },
+            { id: 'personal', label: 'Personal', icon: User },
+            { id: 'business', label: 'Business', icon: Building },
+            { id: 'notes', label: 'Notes', icon: StickyNote },
+            { id: 'appointments', label: 'Appointments', icon: Calendar },
+            { id: 'tasks', label: 'Tasks', icon: CheckSquare }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setDetailTab(tab.id as TabType)}
+              className={`flex items-center space-x-2 px-3 md:px-4 py-2 rounded-md font-medium transition-all flex-shrink-0 ${
+                detailTab === tab.id
+                  ? 'bg-white text-brand-primary shadow-sm'
+                  : 'text-gray-600 hover:text-brand-primary'
+              }`}
+            >
+              <tab.icon className="w-4 h-4" />
+              <span className="hidden sm:inline">{tab.label}</span>
+            </button>
+          ))}
         </div>
 
-        <div className="space-y-6">
-          {detailTab === 'lead-details' && (
-            <div className="flex flex-col lg:flex-row gap-4 md:gap-6">
-              <div className="lg:w-64 flex-shrink-0">
-                <Card className="lg:sticky lg:top-6">
-                  <CardContent className="p-4">
-                    <nav className="space-y-1">
-                      {[
-                        { id: 'info', label: 'Lead Information', icon: Flag },
-                        ...customTabs.filter(tab => tab.is_active).map(tab => ({
-                          id: tab.tab_id,
-                          label: tab.tab_name,
-                          icon: Layers
-                        }))
-                      ].map((subTab) => (
-                        <button
-                          key={subTab.id}
-                          onClick={() => {
-                            // If editing, restore backup values before switching tabs
-                            if (isEditingCustomFields) {
-                              setCustomFieldValues({ ...customFieldValuesBackup })
-                            }
-                            setLeadDetailsSubTab(subTab.id)
-                            setIsEditingCustomFields(false)
-                            setCustomFieldErrors({})
-                          }}
-                          className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors text-left ${
-                            leadDetailsSubTab === subTab.id
-                              ? 'bg-brand-primary text-white'
-                              : 'text-gray-700 hover:bg-gray-100'
-                          }`}
-                        >
-                          <subTab.icon className="w-5 h-5" />
-                          <span className="font-medium">{subTab.label}</span>
-                        </button>
-                      ))}
-                    </nav>
-                  </CardContent>
-                </Card>
+        {detailTab === 'lead-details' && (
+          <div className="space-y-6">
+            {customTabs.filter(tab => tab.is_active).length > 0 && (
+              <div className="flex space-x-1 bg-gray-50 p-1 rounded-lg w-fit overflow-x-auto border border-gray-200">
+                <button
+                  onClick={() => {
+                    if (isEditingCustomFields) {
+                      setCustomFieldValues({ ...customFieldValuesBackup })
+                    }
+                    setLeadDetailsSubTab('info')
+                    setIsEditingCustomFields(false)
+                    setCustomFieldErrors({})
+                  }}
+                  className={`flex items-center space-x-2 px-3 md:px-4 py-2 rounded-md font-medium transition-all flex-shrink-0 text-sm ${
+                    leadDetailsSubTab === 'info'
+                      ? 'bg-white text-brand-primary shadow-sm'
+                      : 'text-gray-600 hover:text-brand-primary'
+                  }`}
+                >
+                  <Flag className="w-4 h-4" />
+                  <span>Lead Information</span>
+                </button>
+                {customTabs.filter(tab => tab.is_active).map(tab => (
+                  <button
+                    key={tab.tab_id}
+                    onClick={() => {
+                      if (isEditingCustomFields) {
+                        setCustomFieldValues({ ...customFieldValuesBackup })
+                      }
+                      setLeadDetailsSubTab(tab.tab_id)
+                      setIsEditingCustomFields(false)
+                      setCustomFieldErrors({})
+                    }}
+                    className={`flex items-center space-x-2 px-3 md:px-4 py-2 rounded-md font-medium transition-all flex-shrink-0 text-sm ${
+                      leadDetailsSubTab === tab.tab_id
+                        ? 'bg-white text-brand-primary shadow-sm'
+                        : 'text-gray-600 hover:text-brand-primary'
+                    }`}
+                  >
+                    <Layers className="w-4 h-4" />
+                    <span>{tab.tab_name}</span>
+                  </button>
+                ))}
               </div>
+            )}
+            {leadDetailsSubTab === 'info' && (
+              <div className="space-y-6">
+                <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
+                  <Avatar className="h-12 w-12 md:h-16 md:w-16">
+                    <AvatarFallback className="bg-brand-primary text-white text-lg md:text-xl font-bold">
+                      {selectedLead.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <h3 className="text-lg md:text-xl font-bold text-brand-text mb-2">{selectedLead.name}</h3>
+                    <div className="flex items-center space-x-2 md:space-x-3 mb-2 flex-wrap">
+                      <Badge variant="secondary">{selectedLead.stage}</Badge>
+                      <Badge className={interestColors[selectedLead.interest]}>{selectedLead.interest}</Badge>
+                    </div>
+                    <div className="text-xs md:text-sm text-gray-600">
+                      Lead ID: {selectedLead.lead_id} • Created: {formatDate(selectedLead.created_at)}
+                    </div>
+                  </div>
+                </div>
 
-              <div className="flex-1">
-                {leadDetailsSubTab === 'info' && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Lead Information</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-2 gap-6">
-                        <div>
-                          <label className="text-sm text-gray-600">Lead ID</label>
-                          <p className="font-medium mt-1">{selectedLead.lead_id}</p>
-                        </div>
-                        <div>
-                          <label className="text-sm text-gray-600">Stage</label>
-                          <p className="font-medium mt-1">
-                            <Badge variant="secondary">{selectedLead.stage}</Badge>
-                          </p>
-                        </div>
-                        <div>
-                          <label className="text-sm text-gray-600">Source</label>
-                          <p className="font-medium mt-1">{selectedLead.source}</p>
-                        </div>
-                        <div>
-                          <label className="text-sm text-gray-600">Interest Level</label>
-                          <p className="font-medium mt-1">
-                            <Badge className={interestColors[selectedLead.interest]}>{selectedLead.interest}</Badge>
-                          </p>
-                        </div>
-                        <div>
-                          <label className="text-sm text-gray-600">Email</label>
-                          <p className="font-medium mt-1">{selectedLead.email || 'N/A'}</p>
-                        </div>
-                        <div>
-                          <label className="text-sm text-gray-600">Phone</label>
-                          <p className="font-medium mt-1">{selectedLead.phone}</p>
-                        </div>
-                        <div>
-                          <label className="text-sm text-gray-600">Assigned To</label>
-                          <p className="font-medium mt-1">{selectedLead.assigned_to_name || 'Unassigned' || 'Unassigned'}</p>
-                        </div>
-                        <div>
-                          <label className="text-sm text-gray-600">Created Date</label>
-                          <p className="font-medium mt-1">{formatDate(selectedLead.created_at)}</p>
-                        </div>
-                        {selectedLead.lead_score && (
-                          <div>
-                            <label className="text-sm text-gray-600">Lead Score</label>
-                            <p className="font-medium mt-1">{selectedLead.lead_score}/100</p>
-                          </div>
-                        )}
-                        {selectedLead.last_contact && (
-                          <div>
-                            <label className="text-sm text-gray-600">Last Contact</label>
-                            <p className="font-medium mt-1">{formatDate(selectedLead.last_contact)}</p>
-                          </div>
-                        )}
+                <div>
+                  <h4 className="text-base md:text-lg font-semibold text-brand-text mb-3">Contact Information</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-center space-x-3">
+                      <Mail className="w-5 h-5 text-gray-400" />
+                      <div>
+                        <div className="text-sm text-gray-600">Email</div>
+                        <div className="font-medium text-sm md:text-base">{selectedLead.email || 'N/A'}</div>
                       </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <Phone className="w-5 h-5 text-gray-400" />
+                      <div>
+                        <div className="text-sm text-gray-600">Phone</div>
+                        <div className="font-medium text-sm md:text-base">{selectedLead.phone}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-base md:text-lg font-semibold text-brand-text mb-3">Lead Information</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <div className="text-sm text-gray-600">Source</div>
+                      <div className="font-medium text-sm md:text-base">{selectedLead.source}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600">Company</div>
+                      <div className="font-medium text-sm md:text-base">{selectedLead.company || 'N/A'}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600">Assigned To</div>
+                      <div className="font-medium text-sm md:text-base">{selectedLead.assigned_to_name || 'Unassigned'}</div>
+                    </div>
+                    {selectedLead.lead_score && (
+                      <div>
+                        <div className="text-sm text-gray-600">Lead Score</div>
+                        <div className="font-medium text-sm md:text-base">{selectedLead.lead_score}/100</div>
+                      </div>
+                    )}
+                    {selectedLead.last_contact && (
+                      <div>
+                        <div className="text-sm text-gray-600">Last Contact</div>
+                        <div className="font-medium text-sm md:text-base">{formatDate(selectedLead.last_contact)}</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {selectedLead.address && (
+                  <div>
+                    <h4 className="text-base md:text-lg font-semibold text-brand-text mb-3">Address</h4>
+                    <div className="flex items-start space-x-3">
+                      <MapPin className="w-5 h-5 text-gray-400 mt-1" />
+                      <div>
+                        <div className="font-medium text-sm md:text-base">{selectedLead.address}</div>
+                      </div>
+                    </div>
+                  </div>
                 )}
 
-                {customTabs.map((customTab) => {
-                  const tabFields = customFields[customTab.id] || []
-                  return leadDetailsSubTab === customTab.tab_id && (
-                    <Card key={customTab.id}>
-                      <CardHeader>
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="flex items-center space-x-2">
-                            <Layers className="w-5 h-5" />
-                            <span>{customTab.tab_name}</span>
-                          </CardTitle>
-                          {tabFields.length > 0 && !isEditingCustomFields && (
-                            <Button
-                              onClick={() => {
-                                // Create a backup of current values before editing
-                                setCustomFieldValuesBackup({ ...customFieldValues })
-                                setIsEditingCustomFields(true)
-                              }}
-                              variant="outline"
-                              size="sm"
-                            >
-                              <Edit className="w-4 h-4 mr-2" />
-                              Edit Details
-                            </Button>
-                          )}
-                        </div>
-                      </CardHeader>
-                      <CardContent>
+                {selectedLead.notes && (
+                  <div>
+                    <h4 className="text-base md:text-lg font-semibold text-brand-text mb-3">Notes</h4>
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <p className="text-gray-700 whitespace-pre-wrap text-sm md:text-base">{selectedLead.notes}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {customTabs.map((customTab) => {
+              const tabFields = customFields[customTab.id] || []
+              return leadDetailsSubTab === customTab.tab_id && (
+                <div key={customTab.id} className="space-y-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-base md:text-lg font-semibold text-brand-text flex items-center space-x-2">
+                      <Layers className="w-5 h-5" />
+                      <span>{customTab.tab_name}</span>
+                    </h4>
+                    {tabFields.length > 0 && !isEditingCustomFields && (
+                      <Button
+                        onClick={() => {
+                          setCustomFieldValuesBackup({ ...customFieldValues })
+                          setIsEditingCustomFields(true)
+                        }}
+                        variant="outline"
+                        size="sm"
+                      >
+                        <Edit className="w-4 h-4 mr-2" />
+                        Edit
+                      </Button>
+                    )}
+                  </div>
+                  <div className="space-y-4">
                         {tabFields.length === 0 ? (
                           <div className="text-center py-12">
                             <Layers className="w-16 h-16 mx-auto mb-4 text-gray-300" />
@@ -2899,13 +2930,12 @@ export function Leads() {
                             )}
                           </div>
                         )}
-                      </CardContent>
-                    </Card>
-                  )
-                })}
-              </div>
-            </div>
-          )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
 
           {detailTab === 'personal' && (
             <Card>
@@ -3477,7 +3507,6 @@ export function Leads() {
               </CardContent>
             </Card>
           )}
-        </div>
       </div>
     )
   }
