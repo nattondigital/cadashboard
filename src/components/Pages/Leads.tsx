@@ -3882,13 +3882,103 @@ export function Leads() {
             </Card>
             </div>
             )}
+            <Card className="shadow-xl md:hidden">
+              <CardContent className="p-0">
+                <div className="space-y-3 p-3">
+                  {filteredLeads.length === 0 ? (
+                    <div className="text-center py-12 text-gray-400">
+                      No leads found
+                    </div>
+                  ) : (
+                    filteredLeads.map((lead, index) => (
+                      <motion.div
+                        key={lead.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.02 }}
+                        onClick={() => handleViewLead(lead)}
+                        className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm active:shadow-md transition-shadow"
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center space-x-3 flex-1 min-w-0">
+                            <Avatar className="h-10 w-10 flex-shrink-0">
+                              <AvatarFallback className="bg-brand-primary text-white text-sm">
+                                {lead.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-gray-900 truncate">{lead.name}</h3>
+                              <p className="text-xs text-brand-primary font-mono">{lead.lead_id}</p>
+                            </div>
+                          </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                              <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                                <MoreVertical className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleViewLead(lead); }}>
+                                <Eye className="w-4 h-4 mr-2" />
+                                View Details
+                              </DropdownMenuItem>
+                              {canUpdate('leads') && (
+                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEditClick(lead); }}>
+                                  <Edit className="w-4 h-4 mr-2" />
+                                  Edit Lead
+                                </DropdownMenuItem>
+                              )}
+                              {canDelete('leads') && (
+                                <DropdownMenuItem
+                                  onClick={(e) => { e.stopPropagation(); handleDeleteLead(lead.id); }}
+                                  className="text-red-600 focus:text-red-600"
+                                >
+                                  <Trash2 className="w-4 h-4 mr-2" />
+                                  Delete Lead
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex items-center space-x-2 text-gray-600">
+                            <Phone className="w-4 h-4 flex-shrink-0" />
+                            <span className="truncate">{lead.phone}</span>
+                          </div>
+                          {lead.email && (
+                            <div className="flex items-center space-x-2 text-gray-600">
+                              <Mail className="w-4 h-4 flex-shrink-0" />
+                              <span className="truncate">{lead.email}</span>
+                            </div>
+                          )}
+                          {lead.company && (
+                            <div className="flex items-center space-x-2 text-gray-600">
+                              <Building className="w-4 h-4 flex-shrink-0" />
+                              <span className="truncate">{lead.company}</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex items-center space-x-2 mt-3">
+                          <Badge className={interestColors[lead.interest]} variant="secondary">
+                            {lead.interest}
+                          </Badge>
+                          <Badge variant="secondary" className="bg-gray-100 text-gray-800">
+                            {lead.stage}
+                          </Badge>
+                        </div>
+                      </motion.div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
             {displayMode === 'list' && (
-            <Card className="shadow-xl">
-              <CardHeader className="hidden md:block">
+            <Card className="shadow-xl hidden md:block">
+              <CardHeader>
                 <CardTitle>{pipelines.find(p => p.id === pipelineFilter)?.name || 'Pipeline'} - List View</CardTitle>
               </CardHeader>
-              <CardContent className="p-0 md:p-6">
-                <div className="hidden md:block overflow-x-auto">
+              <CardContent className="p-6">
+                <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-gray-200">
@@ -4001,100 +4091,6 @@ export function Leads() {
                       )}
                     </tbody>
                   </table>
-                </div>
-                <div className="md:hidden space-y-3 p-3">
-                  {filteredLeads.length === 0 ? (
-                    <div className="text-center py-12 text-gray-400">
-                      No leads found
-                    </div>
-                  ) : (
-                    filteredLeads.map((lead, index) => (
-                      <motion.div
-                        key={lead.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.02 }}
-                        onClick={() => handleViewLead(lead)}
-                        className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm active:shadow-md transition-shadow"
-                      >
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex items-center space-x-3 flex-1 min-w-0">
-                            <Avatar className="h-10 w-10 flex-shrink-0">
-                              <AvatarFallback className="bg-brand-primary text-white text-sm">
-                                {lead.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold text-gray-900 truncate">{lead.name}</h3>
-                              <p className="text-xs text-brand-primary font-mono">{lead.lead_id}</p>
-                            </div>
-                          </div>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                              <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                                <MoreVertical className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleViewLead(lead); }}>
-                                <Eye className="w-4 h-4 mr-2" />
-                                View Details
-                              </DropdownMenuItem>
-                              {canUpdate('leads') && (
-                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEditClick(lead); }}>
-                                  <Edit className="w-4 h-4 mr-2" />
-                                  Edit Lead
-                                </DropdownMenuItem>
-                              )}
-                              {canDelete('leads') && (
-                                <DropdownMenuItem
-                                  onClick={(e) => { e.stopPropagation(); handleDeleteLead(lead.id); }}
-                                  className="text-red-600 focus:text-red-600"
-                                >
-                                  <Trash2 className="w-4 h-4 mr-2" />
-                                  Delete Lead
-                                </DropdownMenuItem>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex items-center space-x-2 text-gray-600">
-                            <Phone className="w-4 h-4 flex-shrink-0" />
-                            <span className="truncate">{lead.phone}</span>
-                          </div>
-                          {lead.email && (
-                            <div className="flex items-center space-x-2 text-gray-600">
-                              <Mail className="w-4 h-4 flex-shrink-0" />
-                              <span className="truncate">{lead.email}</span>
-                            </div>
-                          )}
-                          {lead.company && (
-                            <div className="flex items-center space-x-2 text-gray-600">
-                              <Building className="w-4 h-4 flex-shrink-0" />
-                              <span className="truncate">{lead.company}</span>
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <Badge className={interestColors[lead.interest]} variant="secondary">
-                              {lead.interest}
-                            </Badge>
-                            <Badge variant="secondary" className="bg-gray-100 text-gray-800">
-                              {lead.stage}
-                            </Badge>
-                          </div>
-                          <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                        </div>
-                        {lead.assigned_to_name && (
-                          <div className="text-xs text-gray-500 mt-2">
-                            Owner: {lead.assigned_to_name}
-                          </div>
-                        )}
-                      </motion.div>
-                    ))
-                  )}
                 </div>
               </CardContent>
             </Card>
