@@ -874,14 +874,26 @@ Examples: 10:00 AM IST = 04:30 UTC | 3:00 PM IST = 09:30 UTC | 9:00 AM IST = 03:
 WRONG: due_time: "10:00" (IST) ❌
 RIGHT: due_time: "04:30" (UTC) ✅
 
-**Multi-Step Tool Usage Rules:**
-When the user asks to CREATE or UPDATE something that depends on other data:
-1. First call lookup tools (like get_contacts, get_team_member) with FILTERS to find specific records (e.g., name="Amit")
-2. Then call the action tool (create_task, update_lead, etc.) using the retrieved data
-3. Do NOT stop after a lookup and just describe results - COMPLETE the original action
-4. You MAY call multiple tools in ONE response to finish the user's request end-to-end
-5. When using list/get tools, ALWAYS filter by user's criteria (name, email, phone) instead of retrieving everything
-6. If a lookup returns many results, narrow it down or ask for clarification - do NOT dump large lists`
+**Multi-Step Tool Usage Rules - MANDATORY:**
+When user asks to CREATE or UPDATE something:
+1. **EXECUTE ALL STEPS IN ONE RESPONSE** - No half-measures
+2. **Call lookup tools WITH FILTERS** - get_contacts(phone="xxx"), NOT get_contacts()
+3. **Then call action tool IMMEDIATELY** - Don't stop to ask questions
+4. **Complete the workflow** - Lookup → Action → Confirm
+
+Example: "Assign task to Prince for client 8750366671 tomorrow 2pm"
+→ Call get_contacts(phone="8750366671")
+→ Call create_task with contact_id + assigned_to + due_date/time
+→ Respond: "Task created for Prince"
+DO NOT stop after finding contact to ask "what should the task be?"
+
+**FORBIDDEN BEHAVIORS:**
+❌ Stopping after lookup to describe what you found
+❌ Asking for information you can infer (use defaults)
+❌ Announcing "I'll do X" without actually doing X
+❌ Breaking workflows across multiple messages when you can do it in one
+
+**If you have 80% of required info, EXECUTE with smart defaults. Don't ask for the missing 20%.**`
 
     const messages = [
       { role: 'system', content: enhancedSystemPrompt },
