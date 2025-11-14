@@ -68,7 +68,6 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    // Extract custom fields from the payload (any field starting with "custom_")
     const customFields: Record<string, any> = {}
     const rawPayload = payload as any
     for (const key in rawPayload) {
@@ -77,7 +76,6 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    // Merge with explicit custom_fields if provided
     if (payload.custom_fields) {
       Object.assign(customFields, payload.custom_fields)
     }
@@ -104,20 +102,32 @@ Deno.serve(async (req: Request) => {
 
     let pipelineUuid = null
     if (payload.pipeline_id) {
-      const { data: pipeline } = await supabase
-        .from('pipelines')
-        .select('id')
-        .eq('pipeline_id', payload.pipeline_id)
-        .maybeSingle()
+      const isUuid = payload.pipeline_id.includes('-')
 
-      pipelineUuid = pipeline?.id || null
+      if (isUuid) {
+        const { data: pipeline } = await supabase
+          .from('pipelines')
+          .select('id')
+          .eq('id', payload.pipeline_id)
+          .maybeSingle()
+
+        pipelineUuid = pipeline?.id || null
+      } else {
+        const { data: pipeline } = await supabase
+          .from('pipelines')
+          .select('id')
+          .eq('pipeline_id', payload.pipeline_id)
+          .maybeSingle()
+
+        pipelineUuid = pipeline?.id || null
+      }
     }
 
     if (!pipelineUuid) {
       return new Response(
         JSON.stringify({
           error: 'Invalid pipeline_id',
-          details: 'Pipeline not found with the provided pipeline_id',
+          details: 'Pipeline not found with the provided pipeline_id. Use either UUID format or text ID',
         }),
         {
           status: 400,
@@ -151,7 +161,6 @@ Deno.serve(async (req: Request) => {
       assignedToUuid = teamMember?.id || null
     }
 
-    // Get the first stage for the pipeline if no stage is provided
     let stageToUse = payload.stage
     if (!stageToUse) {
       const { data: firstStage } = await supabase
@@ -256,7 +265,6 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    // Fetch custom field values to include in the response
     let customFieldValues: Record<string, any> = {}
     if (Object.keys(customFields).length > 0) {
       const { data: fieldValues } = await supabase
