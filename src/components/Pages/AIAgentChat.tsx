@@ -1162,7 +1162,7 @@ When users ask about expenses with time periods (like "this month", "today", "la
 
   return (
     <div className="flex flex-col h-screen">
-      <div className="p-8 pb-4">
+      <div className="p-4 md:p-8 pb-4">
         <Button
           variant="outline"
           onClick={() => navigate('/ai-agents')}
@@ -1171,19 +1171,19 @@ When users ask about expenses with time periods (like "this month", "today", "la
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Agents
         </Button>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <PageHeader
             title={`Chat with ${agent?.name}`}
             subtitle={`Powered by ${agent?.model}`}
             icon={Bot}
           />
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-gray-700">Phone:</label>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Phone:</label>
               <select
                 value={selectedPhoneNumber}
                 onChange={(e) => setSelectedPhoneNumber(e.target.value)}
-                className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 sm:flex-initial px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {availablePhoneNumbers.map((phone) => (
                   <option key={phone} value={phone}>
@@ -1192,10 +1192,10 @@ When users ask about expenses with time periods (like "this month", "today", "la
                 ))}
               </select>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <Badge className="bg-blue-100 text-blue-800 flex items-center gap-1">
                 <Zap className="w-3 h-3" />
-                MCP Architecture
+                MCP
               </Badge>
               <Badge className={agent?.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
                 {agent?.status}
@@ -1205,9 +1205,9 @@ When users ask about expenses with time periods (like "this month", "today", "la
         </div>
       </div>
 
-      <div className="flex-1 overflow-hidden px-8 pb-8">
+      <div className="flex-1 overflow-hidden px-4 md:px-8 pb-4 md:pb-8">
         <Card className="h-full flex flex-col">
-          <CardContent className="flex-1 overflow-y-auto p-6 space-y-4">
+          <CardContent className="flex-1 overflow-y-auto p-3 md:p-6 space-y-3 md:space-y-4">
             <AnimatePresence>
               {messages.map((message) => (
                 <motion.div
@@ -1222,10 +1222,10 @@ When users ask about expenses with time periods (like "this month", "today", "la
                       <Bot className="w-5 h-5 text-blue-600" />
                     </div>
                   )}
-                  <div className={`max-w-[70%] ${message.role === 'user' ? 'order-1' : ''}`}>
+                  <div className={`max-w-[85%] md:max-w-[70%] ${message.role === 'user' ? 'order-1' : ''}`}>
                     <div
                       className={`
-                        rounded-2xl px-4 py-3
+                        rounded-2xl px-3 md:px-4 py-2 md:py-3
                         ${message.role === 'user'
                           ? 'bg-blue-600 text-white'
                           : 'bg-gray-100 text-gray-900'
@@ -1290,23 +1290,23 @@ When users ask about expenses with time periods (like "this month", "today", "la
             <div ref={messagesEndRef} />
           </CardContent>
 
-          <div className="p-4 border-t">
+          <div className="p-3 md:p-4 border-t">
             {imagePreview && (
               <div className="mb-3 relative inline-block">
                 <img
                   src={imagePreview}
                   alt="Preview"
-                  className="max-h-32 rounded-lg border border-gray-300"
+                  className="max-h-24 md:max-h-32 rounded-lg border border-gray-300"
                 />
                 <button
                   onClick={removeImage}
                   className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-3 h-3 md:w-4 md:h-4" />
                 </button>
               </div>
             )}
-            <div className="relative flex gap-2">
+            <div className="relative flex gap-1.5 md:gap-2">
               {isRecording && (
                 <div className="absolute bottom-full left-0 mb-2 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg">
                   <div className="flex items-center gap-2">
@@ -1333,38 +1333,39 @@ When users ask about expenses with time periods (like "this month", "today", "la
               <button
                 onClick={handleMicrophoneClick}
                 disabled={isTranscribing}
-                className={`p-2 rounded-lg transition-colors ${
+                className={`p-1.5 md:p-2 rounded-lg transition-colors ${
                   isRecording
                     ? 'bg-red-100 hover:bg-red-200 animate-pulse'
                     : 'hover:bg-gray-100'
                 }`}
                 title={isRecording ? 'Stop recording' : 'Start voice input'}
               >
-                <Mic className={`w-5 h-5 ${isRecording ? 'text-red-600' : 'text-gray-500'}`} />
+                <Mic className={`w-4 h-4 md:w-5 md:h-5 ${isRecording ? 'text-red-600' : 'text-gray-500'}`} />
               </button>
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 title="Attach image"
               >
-                <Paperclip className="w-5 h-5 text-gray-500" />
+                <Paperclip className="w-4 h-4 md:w-5 md:h-5 text-gray-500" />
               </button>
               <Input
                 placeholder="Type your message..."
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                className="flex-1"
+                className="flex-1 text-sm md:text-base"
                 disabled={isRecording || isTranscribing}
               />
               <Button
                 onClick={handleSendMessage}
                 disabled={!inputMessage.trim() || isTyping || isRecording || isTranscribing}
+                className="px-3 md:px-4"
               >
                 <Send className="w-4 h-4" />
               </Button>
             </div>
-            <p className="text-xs text-gray-500 mt-2 px-2">
+            <p className="text-xs text-gray-500 mt-2 px-2 hidden sm:block">
               Powered by OpenRouter AI. Use microphone for voice input or attach images for vision models.
             </p>
           </div>
