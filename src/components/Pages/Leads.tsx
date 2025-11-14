@@ -2278,8 +2278,8 @@ export function Leads() {
 
   if (view === 'view' && selectedLead) {
     return (
-      <div className="p-6">
-        <div className="mb-6">
+      <div className="p-4 md:p-6">
+        <div className="mb-4 md:mb-6">
           <Button
             variant="ghost"
             size="sm"
@@ -2289,16 +2289,16 @@ export function Leads() {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Leads
           </Button>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Avatar className="h-16 w-16">
-                <AvatarFallback className="bg-brand-primary text-white text-xl font-bold">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex items-center space-x-3 md:space-x-4">
+              <Avatar className="h-12 w-12 md:h-16 md:w-16">
+                <AvatarFallback className="bg-brand-primary text-white text-lg md:text-xl font-bold">
                   {selectedLead.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2)}
                 </AvatarFallback>
               </Avatar>
               <div>
-                <h1 className="text-3xl font-bold text-brand-text">{selectedLead.name}</h1>
-                <div className="flex items-center space-x-2 mt-1">
+                <h1 className="text-xl md:text-3xl font-bold text-brand-text">{selectedLead.name}</h1>
+                <div className="flex items-center space-x-2 mt-1 flex-wrap">
                   <Badge variant="secondary">{selectedLead.stage}</Badge>
                   <Badge className={interestColors[selectedLead.interest]}>{selectedLead.interest}</Badge>
                 </div>
@@ -2306,27 +2306,29 @@ export function Leads() {
             </div>
             <div className="flex items-center space-x-2">
               <PermissionGuard module="leads" action="update">
-                <Button onClick={() => handleEditClick(selectedLead)}>
+                <Button onClick={() => handleEditClick(selectedLead)} size="sm" className="md:text-base">
                   <Edit className="w-4 h-4 mr-2" />
-                  Edit Lead
+                  <span className="hidden md:inline">Edit Lead</span>
+                  <span className="md:hidden">Edit</span>
                 </Button>
               </PermissionGuard>
               <PermissionGuard module="leads" action="delete">
                 <Button
                   variant="outline"
+                  size="sm"
                   onClick={() => handleDeleteLead(selectedLead.id)}
                   className="text-red-600 hover:text-red-700"
                 >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete
+                  <Trash2 className="w-4 h-4 md:mr-2" />
+                  <span className="hidden md:inline">Delete</span>
                 </Button>
               </PermissionGuard>
             </div>
           </div>
         </div>
 
-        <div className="border-b border-gray-200 mb-6">
-          <div className="flex space-x-8 overflow-x-auto">
+        <div className="border-b border-gray-200 mb-4 md:mb-6">
+          <div className="flex space-x-4 md:space-x-8 overflow-x-auto">
             {[
               { id: 'lead-details', label: 'Lead Details', icon: Flag },
               { id: 'personal', label: 'Personal', icon: User },
@@ -2338,7 +2340,7 @@ export function Leads() {
               <button
                 key={tab.id}
                 onClick={() => setDetailTab(tab.id as TabType)}
-                className={`flex items-center space-x-2 pb-4 px-1 border-b-2 transition-colors flex-shrink-0 ${
+                className={`flex items-center space-x-1 md:space-x-2 pb-3 md:pb-4 px-1 border-b-2 transition-colors flex-shrink-0 text-sm md:text-base ${
                   detailTab === tab.id
                     ? 'border-brand-primary text-brand-primary'
                     : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -2353,9 +2355,9 @@ export function Leads() {
 
         <div className="space-y-6">
           {detailTab === 'lead-details' && (
-            <div className="flex flex-col md:flex-row gap-6">
-              <div className="md:w-64 flex-shrink-0">
-                <Card className="md:sticky md:top-6">
+            <div className="flex flex-col lg:flex-row gap-4 md:gap-6">
+              <div className="lg:w-64 flex-shrink-0">
+                <Card className="lg:sticky lg:top-6">
                   <CardContent className="p-4">
                     <nav className="space-y-1">
                       {[
@@ -3504,12 +3506,25 @@ export function Leads() {
   }
 
   return (
-    <div className="p-6">
-      <PageHeader
-        title="Leads Management"
-        subtitle="Track and manage your sales pipeline"
-        actions={headerActions}
-      />
+    <div className="p-4 md:p-6">
+      <div className="hidden md:block">
+        <PageHeader
+          title="Leads Management"
+          subtitle="Track and manage your sales pipeline"
+          actions={headerActions}
+        />
+      </div>
+      <div className="md:hidden mb-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-bold text-brand-text">Leads</h1>
+          <PermissionGuard module="leads" action="create">
+            <Button size="sm" onClick={handleAddClick}>
+              <Plus className="w-4 h-4 mr-1" />
+              Add
+            </Button>
+          </PermissionGuard>
+        </div>
+      </div>
 
       {loading ? (
         <motion.div
@@ -3525,7 +3540,7 @@ export function Leads() {
       ) : (
         <>
           <motion.div
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+            className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
             initial="hidden"
             animate="visible"
             variants={{
@@ -3577,18 +3592,18 @@ export function Leads() {
           </motion.div>
 
           <motion.div
-            className="mb-6 flex gap-4 flex-wrap"
+            className="mb-6 flex flex-col md:flex-row gap-3 md:gap-4 flex-wrap"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
             <Input
-              placeholder="Search leads by name, email, phone, or lead ID..."
+              placeholder="Search leads..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-md"
+              className="w-full md:max-w-md"
             />
             <select
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-primary"
+              className="w-full md:w-auto px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-primary text-sm"
               value={pipelineFilter}
               onChange={(e) => {
                 setPipelineFilter(e.target.value)
@@ -3603,7 +3618,7 @@ export function Leads() {
               ))}
             </select>
             <select
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-primary"
+              className="w-full md:w-auto px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-primary text-sm"
               value={sourceFilter}
               onChange={(e) => setSourceFilter(e.target.value)}
             >
@@ -3617,7 +3632,7 @@ export function Leads() {
               <option value="Cold Call">Cold Call</option>
             </select>
             <select
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-primary"
+              className="w-full md:w-auto px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-primary text-sm"
               value={interestFilter}
               onChange={(e) => setInterestFilter(e.target.value)}
             >
@@ -3627,7 +3642,7 @@ export function Leads() {
               <option value="Cold">Cold</option>
             </select>
             <select
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-primary"
+              className="w-full md:w-auto px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-primary text-sm"
               value={stageFilter}
               onChange={(e) => setStageFilter(e.target.value)}
             >
@@ -3637,7 +3652,7 @@ export function Leads() {
               ))}
             </select>
             <select
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-primary"
+              className="w-full md:w-auto px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-primary text-sm"
               value={assignedToFilter}
               onChange={(e) => setAssignedToFilter(e.target.value)}
             >
@@ -3646,7 +3661,7 @@ export function Leads() {
                 <option key={member.id} value={member.full_name}>{member.full_name}</option>
               ))}
             </select>
-            <div className="ml-auto flex items-center gap-2 border border-gray-300 rounded-md overflow-hidden">
+            <div className="hidden md:flex ml-auto items-center gap-2 border border-gray-300 rounded-md overflow-hidden">
               <button
                 onClick={() => setDisplayMode('kanban')}
                 className={`px-4 py-2 flex items-center gap-2 transition-colors ${
@@ -3677,7 +3692,8 @@ export function Leads() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            {displayMode === 'kanban' ? (
+            {displayMode === 'kanban' && (
+            <div className="hidden md:block">
             <Card className="shadow-xl">
               <CardHeader>
                 <CardTitle>{pipelines.find(p => p.id === pipelineFilter)?.name || 'Pipeline'}</CardTitle>
@@ -3807,13 +3823,15 @@ export function Leads() {
                 </div>
               </CardContent>
             </Card>
-            ) : (
+            </div>
+            )}
+            {(displayMode === 'list' || true) && (
             <Card className="shadow-xl">
-              <CardHeader>
+              <CardHeader className="hidden md:block">
                 <CardTitle>{pipelines.find(p => p.id === pipelineFilter)?.name || 'Pipeline'} - List View</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
+              <CardContent className="p-0 md:p-6">
+                <div className="hidden md:block overflow-x-auto">
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-gray-200">
@@ -3926,6 +3944,100 @@ export function Leads() {
                       )}
                     </tbody>
                   </table>
+                </div>
+                <div className="md:hidden space-y-3 p-3">
+                  {filteredLeads.length === 0 ? (
+                    <div className="text-center py-12 text-gray-400">
+                      No leads found
+                    </div>
+                  ) : (
+                    filteredLeads.map((lead, index) => (
+                      <motion.div
+                        key={lead.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.02 }}
+                        onClick={() => handleViewLead(lead)}
+                        className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm active:shadow-md transition-shadow"
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center space-x-3 flex-1 min-w-0">
+                            <Avatar className="h-10 w-10 flex-shrink-0">
+                              <AvatarFallback className="bg-brand-primary text-white text-sm">
+                                {lead.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-gray-900 truncate">{lead.name}</h3>
+                              <p className="text-xs text-brand-primary font-mono">{lead.lead_id}</p>
+                            </div>
+                          </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                              <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                                <MoreVertical className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleViewLead(lead); }}>
+                                <Eye className="w-4 h-4 mr-2" />
+                                View Details
+                              </DropdownMenuItem>
+                              {canUpdate('leads') && (
+                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEditClick(lead); }}>
+                                  <Edit className="w-4 h-4 mr-2" />
+                                  Edit Lead
+                                </DropdownMenuItem>
+                              )}
+                              {canDelete('leads') && (
+                                <DropdownMenuItem
+                                  onClick={(e) => { e.stopPropagation(); handleDeleteLead(lead.id); }}
+                                  className="text-red-600 focus:text-red-600"
+                                >
+                                  <Trash2 className="w-4 h-4 mr-2" />
+                                  Delete Lead
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex items-center space-x-2 text-gray-600">
+                            <Phone className="w-4 h-4 flex-shrink-0" />
+                            <span className="truncate">{lead.phone}</span>
+                          </div>
+                          {lead.email && (
+                            <div className="flex items-center space-x-2 text-gray-600">
+                              <Mail className="w-4 h-4 flex-shrink-0" />
+                              <span className="truncate">{lead.email}</span>
+                            </div>
+                          )}
+                          {lead.company && (
+                            <div className="flex items-center space-x-2 text-gray-600">
+                              <Building className="w-4 h-4 flex-shrink-0" />
+                              <span className="truncate">{lead.company}</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Badge className={interestColors[lead.interest]} variant="secondary">
+                              {lead.interest}
+                            </Badge>
+                            <Badge variant="secondary" className="bg-gray-100 text-gray-800">
+                              {lead.stage}
+                            </Badge>
+                          </div>
+                          <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                        </div>
+                        {lead.assigned_to_name && (
+                          <div className="text-xs text-gray-500 mt-2">
+                            Owner: {lead.assigned_to_name}
+                          </div>
+                        )}
+                      </motion.div>
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>
