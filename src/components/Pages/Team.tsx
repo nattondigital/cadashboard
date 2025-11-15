@@ -2210,11 +2210,10 @@ export function Team() {
                           </SelectTrigger>
                           <SelectContent className="z-[70]">
                             <SelectItem value="Super Admin">Super Admin</SelectItem>
-                            <SelectItem value="Sales Manager">Sales Manager</SelectItem>
-                            <SelectItem value="Content Manager">Content Manager</SelectItem>
-                            <SelectItem value="Support Agent">Support Agent</SelectItem>
-                            <SelectItem value="Marketing Specialist">Marketing Specialist</SelectItem>
-                            <SelectItem value="Developer">Developer</SelectItem>
+                            <SelectItem value="Admin">Admin</SelectItem>
+                            <SelectItem value="Manager">Manager</SelectItem>
+                            <SelectItem value="Team Lead">Team Lead</SelectItem>
+                            <SelectItem value="Team Member">Team Member</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -2459,11 +2458,10 @@ export function Team() {
                           </SelectTrigger>
                           <SelectContent className="z-[70]">
                             <SelectItem value="Super Admin">Super Admin</SelectItem>
-                            <SelectItem value="Sales Manager">Sales Manager</SelectItem>
-                            <SelectItem value="Content Manager">Content Manager</SelectItem>
-                            <SelectItem value="Support Agent">Support Agent</SelectItem>
-                            <SelectItem value="Marketing Specialist">Marketing Specialist</SelectItem>
-                            <SelectItem value="Developer">Developer</SelectItem>
+                            <SelectItem value="Admin">Admin</SelectItem>
+                            <SelectItem value="Manager">Manager</SelectItem>
+                            <SelectItem value="Team Lead">Team Lead</SelectItem>
+                            <SelectItem value="Team Member">Team Member</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
