@@ -1408,32 +1408,74 @@ export function Billing() {
                         className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl py-3 px-6 shadow-lg flex items-center justify-center gap-3 font-semibold"
                       >
                         <Download className="w-5 h-5" />
-                        View PDF
+                        Download PDF
                       </motion.button>
                       {canUpdate('billing') && selectedItem.status !== 'Invoiced' && (
+                        <>
+                          <motion.button
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => handleCreateInvoice(selectedItem)}
+                            className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl py-3 px-6 shadow-lg flex items-center justify-center gap-3 font-semibold"
+                          >
+                            <FileText className="w-5 h-5" />
+                            Create Invoice
+                          </motion.button>
+                          <motion.button
+                            whileTap={{ scale: 0.98 }}
+                            onClick={handleEditFromView}
+                            className="w-full bg-gradient-to-r from-orange-600 to-amber-600 text-white rounded-xl py-3 px-6 shadow-lg flex items-center justify-center gap-3 font-semibold"
+                          >
+                            <Edit className="w-5 h-5" />
+                            Edit Estimate
+                          </motion.button>
+                        </>
+                      )}
+                      {canDelete('billing') && (
                         <motion.button
                           whileTap={{ scale: 0.98 }}
-                          onClick={() => handleCreateInvoice(selectedItem)}
-                          className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl py-3 px-6 shadow-lg flex items-center justify-center gap-3 font-semibold"
+                          onClick={() => handleDelete(selectedItem.id)}
+                          className="w-full bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-xl py-3 px-6 shadow-lg flex items-center justify-center gap-3 font-semibold"
                         >
-                          <FileText className="w-5 h-5" />
-                          Create Invoice
+                          <Trash2 className="w-5 h-5" />
+                          Delete Estimate
                         </motion.button>
                       )}
                     </>
                   )}
                   {activeTab === 'invoices' && (
-                    <motion.button
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => {
-                        setSelectedItem(selectedItem)
-                        setShowInvoicePDF(true)
-                      }}
-                      className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl py-3 px-6 shadow-lg flex items-center justify-center gap-3 font-semibold"
-                    >
-                      <Printer className="w-5 h-5" />
-                      View Invoice PDF
-                    </motion.button>
+                    <>
+                      <motion.button
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => {
+                          setSelectedItem(selectedItem)
+                          setShowInvoicePDF(true)
+                        }}
+                        className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl py-3 px-6 shadow-lg flex items-center justify-center gap-3 font-semibold"
+                      >
+                        <Printer className="w-5 h-5" />
+                        Download Invoice PDF
+                      </motion.button>
+                      {canUpdate('billing') && (
+                        <motion.button
+                          whileTap={{ scale: 0.98 }}
+                          onClick={handleEditFromView}
+                          className="w-full bg-gradient-to-r from-orange-600 to-amber-600 text-white rounded-xl py-3 px-6 shadow-lg flex items-center justify-center gap-3 font-semibold"
+                        >
+                          <Edit className="w-5 h-5" />
+                          Edit Invoice
+                        </motion.button>
+                      )}
+                      {canDelete('billing') && (
+                        <motion.button
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => handleDelete(selectedItem.id)}
+                          className="w-full bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-xl py-3 px-6 shadow-lg flex items-center justify-center gap-3 font-semibold"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                          Delete Invoice
+                        </motion.button>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
