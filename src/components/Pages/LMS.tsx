@@ -995,17 +995,20 @@ export function LMS() {
 
   return (
     <div className="p-6">
-      <PageHeader
-        title="Learning Management System"
-        subtitle="Create and manage your courses, categories, and lessons"
-      />
+      {/* Show PageHeader only on main courses view */}
+      {view === 'courses' && (
+        <PageHeader
+          title="Learning Management System"
+          subtitle="Create and manage your courses, categories, and lessons"
+        />
+      )}
 
       {/* Form Views - Full Screen */}
       {(view === 'add-lesson' || view === 'edit-lesson') && selectedCategory && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-8"
+          className={view === 'courses' ? 'mt-8' : ''}
         >
           <LessonModal
             isOpen={true}
@@ -1030,7 +1033,7 @@ export function LMS() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-8"
+          className={view === 'courses' ? 'mt-8' : ''}
         >
           <CourseModal
             isOpen={true}
@@ -1051,7 +1054,7 @@ export function LMS() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-8"
+          className={view === 'courses' ? 'mt-8' : ''}
         >
           <CategoryModal
             isOpen={true}
@@ -1074,7 +1077,7 @@ export function LMS() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-8"
+          className={view === 'courses' ? 'mt-8' : ''}
         >
           {view === 'courses' && renderCourses()}
           {view === 'categories' && renderCategories()}
