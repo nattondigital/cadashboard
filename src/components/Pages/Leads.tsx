@@ -1835,8 +1835,8 @@ export function Leads() {
           <h1 className="text-3xl font-bold text-brand-text">Add New Lead</h1>
         </div>
 
-        <Card className="md:shadow-sm shadow-lg md:border border-0 md:rounded-lg rounded-none flex-1 md:flex-none overflow-y-auto md:overflow-visible">
-          <CardContent className="md:p-6 p-4">
+        <Card className="md:shadow-sm shadow-lg md:border border-0 md:rounded-lg rounded-none flex-1 md:flex-none overflow-y-auto md:overflow-visible md:bg-white">
+          <CardContent className="md:p-6 p-4 md:bg-white">
             <div className="space-y-4 md:space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                 <div className="relative contact-search-container">
@@ -2090,8 +2090,8 @@ export function Leads() {
           <h1 className="text-3xl font-bold text-brand-text">Edit Lead</h1>
         </div>
 
-        <Card className="md:shadow-sm shadow-lg md:border border-0 md:rounded-lg rounded-none flex-1 md:flex-none overflow-y-auto md:overflow-visible">
-          <CardContent className="md:p-6 p-4">
+        <Card className="md:shadow-sm shadow-lg md:border border-0 md:rounded-lg rounded-none flex-1 md:flex-none overflow-y-auto md:overflow-visible md:bg-white">
+          <CardContent className="md:p-6 p-4 md:bg-white">
             <div className="space-y-4 md:space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                 <div className="relative contact-search-container">
@@ -2441,7 +2441,7 @@ export function Leads() {
           </div>
         </div>
 
-        <div className="flex-1 md:flex-none overflow-y-auto md:overflow-visible p-4 md:pt-4 md:px-6 md:pb-6 space-y-4 md:space-y-6">
+        <div className="flex-1 md:flex-none overflow-y-auto md:overflow-visible p-4 md:pt-4 md:px-6 md:pb-6 space-y-4 md:space-y-6 md:bg-white">
           {detailTab === 'lead-details' && (
             <div className="flex flex-col lg:flex-row gap-4 md:gap-6">
               {/* Mobile Dropdown */}
