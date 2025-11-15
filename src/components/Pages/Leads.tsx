@@ -1822,7 +1822,7 @@ export function Leads() {
         </div>
 
         {/* Desktop Header */}
-        <div className="hidden md:block mb-6 md:bg-white md:p-6 md:-m-6 md:mb-0">
+        <div className="hidden md:block mb-6">
           <Button
             variant="ghost"
             size="sm"
@@ -1835,8 +1835,8 @@ export function Leads() {
           <h1 className="text-3xl font-bold text-brand-text">Add New Lead</h1>
         </div>
 
-        <Card className="md:shadow-sm shadow-lg md:border border-0 md:rounded-lg rounded-none flex-1 md:flex-none overflow-y-auto md:overflow-visible md:bg-white">
-          <CardContent className="md:p-6 p-4 md:bg-white">
+        <Card className="md:shadow-sm shadow-lg md:border border-0 md:rounded-lg rounded-none flex-1 md:flex-none overflow-y-auto md:overflow-visible">
+          <CardContent className="md:p-6 p-4">
             <div className="space-y-4 md:space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                 <div className="relative contact-search-container">
@@ -2077,7 +2077,7 @@ export function Leads() {
         </div>
 
         {/* Desktop Header */}
-        <div className="hidden md:block mb-6 md:bg-white md:p-6 md:-m-6 md:mb-0">
+        <div className="hidden md:block mb-6">
           <Button
             variant="ghost"
             size="sm"
@@ -2090,8 +2090,8 @@ export function Leads() {
           <h1 className="text-3xl font-bold text-brand-text">Edit Lead</h1>
         </div>
 
-        <Card className="md:shadow-sm shadow-lg md:border border-0 md:rounded-lg rounded-none flex-1 md:flex-none overflow-y-auto md:overflow-visible md:bg-white">
-          <CardContent className="md:p-6 p-4 md:bg-white">
+        <Card className="md:shadow-sm shadow-lg md:border border-0 md:rounded-lg rounded-none flex-1 md:flex-none overflow-y-auto md:overflow-visible">
+          <CardContent className="md:p-6 p-4">
             <div className="space-y-4 md:space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                 <div className="relative contact-search-container">
