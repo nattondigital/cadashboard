@@ -4549,23 +4549,11 @@ export function Leads() {
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
-                      <div className="space-y-2.5 text-sm mb-3">
+                      <div className="mb-3">
                         <div className="flex items-center space-x-2.5 text-gray-700 bg-orange-50/50 rounded-lg px-3 py-2">
                           <Phone className="w-4 h-4 flex-shrink-0 text-orange-600" />
                           <span className="truncate font-medium">{lead.phone}</span>
                         </div>
-                        {lead.email && (
-                          <div className="flex items-center space-x-2.5 text-gray-700 bg-orange-50/50 rounded-lg px-3 py-2">
-                            <Mail className="w-4 h-4 flex-shrink-0 text-orange-600" />
-                            <span className="truncate font-medium">{lead.email}</span>
-                          </div>
-                        )}
-                        {lead.company && (
-                          <div className="flex items-center space-x-2.5 text-gray-700 bg-orange-50/50 rounded-lg px-3 py-2">
-                            <Building className="w-4 h-4 flex-shrink-0 text-orange-600" />
-                            <span className="truncate font-medium">{lead.company}</span>
-                          </div>
-                        )}
                       </div>
                       <div className="flex items-center space-x-2">
                         <Badge className={`${interestColors[lead.interest]} font-semibold`} variant="secondary">
