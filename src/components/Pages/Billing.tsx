@@ -1493,12 +1493,13 @@ export function Billing() {
                                 onClick={() => {
                                   if (Array.isArray(pkg.products) && pkg.products.length > 0) {
                                     const newItems = pkg.products.map((product: any, index: number) => ({
-                                      id: Date.now() + index,
+                                      id: Date.now() + Math.random() + index,
                                       product_id: product.product_id,
                                       product_name: product.product_name,
-                                      quantity: 1,
-                                      unit_price: product.product_price || 0,
-                                      total: product.product_price || 0
+                                      description: product.description || '',
+                                      quantity: product.quantity || 1,
+                                      unit_price: product.unit_price || 0,
+                                      total: (product.quantity || 1) * (product.unit_price || 0)
                                     }))
                                     const items = [...(formData.items || []), ...newItems]
                                     const subtotal = items.reduce((sum, item) => sum + item.total, 0)
