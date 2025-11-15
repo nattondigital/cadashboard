@@ -1019,20 +1019,6 @@ export function Billing() {
       {activeTab === 'receipts' && (
         <ReceiptsTable data={filteredData} onView={handleView} onEdit={handleEdit} onDelete={handleDelete} loading={loading} canUpdate={canUpdate('billing')} canDelete={canDelete('billing')} />
       )}
-
-      {showInvoicePDF && selectedItem && (
-        <InvoicePDF
-          invoice={selectedItem}
-          onClose={() => setShowInvoicePDF(false)}
-        />
-      )}
-
-      {showEstimatePDF && selectedItem && (
-        <EstimatePDF
-          estimate={selectedItem}
-          onClose={() => setShowEstimatePDF(false)}
-        />
-      )}
             </motion.div>
           )}
 
@@ -1411,24 +1397,24 @@ export function Billing() {
                         Download PDF
                       </motion.button>
                       {canUpdate('billing') && selectedItem.status !== 'Invoiced' && (
-                        <>
-                          <motion.button
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => handleCreateInvoice(selectedItem)}
-                            className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl py-3 px-6 shadow-lg flex items-center justify-center gap-3 font-semibold"
-                          >
-                            <FileText className="w-5 h-5" />
-                            Create Invoice
-                          </motion.button>
-                          <motion.button
-                            whileTap={{ scale: 0.98 }}
-                            onClick={handleEditFromView}
-                            className="w-full bg-gradient-to-r from-orange-600 to-amber-600 text-white rounded-xl py-3 px-6 shadow-lg flex items-center justify-center gap-3 font-semibold"
-                          >
-                            <Edit className="w-5 h-5" />
-                            Edit Estimate
-                          </motion.button>
-                        </>
+                        <motion.button
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => handleCreateInvoice(selectedItem)}
+                          className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl py-3 px-6 shadow-lg flex items-center justify-center gap-3 font-semibold"
+                        >
+                          <FileText className="w-5 h-5" />
+                          Create Invoice
+                        </motion.button>
+                      )}
+                      {canUpdate('billing') && (
+                        <motion.button
+                          whileTap={{ scale: 0.98 }}
+                          onClick={handleEditFromView}
+                          className="w-full bg-gradient-to-r from-orange-600 to-amber-600 text-white rounded-xl py-3 px-6 shadow-lg flex items-center justify-center gap-3 font-semibold"
+                        >
+                          <Edit className="w-5 h-5" />
+                          Edit Estimate
+                        </motion.button>
                       )}
                       {canDelete('billing') && (
                         <motion.button
@@ -2095,6 +2081,21 @@ export function Billing() {
           )}
         </AnimatePresence>
       </div>
+
+      {/* PDF Modals - Render outside desktop/mobile blocks so they work everywhere */}
+      {showInvoicePDF && selectedItem && (
+        <InvoicePDF
+          invoice={selectedItem}
+          onClose={() => setShowInvoicePDF(false)}
+        />
+      )}
+
+      {showEstimatePDF && selectedItem && (
+        <EstimatePDF
+          estimate={selectedItem}
+          onClose={() => setShowEstimatePDF(false)}
+        />
+      )}
     </>
   )
 }
