@@ -3480,7 +3480,7 @@ export function Leads() {
                       <Button
                         onClick={(e) => {
                           e.preventDefault()
-                          handleAddContactNote()
+                          handleAddNote()
                         }}
                         disabled={!newNoteText.trim()}
                         className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 py-6 rounded-xl font-semibold shadow-md"
