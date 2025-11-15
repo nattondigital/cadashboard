@@ -1233,7 +1233,6 @@ export const Tasks: React.FC = () => {
                               <th className="text-left py-3 px-4 font-semibold text-brand-text">Priority</th>
                               <th className="text-left py-3 px-4 font-semibold text-brand-text">Assigned To</th>
                               <th className="text-left py-3 px-4 font-semibold text-brand-text">Due Date</th>
-                              <th className="text-left py-3 px-4 font-semibold text-brand-text">Progress</th>
                               <th className="text-left py-3 px-4 font-semibold text-brand-text">Actions</th>
                             </tr>
                           </thead>
@@ -1288,17 +1287,6 @@ export const Tasks: React.FC = () => {
                                   ) : (
                                     <span className="text-gray-400 text-sm">No deadline</span>
                                   )}
-                                </td>
-                                <td className="py-3 px-4">
-                                  <div className="flex items-center gap-2">
-                                    <div className="flex-1 bg-gray-200 rounded-full h-2 max-w-[100px]">
-                                      <div
-                                        className="bg-blue-600 h-2 rounded-full"
-                                        style={{ width: `${task.progress_percentage}%` }}
-                                      />
-                                    </div>
-                                    <span className="text-xs text-gray-600 w-10">{task.progress_percentage}%</span>
-                                  </div>
                                 </td>
                                 <td className="py-3 px-4">
                                   <DropdownMenu>
@@ -2128,19 +2116,6 @@ export const Tasks: React.FC = () => {
                     </div>
                   </div>
 
-                  <div>
-                    <h4 className="text-lg font-semibold text-brand-text mb-3">Progress</h4>
-                    <div className="flex items-center gap-3">
-                      <div className="flex-1 bg-gray-200 rounded-full h-4">
-                        <div
-                          className="bg-blue-600 h-4 rounded-full transition-all"
-                          style={{ width: `${selectedTask.progress_percentage}%` }}
-                        />
-                      </div>
-                      <span className="text-sm font-medium text-gray-700 min-w-[50px]">{selectedTask.progress_percentage}%</span>
-                    </div>
-                  </div>
-
                   {selectedTask.supporting_documents && selectedTask.supporting_documents.length > 0 && (
                     <div>
                       <h4 className="text-lg font-semibold text-brand-text mb-3">Supporting Documents</h4>
@@ -2403,15 +2378,6 @@ export const Tasks: React.FC = () => {
                               <span>{formatDate(task.due_date)}</span>
                             </div>
                           )}
-                          <div className="flex items-center gap-2">
-                            <div className="flex-1 bg-gray-200 rounded-full h-2">
-                              <div
-                                className="bg-blue-600 h-2 rounded-full"
-                                style={{ width: `${task.progress_percentage}%` }}
-                              />
-                            </div>
-                            <span className="text-xs text-gray-600">{task.progress_percentage}%</span>
-                          </div>
                         </div>
                       </motion.div>
                     ))}
@@ -2756,19 +2722,6 @@ export const Tasks: React.FC = () => {
                         </div>
                       </div>
                     )}
-
-                    <div className="bg-gray-50 p-3 rounded-lg">
-                      <div className="text-xs text-gray-500 mb-2">Progress</div>
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 bg-gray-200 rounded-full h-3">
-                          <div
-                            className="bg-blue-600 h-3 rounded-full"
-                            style={{ width: `${selectedTask.progress_percentage}%` }}
-                          />
-                        </div>
-                        <span className="text-sm font-medium">{selectedTask.progress_percentage}%</span>
-                      </div>
-                    </div>
 
                     {selectedTask.supporting_documents && selectedTask.supporting_documents.length > 0 && (
                       <div className="bg-gray-50 p-3 rounded-lg">
