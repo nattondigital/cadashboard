@@ -1822,7 +1822,7 @@ export function Leads() {
         </div>
 
         {/* Desktop Header */}
-        <div className="hidden md:block mb-6">
+        <div className="hidden md:block mb-6 md:bg-white md:p-6 md:-m-6 md:mb-0">
           <Button
             variant="ghost"
             size="sm"
@@ -2077,7 +2077,7 @@ export function Leads() {
         </div>
 
         {/* Desktop Header */}
-        <div className="hidden md:block mb-6">
+        <div className="hidden md:block mb-6 md:bg-white md:p-6 md:-m-6 md:mb-0">
           <Button
             variant="ghost"
             size="sm"
