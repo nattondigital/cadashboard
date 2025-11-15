@@ -2527,50 +2527,50 @@ export function Leads() {
                     </CardHeader>
                     <CardContent className="md:p-6 p-5">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
-                        <div className="bg-gradient-to-br from-orange-50 to-red-50 md:!bg-white md:p-0 p-4 md:rounded-none rounded-xl">
+                        <div className="p-4 rounded-xl bg-orange-50 md:bg-white md:p-0 md:rounded-none">
                           <label className="text-xs md:text-sm text-gray-600 font-medium">Lead ID</label>
                           <p className="font-semibold mt-1 text-gray-900">{selectedLead.lead_id}</p>
                         </div>
-                        <div className="bg-gradient-to-br from-orange-50 to-red-50 md:!bg-white md:p-0 p-4 md:rounded-none rounded-xl">
+                        <div className="p-4 rounded-xl bg-orange-50 md:bg-white md:p-0 md:rounded-none">
                           <label className="text-xs md:text-sm text-gray-600 font-medium">Stage</label>
                           <p className="font-semibold mt-1">
                             <Badge variant="secondary" className="md:text-xs text-sm">{selectedLead.stage}</Badge>
                           </p>
                         </div>
-                        <div className="bg-gradient-to-br from-orange-50 to-red-50 md:!bg-white md:p-0 p-4 md:rounded-none rounded-xl">
+                        <div className="p-4 rounded-xl bg-orange-50 md:bg-white md:p-0 md:rounded-none">
                           <label className="text-xs md:text-sm text-gray-600 font-medium">Source</label>
                           <p className="font-semibold mt-1 text-gray-900">{selectedLead.source}</p>
                         </div>
-                        <div className="bg-gradient-to-br from-orange-50 to-red-50 md:!bg-white md:p-0 p-4 md:rounded-none rounded-xl">
+                        <div className="p-4 rounded-xl bg-orange-50 md:bg-white md:p-0 md:rounded-none">
                           <label className="text-xs md:text-sm text-gray-600 font-medium">Interest Level</label>
                           <p className="font-semibold mt-1">
                             <Badge className={`${interestColors[selectedLead.interest]} md:text-xs text-sm`}>{selectedLead.interest}</Badge>
                           </p>
                         </div>
-                        <div className="bg-gradient-to-br from-orange-50 to-red-50 md:!bg-white md:p-0 p-4 md:rounded-none rounded-xl">
+                        <div className="p-4 rounded-xl bg-orange-50 md:bg-white md:p-0 md:rounded-none">
                           <label className="text-xs md:text-sm text-gray-600 font-medium">Email</label>
                           <p className="font-semibold mt-1 text-gray-900 break-all">{selectedLead.email || 'N/A'}</p>
                         </div>
-                        <div className="bg-gradient-to-br from-orange-50 to-red-50 md:!bg-white md:p-0 p-4 md:rounded-none rounded-xl">
+                        <div className="p-4 rounded-xl bg-orange-50 md:bg-white md:p-0 md:rounded-none">
                           <label className="text-xs md:text-sm text-gray-600 font-medium">Phone</label>
                           <p className="font-semibold mt-1 text-gray-900">{selectedLead.phone}</p>
                         </div>
-                        <div className="bg-gradient-to-br from-orange-50 to-red-50 md:!bg-white md:p-0 p-4 md:rounded-none rounded-xl">
+                        <div className="p-4 rounded-xl bg-orange-50 md:bg-white md:p-0 md:rounded-none">
                           <label className="text-xs md:text-sm text-gray-600 font-medium">Assigned To</label>
                           <p className="font-semibold mt-1 text-gray-900">{selectedLead.assigned_to_name || 'Unassigned' || 'Unassigned'}</p>
                         </div>
-                        <div className="bg-gradient-to-br from-orange-50 to-red-50 md:!bg-white md:p-0 p-4 md:rounded-none rounded-xl">
+                        <div className="p-4 rounded-xl bg-orange-50 md:bg-white md:p-0 md:rounded-none">
                           <label className="text-xs md:text-sm text-gray-600 font-medium">Created Date</label>
                           <p className="font-semibold mt-1 text-gray-900">{formatDate(selectedLead.created_at)}</p>
                         </div>
                         {selectedLead.lead_score && (
-                          <div className="bg-gradient-to-br from-orange-50 to-red-50 md:!bg-white md:p-0 p-4 md:rounded-none rounded-xl">
+                          <div className="p-4 rounded-xl bg-orange-50 md:bg-white md:p-0 md:rounded-none">
                             <label className="text-xs md:text-sm text-gray-600 font-medium">Lead Score</label>
                             <p className="font-semibold mt-1 text-gray-900">{selectedLead.lead_score}/100</p>
                           </div>
                         )}
                         {selectedLead.last_contact && (
-                          <div className="bg-gradient-to-br from-orange-50 to-red-50 md:!bg-white md:p-0 p-4 md:rounded-none rounded-xl">
+                          <div className="p-4 rounded-xl bg-orange-50 md:bg-white md:p-0 md:rounded-none">
                             <label className="text-xs md:text-sm text-gray-600 font-medium">Last Contact</label>
                             <p className="font-semibold mt-1 text-gray-900">{formatDate(selectedLead.last_contact)}</p>
                           </div>
