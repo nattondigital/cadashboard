@@ -1000,16 +1000,13 @@ export function LMS() {
         subtitle="Create and manage your courses, categories, and lessons"
       />
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mt-8"
-      >
-        {view === 'courses' && renderCourses()}
-        {view === 'categories' && renderCategories()}
-        {view === 'lessons' && renderLessons()}
-        {view === 'lesson-detail' && renderLessonDetail()}
-        {(view === 'add-lesson' || view === 'edit-lesson') && selectedCategory && (
+      {/* Form Views - Full Screen */}
+      {(view === 'add-lesson' || view === 'edit-lesson') && selectedCategory && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-8"
+        >
           <LessonModal
             isOpen={true}
             onClose={() => {
@@ -1026,8 +1023,15 @@ export function LMS() {
               }
             }}
           />
-        )}
-        {(view === 'add-course' || view === 'edit-course') && (
+        </motion.div>
+      )}
+
+      {(view === 'add-course' || view === 'edit-course') && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-8"
+        >
           <CourseModal
             isOpen={true}
             onClose={() => {
@@ -1040,8 +1044,15 @@ export function LMS() {
               fetchCourses()
             }}
           />
-        )}
-        {(view === 'add-category' || view === 'edit-category') && selectedCourse && (
+        </motion.div>
+      )}
+
+      {(view === 'add-category' || view === 'edit-category') && selectedCourse && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-8"
+        >
           <CategoryModal
             isOpen={true}
             onClose={() => {
@@ -1055,8 +1066,22 @@ export function LMS() {
               fetchCategories(selectedCourse.id)
             }}
           />
-        )}
-      </motion.div>
+        </motion.div>
+      )}
+
+      {/* List/Detail Views */}
+      {!['add-lesson', 'edit-lesson', 'add-course', 'edit-course', 'add-category', 'edit-category'].includes(view) && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-8"
+        >
+          {view === 'courses' && renderCourses()}
+          {view === 'categories' && renderCategories()}
+          {view === 'lessons' && renderLessons()}
+          {view === 'lesson-detail' && renderLessonDetail()}
+        </motion.div>
+      )}
     </div>
   )
 }

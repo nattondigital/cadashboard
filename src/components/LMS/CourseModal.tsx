@@ -141,8 +141,8 @@ export function CourseModal({ isOpen, onClose, course, onSuccess }: CourseModalP
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 md:bg-transparent md:relative flex items-center justify-center z-50 p-0 md:p-0">
-      <div className="bg-white rounded-none md:rounded-lg shadow-xl w-full h-full md:max-w-2xl md:w-full md:max-h-[90vh] overflow-y-auto md:shadow-none md:bg-transparent">
+    <div className="fixed inset-0 md:relative bg-black bg-opacity-50 md:bg-transparent flex items-center justify-center z-50 p-0 md:p-0">
+      <div className="bg-white rounded-none md:rounded-lg shadow-xl w-full h-full md:w-full overflow-y-auto">
         <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-green-600 md:bg-white md:border-b px-4 md:px-6 py-4 flex items-center justify-between z-10">
           <h2 className="text-xl md:text-2xl font-bold text-white md:text-gray-900">
             {course ? 'Edit Course' : 'Add New Course'}
@@ -152,7 +152,7 @@ export function CourseModal({ isOpen, onClose, course, onSuccess }: CourseModalP
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-4 md:p-6 space-y-4 bg-white">
+        <form onSubmit={handleSubmit} className="p-4 md:p-6 space-y-4 bg-white max-w-4xl md:mx-auto">
           {error && (
             <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">
               {error}
