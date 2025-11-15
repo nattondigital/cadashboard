@@ -2278,36 +2278,36 @@ export function Leads() {
 
   if (view === 'view' && selectedLead) {
     return (
-      <div className="md:static fixed inset-0 z-50 bg-white md:bg-transparent flex flex-col">
+      <div className="md:static fixed inset-0 z-50 bg-gradient-to-br from-orange-50 to-red-50 md:bg-transparent flex flex-col">
         {/* Mobile Header with Back Button, Name, and Tabs */}
-        <div className="md:hidden bg-white border-b border-gray-200 flex-shrink-0">
+        <div className="md:hidden bg-gradient-to-r from-orange-600 to-red-600 text-white flex-shrink-0 shadow-lg">
           <div className="p-4 pb-0">
             {/* Back Button and Lead Name */}
-            <div className="flex items-center space-x-3 mb-3">
+            <div className="flex items-center space-x-3 mb-4">
               <button
                 onClick={handleBackToList}
-                className="text-brand-text"
+                className="text-white hover:bg-white/20 rounded-lg p-2 transition-colors"
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
               <div className="flex items-center space-x-3 flex-1">
-                <Avatar className="h-10 w-10">
-                  <AvatarFallback className="bg-brand-primary text-white text-sm font-bold">
+                <Avatar className="h-12 w-12 border-2 border-white/30">
+                  <AvatarFallback className="bg-white/20 text-white text-base font-bold backdrop-blur-sm">
                     {selectedLead.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2)}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h1 className="text-lg font-bold text-brand-text">{selectedLead.name}</h1>
-                  <div className="flex items-center space-x-2 mt-0.5">
-                    <Badge variant="secondary" className="text-xs">{selectedLead.stage}</Badge>
-                    <Badge className={`${interestColors[selectedLead.interest]} text-xs`}>{selectedLead.interest}</Badge>
+                  <h1 className="text-xl font-bold text-white">{selectedLead.name}</h1>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <Badge className="bg-white/20 text-white border-0 text-xs backdrop-blur-sm">{selectedLead.stage}</Badge>
+                    <Badge className="bg-white/20 text-white border-0 text-xs backdrop-blur-sm">{selectedLead.interest}</Badge>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Icon Tabs */}
-            <div className="flex gap-2 px-4 py-3">
+            <div className="flex gap-2 py-3">
               {[
                 { id: 'lead-details', label: 'Lead Details', icon: Flag },
                 { id: 'personal', label: 'Personal', icon: User },
@@ -2321,8 +2321,8 @@ export function Leads() {
                   onClick={() => setDetailTab(tab.id as TabType)}
                   className={`flex-1 py-3 rounded-xl font-medium transition-all flex items-center justify-center ${
                     detailTab === tab.id
-                      ? 'bg-white text-brand-primary shadow-lg'
-                      : 'bg-brand-primary/80 text-white'
+                      ? 'bg-white text-orange-600 shadow-lg'
+                      : 'bg-orange-700/50 text-white hover:bg-orange-700/70'
                   }`}
                 >
                   <tab.icon className="w-5 h-5" />
@@ -2390,11 +2390,11 @@ export function Leads() {
           </div>
         </div>
 
-        <div className="flex-1 md:flex-none overflow-y-auto md:overflow-visible p-4 md:pt-4 md:px-6 md:pb-6 space-y-6">
+        <div className="flex-1 md:flex-none overflow-y-auto md:overflow-visible p-4 md:pt-4 md:px-6 md:pb-6 space-y-4 md:space-y-6">
           {detailTab === 'lead-details' && (
             <div className="flex flex-col lg:flex-row gap-4 md:gap-6">
               {/* Mobile Dropdown */}
-              <div className="lg:hidden px-4">
+              <div className="lg:hidden">
                 <Select
                   value={leadDetailsSubTab}
                   onValueChange={(value) => {
@@ -2407,7 +2407,7 @@ export function Leads() {
                     setCustomFieldErrors({})
                   }}
                 >
-                  <SelectTrigger className="w-full bg-white border-2 border-gray-200 rounded-xl py-6">
+                  <SelectTrigger className="w-full bg-white shadow-lg border-0 rounded-2xl py-6 text-base font-medium">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -2470,58 +2470,58 @@ export function Leads() {
 
               <div className="flex-1">
                 {leadDetailsSubTab === 'info' && (
-                  <Card>
-                    <CardHeader>
+                  <Card className="md:shadow-sm shadow-lg border-0 md:border rounded-2xl md:rounded-lg">
+                    <CardHeader className="md:block hidden">
                       <CardTitle>Lead Information</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-2 gap-6">
-                        <div>
-                          <label className="text-sm text-gray-600">Lead ID</label>
-                          <p className="font-medium mt-1">{selectedLead.lead_id}</p>
+                    <CardContent className="md:p-6 p-5">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
+                        <div className="md:bg-transparent bg-gradient-to-br from-orange-50 to-red-50 md:p-0 p-4 md:rounded-none rounded-xl">
+                          <label className="text-xs md:text-sm text-gray-600 font-medium">Lead ID</label>
+                          <p className="font-semibold mt-1 text-gray-900">{selectedLead.lead_id}</p>
                         </div>
-                        <div>
-                          <label className="text-sm text-gray-600">Stage</label>
-                          <p className="font-medium mt-1">
-                            <Badge variant="secondary">{selectedLead.stage}</Badge>
+                        <div className="md:bg-transparent bg-gradient-to-br from-orange-50 to-red-50 md:p-0 p-4 md:rounded-none rounded-xl">
+                          <label className="text-xs md:text-sm text-gray-600 font-medium">Stage</label>
+                          <p className="font-semibold mt-1">
+                            <Badge variant="secondary" className="md:text-xs text-sm">{selectedLead.stage}</Badge>
                           </p>
                         </div>
-                        <div>
-                          <label className="text-sm text-gray-600">Source</label>
-                          <p className="font-medium mt-1">{selectedLead.source}</p>
+                        <div className="md:bg-transparent bg-gradient-to-br from-orange-50 to-red-50 md:p-0 p-4 md:rounded-none rounded-xl">
+                          <label className="text-xs md:text-sm text-gray-600 font-medium">Source</label>
+                          <p className="font-semibold mt-1 text-gray-900">{selectedLead.source}</p>
                         </div>
-                        <div>
-                          <label className="text-sm text-gray-600">Interest Level</label>
-                          <p className="font-medium mt-1">
-                            <Badge className={interestColors[selectedLead.interest]}>{selectedLead.interest}</Badge>
+                        <div className="md:bg-transparent bg-gradient-to-br from-orange-50 to-red-50 md:p-0 p-4 md:rounded-none rounded-xl">
+                          <label className="text-xs md:text-sm text-gray-600 font-medium">Interest Level</label>
+                          <p className="font-semibold mt-1">
+                            <Badge className={`${interestColors[selectedLead.interest]} md:text-xs text-sm`}>{selectedLead.interest}</Badge>
                           </p>
                         </div>
-                        <div>
-                          <label className="text-sm text-gray-600">Email</label>
-                          <p className="font-medium mt-1">{selectedLead.email || 'N/A'}</p>
+                        <div className="md:bg-transparent bg-gradient-to-br from-orange-50 to-red-50 md:p-0 p-4 md:rounded-none rounded-xl">
+                          <label className="text-xs md:text-sm text-gray-600 font-medium">Email</label>
+                          <p className="font-semibold mt-1 text-gray-900 break-all">{selectedLead.email || 'N/A'}</p>
                         </div>
-                        <div>
-                          <label className="text-sm text-gray-600">Phone</label>
-                          <p className="font-medium mt-1">{selectedLead.phone}</p>
+                        <div className="md:bg-transparent bg-gradient-to-br from-orange-50 to-red-50 md:p-0 p-4 md:rounded-none rounded-xl">
+                          <label className="text-xs md:text-sm text-gray-600 font-medium">Phone</label>
+                          <p className="font-semibold mt-1 text-gray-900">{selectedLead.phone}</p>
                         </div>
-                        <div>
-                          <label className="text-sm text-gray-600">Assigned To</label>
-                          <p className="font-medium mt-1">{selectedLead.assigned_to_name || 'Unassigned' || 'Unassigned'}</p>
+                        <div className="md:bg-transparent bg-gradient-to-br from-orange-50 to-red-50 md:p-0 p-4 md:rounded-none rounded-xl">
+                          <label className="text-xs md:text-sm text-gray-600 font-medium">Assigned To</label>
+                          <p className="font-semibold mt-1 text-gray-900">{selectedLead.assigned_to_name || 'Unassigned' || 'Unassigned'}</p>
                         </div>
-                        <div>
-                          <label className="text-sm text-gray-600">Created Date</label>
-                          <p className="font-medium mt-1">{formatDate(selectedLead.created_at)}</p>
+                        <div className="md:bg-transparent bg-gradient-to-br from-orange-50 to-red-50 md:p-0 p-4 md:rounded-none rounded-xl">
+                          <label className="text-xs md:text-sm text-gray-600 font-medium">Created Date</label>
+                          <p className="font-semibold mt-1 text-gray-900">{formatDate(selectedLead.created_at)}</p>
                         </div>
                         {selectedLead.lead_score && (
-                          <div>
-                            <label className="text-sm text-gray-600">Lead Score</label>
-                            <p className="font-medium mt-1">{selectedLead.lead_score}/100</p>
+                          <div className="md:bg-transparent bg-gradient-to-br from-orange-50 to-red-50 md:p-0 p-4 md:rounded-none rounded-xl">
+                            <label className="text-xs md:text-sm text-gray-600 font-medium">Lead Score</label>
+                            <p className="font-semibold mt-1 text-gray-900">{selectedLead.lead_score}/100</p>
                           </div>
                         )}
                         {selectedLead.last_contact && (
-                          <div>
-                            <label className="text-sm text-gray-600">Last Contact</label>
-                            <p className="font-medium mt-1">{formatDate(selectedLead.last_contact)}</p>
+                          <div className="md:bg-transparent bg-gradient-to-br from-orange-50 to-red-50 md:p-0 p-4 md:rounded-none rounded-xl">
+                            <label className="text-xs md:text-sm text-gray-600 font-medium">Last Contact</label>
+                            <p className="font-semibold mt-1 text-gray-900">{formatDate(selectedLead.last_contact)}</p>
                           </div>
                         )}
                       </div>
@@ -3109,46 +3109,46 @@ export function Leads() {
 
           {/* Mobile Personal Details */}
           {detailTab === 'personal' && (
-            <div className="md:hidden p-4 space-y-4">
+            <div className="md:hidden space-y-3">
               {linkedContact ? (
-                <div className="space-y-4">
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="text-xs text-gray-500 mb-1">Full Name</div>
-                    <div className="font-medium">{linkedContact.full_name || 'N/A'}</div>
+                <div className="space-y-3">
+                  <div className="bg-white shadow-lg p-4 rounded-2xl border border-orange-100">
+                    <div className="text-xs text-gray-500 mb-1 font-medium">Full Name</div>
+                    <div className="font-semibold text-gray-900">{linkedContact.full_name || 'N/A'}</div>
                   </div>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="text-xs text-gray-500 mb-1">Email</div>
-                    <div className="font-medium">{linkedContact.email || 'N/A'}</div>
+                  <div className="bg-white shadow-lg p-4 rounded-2xl border border-orange-100">
+                    <div className="text-xs text-gray-500 mb-1 font-medium">Email</div>
+                    <div className="font-semibold text-gray-900 break-all">{linkedContact.email || 'N/A'}</div>
                   </div>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="text-xs text-gray-500 mb-1">Phone</div>
-                    <div className="font-medium">{linkedContact.phone}</div>
+                  <div className="bg-white shadow-lg p-4 rounded-2xl border border-orange-100">
+                    <div className="text-xs text-gray-500 mb-1 font-medium">Phone</div>
+                    <div className="font-semibold text-gray-900">{linkedContact.phone}</div>
                   </div>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="text-xs text-gray-500 mb-1">Date of Birth</div>
-                    <div className="font-medium">{linkedContact.date_of_birth ? formatDate(linkedContact.date_of_birth) : 'N/A'}</div>
+                  <div className="bg-white shadow-lg p-4 rounded-2xl border border-orange-100">
+                    <div className="text-xs text-gray-500 mb-1 font-medium">Date of Birth</div>
+                    <div className="font-semibold text-gray-900">{linkedContact.date_of_birth ? formatDate(linkedContact.date_of_birth) : 'N/A'}</div>
                   </div>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="text-xs text-gray-500 mb-1">Gender</div>
-                    <div className="font-medium">{linkedContact.gender || 'N/A'}</div>
+                  <div className="bg-white shadow-lg p-4 rounded-2xl border border-orange-100">
+                    <div className="text-xs text-gray-500 mb-1 font-medium">Gender</div>
+                    <div className="font-semibold text-gray-900">{linkedContact.gender || 'N/A'}</div>
                   </div>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="text-xs text-gray-500 mb-1">Education Level</div>
-                    <div className="font-medium">{linkedContact.education_level || 'N/A'}</div>
+                  <div className="bg-white shadow-lg p-4 rounded-2xl border border-orange-100">
+                    <div className="text-xs text-gray-500 mb-1 font-medium">Education Level</div>
+                    <div className="font-semibold text-gray-900">{linkedContact.education_level || 'N/A'}</div>
                   </div>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="text-xs text-gray-500 mb-1">Profession</div>
-                    <div className="font-medium">{linkedContact.profession || 'N/A'}</div>
+                  <div className="bg-white shadow-lg p-4 rounded-2xl border border-orange-100">
+                    <div className="text-xs text-gray-500 mb-1 font-medium">Profession</div>
+                    <div className="font-semibold text-gray-900">{linkedContact.profession || 'N/A'}</div>
                   </div>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="text-xs text-gray-500 mb-1">Experience</div>
-                    <div className="font-medium">{linkedContact.experience || 'N/A'}</div>
+                  <div className="bg-white shadow-lg p-4 rounded-2xl border border-orange-100">
+                    <div className="text-xs text-gray-500 mb-1 font-medium">Experience</div>
+                    <div className="font-semibold text-gray-900">{linkedContact.experience || 'N/A'}</div>
                   </div>
                 </div>
               ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <AlertCircle className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-                  <p>No contact record found for this lead.</p>
+                <div className="text-center py-12 text-gray-500 bg-white rounded-2xl shadow-lg">
+                  <AlertCircle className="w-12 h-12 mx-auto mb-3 text-orange-300" />
+                  <p className="font-medium">No contact record found for this lead.</p>
                   <p className="text-sm mt-2">Personal details will be available once a contact is created.</p>
                 </div>
               )}
@@ -3255,38 +3255,38 @@ export function Leads() {
 
           {/* Mobile Business Details */}
           {detailTab === 'business' && (
-            <div className="md:hidden p-4 space-y-4">
+            <div className="md:hidden space-y-3">
               {linkedContact ? (
-                <div className="space-y-4">
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="text-xs text-gray-500 mb-1">Business Name</div>
-                    <div className="font-medium">{linkedContact.business_name || 'N/A'}</div>
+                <div className="space-y-3">
+                  <div className="bg-white shadow-lg p-4 rounded-2xl border border-orange-100">
+                    <div className="text-xs text-gray-500 mb-1 font-medium">Business Name</div>
+                    <div className="font-semibold text-gray-900">{linkedContact.business_name || 'N/A'}</div>
                   </div>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="text-xs text-gray-500 mb-1">GST Number</div>
-                    <div className="font-medium font-mono">{linkedContact.gst_number || 'N/A'}</div>
+                  <div className="bg-white shadow-lg p-4 rounded-2xl border border-orange-100">
+                    <div className="text-xs text-gray-500 mb-1 font-medium">GST Number</div>
+                    <div className="font-semibold text-gray-900 font-mono">{linkedContact.gst_number || 'N/A'}</div>
                   </div>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="text-xs text-gray-500 mb-1">Address</div>
-                    <div className="font-medium">{linkedContact.address || 'N/A'}</div>
+                  <div className="bg-white shadow-lg p-4 rounded-2xl border border-orange-100">
+                    <div className="text-xs text-gray-500 mb-1 font-medium">Address</div>
+                    <div className="font-semibold text-gray-900">{linkedContact.address || 'N/A'}</div>
                   </div>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="text-xs text-gray-500 mb-1">City</div>
-                    <div className="font-medium">{linkedContact.city || 'N/A'}</div>
+                  <div className="bg-white shadow-lg p-4 rounded-2xl border border-orange-100">
+                    <div className="text-xs text-gray-500 mb-1 font-medium">City</div>
+                    <div className="font-semibold text-gray-900">{linkedContact.city || 'N/A'}</div>
                   </div>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="text-xs text-gray-500 mb-1">State</div>
-                    <div className="font-medium">{linkedContact.state || 'N/A'}</div>
+                  <div className="bg-white shadow-lg p-4 rounded-2xl border border-orange-100">
+                    <div className="text-xs text-gray-500 mb-1 font-medium">State</div>
+                    <div className="font-semibold text-gray-900">{linkedContact.state || 'N/A'}</div>
                   </div>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="text-xs text-gray-500 mb-1">Pincode</div>
-                    <div className="font-medium">{linkedContact.pincode || 'N/A'}</div>
+                  <div className="bg-white shadow-lg p-4 rounded-2xl border border-orange-100">
+                    <div className="text-xs text-gray-500 mb-1 font-medium">Pincode</div>
+                    <div className="font-semibold text-gray-900">{linkedContact.pincode || 'N/A'}</div>
                   </div>
                 </div>
               ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <AlertCircle className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-                  <p>No contact record found for this lead.</p>
+                <div className="text-center py-12 text-gray-500 bg-white rounded-2xl shadow-lg">
+                  <AlertCircle className="w-12 h-12 mx-auto mb-3 text-orange-300" />
+                  <p className="font-medium">No contact record found for this lead.</p>
                   <p className="text-sm mt-2">Business details will be available once a contact is created.</p>
                 </div>
               )}
@@ -3413,18 +3413,18 @@ export function Leads() {
 
           {/* Mobile Notes */}
           {detailTab === 'notes' && (
-            <div className="md:hidden p-4 space-y-6">
+            <div className="md:hidden space-y-4">
               {linkedContact ? (
                 <div className="space-y-4">
-                  <div>
-                    <h4 className="text-lg font-semibold text-brand-text mb-3">Add New Note</h4>
+                  <div className="bg-white shadow-lg rounded-2xl p-5 border border-orange-100">
+                    <h4 className="text-base font-bold text-gray-900 mb-3">Add New Note</h4>
                     <div className="space-y-3">
                       <textarea
                         value={newNoteText}
                         onChange={(e) => setNewNoteText(e.target.value)}
                         placeholder="Type your note here..."
                         rows={4}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent"
+                        className="w-full px-4 py-3 border-2 border-orange-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-orange-50/30"
                       />
                       <Button
                         onClick={(e) => {
@@ -3432,27 +3432,27 @@ export function Leads() {
                           handleAddContactNote()
                         }}
                         disabled={!newNoteText.trim()}
-                        className="w-full"
+                        className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 py-6 rounded-xl font-semibold shadow-md"
                       >
-                        <Plus className="w-4 h-4 mr-2" />
+                        <Plus className="w-5 h-5 mr-2" />
                         Add Note
                       </Button>
                     </div>
                   </div>
 
                   <div>
-                    <h4 className="text-lg font-semibold text-brand-text mb-3">
+                    <h4 className="text-base font-bold text-gray-900 mb-3 px-1">
                       All Notes ({contactNotes.length})
                     </h4>
                     <div className="space-y-3">
                       {contactNotes.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500">
-                          <StickyNote className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                          <p>No notes added yet</p>
+                        <div className="text-center py-12 text-gray-500 bg-white rounded-2xl shadow-lg">
+                          <StickyNote className="w-12 h-12 mx-auto mb-3 text-orange-300" />
+                          <p className="font-medium">No notes added yet</p>
                         </div>
                       ) : (
                         contactNotes.map((note) => (
-                          <div key={note.id} className="bg-gray-50 p-4 rounded-lg">
+                          <div key={note.id} className="bg-white shadow-lg p-4 rounded-2xl border border-orange-100">
                             {editingNoteId === note.id ? (
                               <div className="space-y-3">
                                 <textarea
@@ -3642,18 +3642,18 @@ export function Leads() {
 
           {/* Mobile Appointments */}
           {detailTab === 'appointments' && (
-            <div className="md:hidden p-4 space-y-6">
+            <div className="md:hidden space-y-4">
               {linkedContact ? (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-lg font-semibold text-gray-800">
+                    <h4 className="text-base font-bold text-gray-900">
                       Appointments ({contactAppointments.length})
                     </h4>
                     <PermissionGuard module="appointments" action="insert">
                       <motion.button
                         whileTap={{ scale: 0.95 }}
                         onClick={handleAddAppointment}
-                        className="bg-brand-primary text-white px-4 py-2 rounded-xl font-medium flex items-center gap-2 shadow-md"
+                        className="bg-gradient-to-r from-orange-600 to-red-600 text-white px-5 py-2.5 rounded-xl font-semibold flex items-center gap-2 shadow-lg"
                       >
                         <Plus className="w-4 h-4" />
                         Add
@@ -3662,14 +3662,14 @@ export function Leads() {
                   </div>
 
                   {isLoadingAppointments ? (
-                    <div className="text-center py-12">
-                      <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-3 text-brand-primary" />
-                      <p className="text-gray-500 text-sm">Loading appointments...</p>
+                    <div className="text-center py-12 bg-white rounded-2xl shadow-lg">
+                      <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-3 text-orange-600" />
+                      <p className="text-gray-500 text-sm font-medium">Loading appointments...</p>
                     </div>
                   ) : contactAppointments.length === 0 ? (
-                    <div className="text-center py-12 text-gray-500">
-                      <Calendar className="w-16 h-16 mx-auto mb-3 text-gray-300\" />
-                      <p className="text-sm">No appointments scheduled</p>
+                    <div className="text-center py-12 text-gray-500 bg-white rounded-2xl shadow-lg">
+                      <Calendar className="w-16 h-16 mx-auto mb-3 text-orange-300" />
+                      <p className="font-medium">No appointments scheduled</p>
                     </div>
                   ) : (
                     <div className="space-y-3">
@@ -3893,18 +3893,18 @@ export function Leads() {
 
           {/* Mobile Tasks */}
           {detailTab === 'tasks' && (
-            <div className="md:hidden p-4 space-y-6">
+            <div className="md:hidden space-y-4">
               {linkedContact ? (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-lg font-semibold text-gray-800">
+                    <h4 className="text-base font-bold text-gray-900">
                       Tasks ({contactTasks.length})
                     </h4>
                     <PermissionGuard module="tasks" action="insert">
                       <motion.button
                         whileTap={{ scale: 0.95 }}
                         onClick={handleAddTask}
-                        className="bg-brand-primary text-white px-4 py-2 rounded-xl font-medium flex items-center gap-2 shadow-md"
+                        className="bg-gradient-to-r from-orange-600 to-red-600 text-white px-5 py-2.5 rounded-xl font-semibold flex items-center gap-2 shadow-lg"
                       >
                         <Plus className="w-4 h-4" />
                         Add
@@ -3913,14 +3913,14 @@ export function Leads() {
                   </div>
 
                   {isLoadingTasks ? (
-                    <div className="text-center py-12">
-                      <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-3 text-brand-primary" />
-                      <p className="text-gray-500 text-sm">Loading tasks...</p>
+                    <div className="text-center py-12 bg-white rounded-2xl shadow-lg">
+                      <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-3 text-orange-600" />
+                      <p className="text-gray-500 text-sm font-medium">Loading tasks...</p>
                     </div>
                   ) : contactTasks.length === 0 ? (
-                    <div className="text-center py-12 text-gray-500">
-                      <CheckSquare className="w-16 h-16 mx-auto mb-3 text-gray-300" />
-                      <p className="text-sm">No tasks found</p>
+                    <div className="text-center py-12 text-gray-500 bg-white rounded-2xl shadow-lg">
+                      <CheckSquare className="w-16 h-16 mx-auto mb-3 text-orange-300" />
+                      <p className="font-medium">No tasks found</p>
                     </div>
                   ) : (
                     <div className="space-y-3">
