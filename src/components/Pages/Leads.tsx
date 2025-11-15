@@ -4107,23 +4107,87 @@ export function Leads() {
   }
 
   return (
-    <div className="p-4 md:p-6">
-      <div className="hidden md:block">
+    <div className="md:p-6 md:p-4 p-0 bg-gradient-to-br from-orange-50 to-red-50 md:bg-transparent min-h-screen md:min-h-0">
+      <div className="hidden md:block mb-6">
         <PageHeader
           title="Leads Management"
           subtitle="Track and manage your sales pipeline"
           actions={headerActions}
         />
       </div>
-      <div className="md:hidden mb-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold text-brand-text">Leads</h1>
+
+      {/* Mobile Header */}
+      <div className="md:hidden bg-gradient-to-r from-orange-600 to-red-600 px-4 pt-6 pb-4 mb-4 shadow-lg">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-2xl font-bold text-white">Leads</h1>
+            <p className="text-orange-100 text-sm">{format(new Date(), 'EEEE, MMMM dd, yyyy')}</p>
+          </div>
           <PermissionGuard module="leads" action="create">
-            <Button size="sm" onClick={handleAddClick}>
-              <Plus className="w-4 h-4 mr-1" />
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={handleAddClick}
+              className="bg-white text-orange-600 px-4 py-2.5 rounded-xl font-semibold flex items-center gap-2 shadow-lg"
+            >
+              <Plus className="w-5 h-5" />
               Add
-            </Button>
+            </motion.button>
           </PermissionGuard>
+        </div>
+
+        {/* Mobile Stats Cards */}
+        <div className="grid grid-cols-2 gap-3 -mb-8">
+          <motion.div
+            whileTap={{ scale: 0.98 }}
+            className="bg-white rounded-2xl p-4 shadow-lg"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="bg-orange-100 p-2 rounded-xl">
+                <Users className="w-5 h-5 text-orange-600" />
+              </div>
+              <span className="text-2xl font-bold text-orange-600">{totalLeads}</span>
+            </div>
+            <p className="text-xs text-gray-600 font-medium">Total Leads</p>
+          </motion.div>
+
+          <motion.div
+            whileTap={{ scale: 0.98 }}
+            className="bg-white rounded-2xl p-4 shadow-lg"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="bg-red-100 p-2 rounded-xl">
+                <Flag className="w-5 h-5 text-red-600" />
+              </div>
+              <span className="text-2xl font-bold text-red-600">{hotLeads}</span>
+            </div>
+            <p className="text-xs text-gray-600 font-medium">Hot Leads</p>
+          </motion.div>
+
+          <motion.div
+            whileTap={{ scale: 0.98 }}
+            className="bg-white rounded-2xl p-4 shadow-lg"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="bg-blue-100 p-2 rounded-xl">
+                <Calendar className="w-5 h-5 text-blue-600" />
+              </div>
+              <span className="text-2xl font-bold text-blue-600">{demoBookedLeads}</span>
+            </div>
+            <p className="text-xs text-gray-600 font-medium">Demo Booked</p>
+          </motion.div>
+
+          <motion.div
+            whileTap={{ scale: 0.98 }}
+            className="bg-white rounded-2xl p-4 shadow-lg"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="bg-green-100 p-2 rounded-xl">
+                <CheckSquare className="w-5 h-5 text-green-600" />
+              </div>
+              <span className="text-2xl font-bold text-green-600">{wonLeads}</span>
+            </div>
+            <p className="text-xs text-gray-600 font-medium">Won</p>
+          </motion.div>
         </div>
       </div>
 
@@ -4193,7 +4257,7 @@ export function Leads() {
           </motion.div>
 
           <motion.div
-            className="mb-6 flex flex-col md:flex-row gap-3 md:gap-4 flex-wrap"
+            className="mb-6 md:mb-6 px-4 md:px-0 flex flex-col md:flex-row gap-3 md:gap-4 flex-wrap"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
@@ -4201,10 +4265,10 @@ export function Leads() {
               placeholder="Search leads..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full md:max-w-md"
+              className="w-full md:max-w-md md:rounded-lg rounded-xl md:py-2 py-3 border-2 md:border border-orange-100 focus:ring-orange-500 shadow-md md:shadow-sm bg-white"
             />
             <select
-              className="w-full md:w-auto px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-primary text-sm"
+              className="w-full md:w-auto px-4 md:px-3 py-3 md:py-2 border-2 md:border border-orange-100 md:border-gray-300 rounded-xl md:rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 md:focus:ring-brand-primary text-sm font-medium shadow-md md:shadow-none bg-white"
               value={pipelineFilter}
               onChange={(e) => {
                 setPipelineFilter(e.target.value)
@@ -4219,7 +4283,7 @@ export function Leads() {
               ))}
             </select>
             <select
-              className="w-full md:w-auto px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-primary text-sm"
+              className="w-full md:w-auto px-4 md:px-3 py-3 md:py-2 border-2 md:border border-orange-100 md:border-gray-300 rounded-xl md:rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 md:focus:ring-brand-primary text-sm font-medium shadow-md md:shadow-none bg-white"
               value={sourceFilter}
               onChange={(e) => setSourceFilter(e.target.value)}
             >
@@ -4233,7 +4297,7 @@ export function Leads() {
               <option value="Cold Call">Cold Call</option>
             </select>
             <select
-              className="w-full md:w-auto px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-primary text-sm"
+              className="w-full md:w-auto px-4 md:px-3 py-3 md:py-2 border-2 md:border border-orange-100 md:border-gray-300 rounded-xl md:rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 md:focus:ring-brand-primary text-sm font-medium shadow-md md:shadow-none bg-white"
               value={interestFilter}
               onChange={(e) => setInterestFilter(e.target.value)}
             >
@@ -4243,7 +4307,7 @@ export function Leads() {
               <option value="Cold">Cold</option>
             </select>
             <select
-              className="w-full md:w-auto px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-primary text-sm"
+              className="w-full md:w-auto px-4 md:px-3 py-3 md:py-2 border-2 md:border border-orange-100 md:border-gray-300 rounded-xl md:rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 md:focus:ring-brand-primary text-sm font-medium shadow-md md:shadow-none bg-white"
               value={stageFilter}
               onChange={(e) => setStageFilter(e.target.value)}
             >
@@ -4253,7 +4317,7 @@ export function Leads() {
               ))}
             </select>
             <select
-              className="w-full md:w-auto px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-primary text-sm"
+              className="w-full md:w-auto px-4 md:px-3 py-3 md:py-2 border-2 md:border border-orange-100 md:border-gray-300 rounded-xl md:rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 md:focus:ring-brand-primary text-sm font-medium shadow-md md:shadow-none bg-white"
               value={assignedToFilter}
               onChange={(e) => setAssignedToFilter(e.target.value)}
             >
@@ -4426,96 +4490,96 @@ export function Leads() {
             </Card>
             </div>
             )}
-            <Card className="shadow-xl md:hidden">
-              <CardContent className="p-0">
-                <div className="space-y-3 p-3">
-                  {filteredLeads.length === 0 ? (
-                    <div className="text-center py-12 text-gray-400">
-                      No leads found
-                    </div>
-                  ) : (
-                    filteredLeads.map((lead, index) => (
-                      <motion.div
-                        key={lead.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.02 }}
-                        onClick={() => handleViewLead(lead)}
-                        className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm active:shadow-md transition-shadow"
-                      >
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex items-center space-x-3 flex-1 min-w-0">
-                            <Avatar className="h-10 w-10 flex-shrink-0">
-                              <AvatarFallback className="bg-brand-primary text-white text-sm">
-                                {lead.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold text-gray-900 truncate">{lead.name}</h3>
-                              <p className="text-xs text-brand-primary font-mono">{lead.lead_id}</p>
-                            </div>
+            <div className="md:hidden px-4">
+              <div className="space-y-3">
+                {filteredLeads.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500 bg-white rounded-2xl shadow-lg">
+                    <Flag className="w-16 h-16 mx-auto mb-3 text-orange-300" />
+                    <p className="font-medium">No leads found</p>
+                  </div>
+                ) : (
+                  filteredLeads.map((lead, index) => (
+                    <motion.div
+                      key={lead.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.02 }}
+                      onClick={() => handleViewLead(lead)}
+                      whileTap={{ scale: 0.98 }}
+                      className="bg-white border-2 border-orange-100 rounded-2xl p-4 shadow-lg active:shadow-xl transition-all"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center space-x-3 flex-1 min-w-0">
+                          <Avatar className="h-12 w-12 flex-shrink-0 border-2 border-orange-100">
+                            <AvatarFallback className="bg-gradient-to-br from-orange-600 to-red-600 text-white text-base font-bold">
+                              {lead.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-bold text-gray-900 truncate text-base">{lead.name}</h3>
+                            <p className="text-xs text-orange-600 font-semibold">{lead.lead_id}</p>
                           </div>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                              <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                                <MoreVertical className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleViewLead(lead); }}>
-                                <Eye className="w-4 h-4 mr-2" />
-                                View Details
+                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                            <Button size="sm" variant="ghost" className="h-9 w-9 p-0 hover:bg-orange-50">
+                              <MoreVertical className="w-5 h-5 text-orange-600" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleViewLead(lead); }}>
+                              <Eye className="w-4 h-4 mr-2" />
+                              View Details
+                            </DropdownMenuItem>
+                            {canUpdate('leads') && (
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEditClick(lead); }}>
+                                <Edit className="w-4 h-4 mr-2" />
+                                Edit Lead
                               </DropdownMenuItem>
-                              {canUpdate('leads') && (
-                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEditClick(lead); }}>
-                                  <Edit className="w-4 h-4 mr-2" />
-                                  Edit Lead
-                                </DropdownMenuItem>
-                              )}
-                              {canDelete('leads') && (
-                                <DropdownMenuItem
-                                  onClick={(e) => { e.stopPropagation(); handleDeleteLead(lead.id); }}
-                                  className="text-red-600 focus:text-red-600"
-                                >
-                                  <Trash2 className="w-4 h-4 mr-2" />
-                                  Delete Lead
-                                </DropdownMenuItem>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                            )}
+                            {canDelete('leads') && (
+                              <DropdownMenuItem
+                                onClick={(e) => { e.stopPropagation(); handleDeleteLead(lead.id); }}
+                                className="text-red-600 focus:text-red-600"
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete Lead
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                      <div className="space-y-2.5 text-sm mb-3">
+                        <div className="flex items-center space-x-2.5 text-gray-700 bg-orange-50/50 rounded-lg px-3 py-2">
+                          <Phone className="w-4 h-4 flex-shrink-0 text-orange-600" />
+                          <span className="truncate font-medium">{lead.phone}</span>
                         </div>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex items-center space-x-2 text-gray-600">
-                            <Phone className="w-4 h-4 flex-shrink-0" />
-                            <span className="truncate">{lead.phone}</span>
+                        {lead.email && (
+                          <div className="flex items-center space-x-2.5 text-gray-700 bg-orange-50/50 rounded-lg px-3 py-2">
+                            <Mail className="w-4 h-4 flex-shrink-0 text-orange-600" />
+                            <span className="truncate font-medium">{lead.email}</span>
                           </div>
-                          {lead.email && (
-                            <div className="flex items-center space-x-2 text-gray-600">
-                              <Mail className="w-4 h-4 flex-shrink-0" />
-                              <span className="truncate">{lead.email}</span>
-                            </div>
-                          )}
-                          {lead.company && (
-                            <div className="flex items-center space-x-2 text-gray-600">
-                              <Building className="w-4 h-4 flex-shrink-0" />
-                              <span className="truncate">{lead.company}</span>
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex items-center space-x-2 mt-3">
-                          <Badge className={interestColors[lead.interest]} variant="secondary">
-                            {lead.interest}
-                          </Badge>
-                          <Badge variant="secondary" className="bg-gray-100 text-gray-800">
-                            {lead.stage}
-                          </Badge>
-                        </div>
-                      </motion.div>
-                    ))
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                        )}
+                        {lead.company && (
+                          <div className="flex items-center space-x-2.5 text-gray-700 bg-orange-50/50 rounded-lg px-3 py-2">
+                            <Building className="w-4 h-4 flex-shrink-0 text-orange-600" />
+                            <span className="truncate font-medium">{lead.company}</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Badge className={`${interestColors[lead.interest]} font-semibold`} variant="secondary">
+                          {lead.interest}
+                        </Badge>
+                        <Badge variant="secondary" className="bg-orange-100 text-orange-800 font-semibold">
+                          {lead.stage}
+                        </Badge>
+                      </div>
+                    </motion.div>
+                  ))
+                )}
+              </div>
+            </div>
             {displayMode === 'list' && (
             <Card className="shadow-xl hidden md:block">
               <CardHeader>
