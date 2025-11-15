@@ -1461,30 +1461,252 @@ export function Billing() {
                   />
                 </div>
 
-                {/* Amount/Items Field */}
+                {/* Package and Products Selection */}
                 {(activeTab === 'estimates' || activeTab === 'invoices') && (
                   <>
+                    {/* Package Selection */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Subtotal *</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Quick Add Package</label>
+                      <div className="relative package-search-container">
+                        <Input
+                          value={packageSearchTerm}
+                          onChange={(e) => {
+                            setPackageSearchTerm(e.target.value)
+                            setShowPackageDropdown(true)
+                          }}
+                          onFocus={() => setShowPackageDropdown(true)}
+                          placeholder="Search and add package (optional)"
+                          className="rounded-xl"
+                        />
+                        {showPackageDropdown && packages.filter(pkg =>
+                          pkg.package_name?.toLowerCase().includes(packageSearchTerm.toLowerCase()) ||
+                          pkg.package_id?.toLowerCase().includes(packageSearchTerm.toLowerCase())
+                        ).length > 0 && (
+                          <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                            {packages.filter(pkg =>
+                              pkg.package_name?.toLowerCase().includes(packageSearchTerm.toLowerCase()) ||
+                              pkg.package_id?.toLowerCase().includes(packageSearchTerm.toLowerCase())
+                            ).map((pkg: any) => (
+                              <div
+                                key={pkg.id}
+                                className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                                onClick={() => {
+                                  if (Array.isArray(pkg.products) && pkg.products.length > 0) {
+                                    const newItems = pkg.products.map((product: any, index: number) => ({
+                                      id: Date.now() + index,
+                                      product_id: product.product_id,
+                                      product_name: product.product_name,
+                                      quantity: 1,
+                                      unit_price: product.product_price || 0,
+                                      total: product.product_price || 0
+                                    }))
+                                    const items = [...(formData.items || []), ...newItems]
+                                    const subtotal = items.reduce((sum, item) => sum + item.total, 0)
+                                    const discount = parseFloat(formData.discount) || 0
+                                    const taxRate = parseFloat(formData.taxRate) || 0
+                                    const afterDiscount = subtotal - discount
+                                    const taxAmount = (afterDiscount * taxRate) / 100
+                                    const totalAmount = afterDiscount + taxAmount
+                                    setFormData({
+                                      ...formData,
+                                      items,
+                                      subtotal: subtotal.toFixed(2),
+                                      taxAmount: taxAmount.toFixed(2),
+                                      totalAmount: totalAmount.toFixed(2)
+                                    })
+                                  }
+                                  setPackageSearchTerm('')
+                                  setShowPackageDropdown(false)
+                                }}
+                              >
+                                <div className="font-medium text-gray-900">{pkg.package_name}</div>
+                                <div className="text-sm text-gray-500">
+                                  {pkg.package_id} • {Array.isArray(pkg.products) ? pkg.products.length : 0} products • {formatCurrency(pkg.discounted_price || 0)}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">Select a package to add all its products at once</p>
+                    </div>
+
+                    {/* Product Selection */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Products *</label>
+                      <div className="relative">
+                        <Input
+                          value={contactSearchTerm}
+                          onChange={(e) => {
+                            setContactSearchTerm(e.target.value)
+                            setShowContactDropdown(true)
+                          }}
+                          onFocus={() => setShowContactDropdown(true)}
+                          placeholder="Search and add products"
+                          className="rounded-xl"
+                        />
+                        {showContactDropdown && products.filter(p =>
+                          p.product_name?.toLowerCase().includes(contactSearchTerm.toLowerCase()) ||
+                          p.product_id?.toLowerCase().includes(contactSearchTerm.toLowerCase())
+                        ).length > 0 && (
+                          <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                            {products.filter(p =>
+                              p.product_name?.toLowerCase().includes(contactSearchTerm.toLowerCase()) ||
+                              p.product_id?.toLowerCase().includes(contactSearchTerm.toLowerCase())
+                            ).map((product: any) => (
+                              <div
+                                key={product.id}
+                                className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                                onClick={() => {
+                                  const newItem = {
+                                    id: Date.now(),
+                                    product_id: product.product_id,
+                                    product_name: product.product_name,
+                                    quantity: 1,
+                                    unit_price: product.product_price || 0,
+                                    total: product.product_price || 0
+                                  }
+                                  const items = [...(formData.items || []), newItem]
+                                  const subtotal = items.reduce((sum, item) => sum + item.total, 0)
+                                  const discount = parseFloat(formData.discount) || 0
+                                  const taxRate = parseFloat(formData.taxRate) || 0
+                                  const afterDiscount = subtotal - discount
+                                  const taxAmount = (afterDiscount * taxRate) / 100
+                                  const totalAmount = afterDiscount + taxAmount
+                                  setFormData({
+                                    ...formData,
+                                    items,
+                                    subtotal: subtotal.toFixed(2),
+                                    taxAmount: taxAmount.toFixed(2),
+                                    totalAmount: totalAmount.toFixed(2)
+                                  })
+                                  setContactSearchTerm('')
+                                  setShowContactDropdown(false)
+                                }}
+                              >
+                                <div className="font-medium text-gray-900">{product.product_name}</div>
+                                <div className="text-sm text-gray-500">
+                                  {product.product_id} • {formatCurrency(product.product_price || 0)}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Selected Products List */}
+                      {(formData.items || []).length > 0 && (
+                        <div className="mt-3 space-y-2">
+                          {(formData.items || []).map((item: any) => (
+                            <div key={item.id} className="border border-cyan-200 rounded-xl p-3 bg-cyan-50">
+                              <div className="flex items-start justify-between mb-2">
+                                <div className="flex-1">
+                                  <div className="font-medium text-gray-900">{item.product_name}</div>
+                                  <div className="text-xs text-gray-500">{item.product_id}</div>
+                                </div>
+                                <button
+                                  onClick={() => {
+                                    const items = (formData.items || []).filter((i: any) => i.id !== item.id)
+                                    const subtotal = items.reduce((sum: number, item: any) => sum + item.total, 0)
+                                    const discount = parseFloat(formData.discount) || 0
+                                    const taxRate = parseFloat(formData.taxRate) || 0
+                                    const afterDiscount = subtotal - discount
+                                    const taxAmount = (afterDiscount * taxRate) / 100
+                                    const totalAmount = afterDiscount + taxAmount
+                                    setFormData({
+                                      ...formData,
+                                      items,
+                                      subtotal: subtotal.toFixed(2),
+                                      taxAmount: taxAmount.toFixed(2),
+                                      totalAmount: totalAmount.toFixed(2)
+                                    })
+                                  }}
+                                  className="p-1 text-red-600 hover:bg-red-50 rounded"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                              <div className="grid grid-cols-3 gap-2">
+                                <div>
+                                  <label className="text-xs text-gray-600">Quantity</label>
+                                  <Input
+                                    type="number"
+                                    min="1"
+                                    value={item.quantity}
+                                    onChange={(e) => {
+                                      const quantity = parseFloat(e.target.value) || 1
+                                      const items = (formData.items || []).map((i: any) =>
+                                        i.id === item.id ? { ...i, quantity, total: quantity * i.unit_price } : i
+                                      )
+                                      const subtotal = items.reduce((sum: number, item: any) => sum + item.total, 0)
+                                      const discount = parseFloat(formData.discount) || 0
+                                      const taxRate = parseFloat(formData.taxRate) || 0
+                                      const afterDiscount = subtotal - discount
+                                      const taxAmount = (afterDiscount * taxRate) / 100
+                                      const totalAmount = afterDiscount + taxAmount
+                                      setFormData({
+                                        ...formData,
+                                        items,
+                                        subtotal: subtotal.toFixed(2),
+                                        taxAmount: taxAmount.toFixed(2),
+                                        totalAmount: totalAmount.toFixed(2)
+                                      })
+                                    }}
+                                    className="h-9 text-sm rounded-lg"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-xs text-gray-600">Unit Price</label>
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value={item.unit_price}
+                                    onChange={(e) => {
+                                      const unitPrice = parseFloat(e.target.value) || 0
+                                      const items = (formData.items || []).map((i: any) =>
+                                        i.id === item.id ? { ...i, unit_price: unitPrice, total: i.quantity * unitPrice } : i
+                                      )
+                                      const subtotal = items.reduce((sum: number, item: any) => sum + item.total, 0)
+                                      const discount = parseFloat(formData.discount) || 0
+                                      const taxRate = parseFloat(formData.taxRate) || 0
+                                      const afterDiscount = subtotal - discount
+                                      const taxAmount = (afterDiscount * taxRate) / 100
+                                      const totalAmount = afterDiscount + taxAmount
+                                      setFormData({
+                                        ...formData,
+                                        items,
+                                        subtotal: subtotal.toFixed(2),
+                                        taxAmount: taxAmount.toFixed(2),
+                                        totalAmount: totalAmount.toFixed(2)
+                                      })
+                                    }}
+                                    className="h-9 text-sm rounded-lg"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-xs text-gray-600">Total</label>
+                                  <Input
+                                    type="number"
+                                    value={item.total.toFixed(2)}
+                                    readOnly
+                                    className="h-9 text-sm rounded-lg bg-gray-100"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Subtotal</label>
                       <Input
                         type="number"
-                        value={formData.subtotal || ''}
-                        onChange={(e) => {
-                          const subtotal = parseFloat(e.target.value) || 0
-                          const discount = parseFloat(formData.discount) || 0
-                          const taxRate = parseFloat(formData.taxRate) || 0
-                          const afterDiscount = subtotal - discount
-                          const taxAmount = (afterDiscount * taxRate) / 100
-                          const totalAmount = afterDiscount + taxAmount
-                          setFormData({
-                            ...formData,
-                            subtotal: e.target.value,
-                            taxAmount: taxAmount.toFixed(2),
-                            totalAmount: totalAmount.toFixed(2)
-                          })
-                        }}
-                        placeholder="0.00"
-                        className="rounded-xl"
+                        value={formData.subtotal || 0}
+                        readOnly
+                        className="rounded-xl bg-gray-100"
                       />
                     </div>
                     <div>
