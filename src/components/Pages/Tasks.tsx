@@ -150,7 +150,6 @@ export const Tasks: React.FC = () => {
     startDate: '',
     estimatedHours: '',
     category: 'Other',
-    progressPercentage: 0,
     supportingDocuments: [] as string[]
   })
 
@@ -577,7 +576,7 @@ export const Tasks: React.FC = () => {
         start_date: formData.startDate ? convertISTToUTC(formData.startDate) : null,
         estimated_hours: formData.estimatedHours ? parseFloat(formData.estimatedHours) : null,
         category: formData.category,
-        progress_percentage: formData.progressPercentage || 0,
+        progress_percentage: 0,
         supporting_documents: formData.supportingDocuments || []
       }
 
@@ -630,7 +629,7 @@ export const Tasks: React.FC = () => {
         start_date: formData.startDate ? convertISTToUTC(formData.startDate) : null,
         estimated_hours: formData.estimatedHours ? parseFloat(formData.estimatedHours) : null,
         category: formData.category,
-        progress_percentage: formData.progressPercentage,
+        progress_percentage: task.progress_percentage,
         supporting_documents: formData.supportingDocuments || []
       }
 
@@ -693,7 +692,6 @@ export const Tasks: React.FC = () => {
       startDate: convertUTCToISTForInput(task.start_date),
       estimatedHours: task.estimated_hours?.toString() || '',
       category: task.category,
-      progressPercentage: task.progress_percentage,
       supportingDocuments: task.supporting_documents || []
     })
     await fetchReminders(task.id)
@@ -713,8 +711,7 @@ export const Tasks: React.FC = () => {
       startDate: '',
       estimatedHours: '',
       category: 'Other',
-      progressPercentage: 0,
-      supportingDocuments: [] as string[]
+        supportingDocuments: [] as string[]
     })
     setSelectedTask(null)
     setSelectedContactId(null)
@@ -1731,17 +1728,6 @@ export const Tasks: React.FC = () => {
                       />
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Progress (%)</label>
-                      <Input
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={formData.progressPercentage}
-                        onChange={(e) => setFormData(prev => ({ ...prev, progressPercentage: parseInt(e.target.value) || 0 }))}
-                      />
-                    </div>
-
                     <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-gray-700 mb-2">Supporting Documents</label>
                       <div className="space-y-2">
@@ -2609,17 +2595,6 @@ export const Tasks: React.FC = () => {
                     value={formData.estimatedHours}
                     onChange={(e) => setFormData(prev => ({ ...prev, estimatedHours: e.target.value }))}
                     placeholder="0"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Progress (%)</label>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={formData.progressPercentage}
-                    onChange={(e) => setFormData(prev => ({ ...prev, progressPercentage: parseInt(e.target.value) || 0 }))}
                   />
                 </div>
 
