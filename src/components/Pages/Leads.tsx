@@ -2393,7 +2393,44 @@ export function Leads() {
         <div className="flex-1 md:flex-none overflow-y-auto md:overflow-visible p-4 md:pt-4 md:px-6 md:pb-6 space-y-6">
           {detailTab === 'lead-details' && (
             <div className="flex flex-col lg:flex-row gap-4 md:gap-6">
-              <div className="lg:w-64 flex-shrink-0">
+              {/* Mobile Dropdown */}
+              <div className="lg:hidden px-4">
+                <Select
+                  value={leadDetailsSubTab}
+                  onValueChange={(value) => {
+                    // If editing, restore backup values before switching tabs
+                    if (isEditingCustomFields) {
+                      setCustomFieldValues({ ...customFieldValuesBackup })
+                    }
+                    setLeadDetailsSubTab(value)
+                    setIsEditingCustomFields(false)
+                    setCustomFieldErrors({})
+                  }}
+                >
+                  <SelectTrigger className="w-full bg-white border-2 border-gray-200 rounded-xl py-6">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="info">
+                      <div className="flex items-center gap-2">
+                        <Flag className="w-4 h-4" />
+                        Lead Information
+                      </div>
+                    </SelectItem>
+                    {customTabs.filter(tab => tab.is_active).map(tab => (
+                      <SelectItem key={tab.tab_id} value={tab.tab_id}>
+                        <div className="flex items-center gap-2">
+                          <Layers className="w-4 h-4" />
+                          {tab.tab_name}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Desktop Sidebar */}
+              <div className="hidden lg:block lg:w-64 flex-shrink-0">
                 <Card className="lg:sticky lg:top-6">
                   <CardContent className="p-4">
                     <nav className="space-y-1">
