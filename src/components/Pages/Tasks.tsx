@@ -1833,8 +1833,8 @@ export const Tasks: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Reminders Section */}
-                    {(view === 'add' || (view === 'edit' && selectedTask)) && (
+                    {/* Reminders Section - Only show in edit mode */}
+                    {view === 'edit' && selectedTask && (
                       <div className="md:col-span-2">
                         <div className="border-t border-gray-200 pt-6">
                           <div className="flex items-center justify-between mb-4">
@@ -1842,41 +1842,27 @@ export const Tasks: React.FC = () => {
                               <Bell className="w-5 h-5 text-gray-600" />
                               <h4 className="text-lg font-semibold text-gray-800">Reminders</h4>
                             </div>
-                            {view === 'edit' && (
-                              <Button
-                                type="button"
-                                size="sm"
-                                onClick={() => setShowReminderForm(!showReminderForm)}
-                                variant={showReminderForm ? "outline" : "default"}
-                              >
-                                {showReminderForm ? (
-                                  <>
-                                    <X className="w-4 h-4 mr-2" />
-                                    Cancel
-                                  </>
-                                ) : (
-                                  <>
-                                    <BellPlus className="w-4 h-4 mr-2" />
-                                    Add Reminder
-                                  </>
-                                )}
-                              </Button>
-                            )}
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={() => setShowReminderForm(!showReminderForm)}
+                              variant={showReminderForm ? "outline" : "default"}
+                            >
+                              {showReminderForm ? (
+                                <>
+                                  <X className="w-4 h-4 mr-2" />
+                                  Cancel
+                                </>
+                              ) : (
+                                <>
+                                  <BellPlus className="w-4 h-4 mr-2" />
+                                  Add Reminder
+                                </>
+                              )}
+                            </Button>
                           </div>
 
-                          {view === 'add' && (
-                            <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
-                              <div className="flex items-start gap-3">
-                                <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                                <div>
-                                  <p className="text-sm text-blue-900 font-medium">Reminders can be added after creating the task</p>
-                                  <p className="text-xs text-blue-700 mt-1">Create the task first, then edit it to add reminders for start date, due date, or custom times.</p>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-
-                          {view === 'edit' && showReminderForm && (
+                          {showReminderForm && (
                             <div className="bg-gray-50 p-4 rounded-lg mb-4 space-y-4">
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
@@ -1999,7 +1985,7 @@ export const Tasks: React.FC = () => {
                             </div>
                           )}
 
-                          {view === 'edit' && reminders.length > 0 ? (
+                          {reminders.length > 0 ? (
                             <div className="space-y-2">
                               {reminders.map((reminder) => (
                                 <div
@@ -2055,11 +2041,11 @@ export const Tasks: React.FC = () => {
                                 </div>
                               ))}
                             </div>
-                          ) : view === 'edit' ? (
+                          ) : (
                             <p className="text-sm text-gray-500 text-center py-4">
                               No reminders set. Click "Add Reminder" to create one.
                             </p>
-                          ) : null}
+                          )}
                         </div>
                       </div>
                     )}
