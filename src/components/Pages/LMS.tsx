@@ -287,7 +287,30 @@ export function LMS() {
 
   const renderCourses = () => (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Mobile Header */}
+      <div className="md:hidden bg-gradient-to-r from-blue-600 to-green-600 -mx-4 -mt-6 px-4 py-6 mb-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-white">Courses</h2>
+            <p className="text-blue-100 text-sm mt-1">{courses.length} courses available</p>
+          </div>
+          <PermissionGuard module="lms" action="insert">
+            <Button
+              onClick={() => {
+                setEditingItem(null)
+                setShowCourseModal(true)
+              }}
+              size="sm"
+              className="bg-white text-blue-600 hover:bg-blue-50"
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
+          </PermissionGuard>
+        </div>
+      </div>
+
+      {/* Desktop Header */}
+      <div className="hidden md:flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">All Courses</h2>
           <p className="text-gray-600 mt-1">Manage your course library</p>
@@ -315,7 +338,7 @@ export function LMS() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {courses.map((course, index) => {
             const statusColors = {
               'Published': 'bg-green-100 text-green-800',
@@ -344,74 +367,81 @@ export function LMS() {
                 key={course.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 * index }}
-                whileHover={{ scale: 1.02 }}
+                transition={{ delay: 0.05 * index }}
                 className="h-full"
               >
-                <Card className="shadow-xl hover:shadow-2xl transition-all duration-300 h-full flex flex-col">
+                <Card
+                  className="shadow-lg hover:shadow-xl transition-all duration-300 h-full flex flex-col overflow-hidden active:scale-98 md:hover:scale-102"
+                  onClick={() => handleViewCourse(course)}
+                >
                   <div className="relative">
                     {course.thumbnail_url ? (
                       <img
                         src={course.thumbnail_url}
                         alt={course.title}
-                        className="w-full h-48 object-cover rounded-t-lg"
+                        className="w-full h-40 md:h-48 object-cover"
                       />
                     ) : (
-                      <div className="w-full h-48 bg-gradient-to-br from-blue-100 to-green-100 flex items-center justify-center rounded-t-lg">
-                        <BookOpen className="w-16 h-16 text-gray-400" />
+                      <div className="w-full h-40 md:h-48 bg-gradient-to-br from-blue-100 to-green-100 flex items-center justify-center">
+                        <BookOpen className="w-12 h-12 md:w-16 md:h-16 text-gray-400" />
                       </div>
                     )}
-                    <div className="absolute top-4 right-4">
-                      <Badge className={statusColors[course.status] || 'bg-gray-100 text-gray-800'}>
+                    <div className="absolute top-2 md:top-4 right-2 md:right-4 flex gap-2">
+                      <Badge className={`text-xs ${statusColors[course.status] || 'bg-gray-100 text-gray-800'}`}>
                         {course.status}
                       </Badge>
                     </div>
-                    <div className="absolute top-4 left-4">
-                      <Badge className={levelColors[course.level] || 'bg-gray-100 text-gray-800'}>
+                    <div className="absolute top-2 md:top-4 left-2 md:left-4">
+                      <Badge className={`text-xs ${levelColors[course.level] || 'bg-gray-100 text-gray-800'}`}>
                         {course.level}
                       </Badge>
                     </div>
                   </div>
 
-                  <CardContent className="p-6 flex-1 flex flex-col">
+                  <CardContent className="p-4 md:p-6 flex-1 flex flex-col">
                     <div className="flex-1">
-                      <h3 className="text-xl font-bold text-brand-text mb-2 line-clamp-2">
+                      <h3 className="text-lg md:text-xl font-bold text-brand-text mb-2 line-clamp-2">
                         {course.title}
                       </h3>
 
-                      <p className="text-gray-600 mb-4 line-clamp-2">
+                      <p className="text-sm text-gray-600 mb-3 line-clamp-2">
                         {course.description}
                       </p>
 
-                      <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
+                      <div className="flex flex-wrap gap-3 mb-3 text-xs md:text-sm text-gray-600">
                         {course.duration && (
-                          <div className="flex items-center space-x-2">
-                            <Clock className="w-4 h-4 text-gray-400" />
+                          <div className="flex items-center gap-1.5">
+                            <Clock className="w-3.5 h-3.5 md:w-4 md:h-4 text-gray-400" />
                             <span>{course.duration}</span>
                           </div>
                         )}
-                        <div className="flex items-center space-x-2">
-                          <BookOpen className="w-4 h-4 text-gray-400" />
-                          <span>Course ID: {course.course_id}</span>
+                        <div className="flex items-center gap-1.5">
+                          <BookOpen className="w-3.5 h-3.5 md:w-4 md:h-4 text-gray-400" />
+                          <span className="hidden md:inline">Course ID: </span>
+                          <span>{course.course_id}</span>
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="text-2xl font-bold text-brand-primary">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="text-xl md:text-2xl font-bold text-brand-primary">
                           {formatCurrency(course.price)}
                         </div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-xs md:text-sm text-gray-500 line-clamp-1">
                           by {course.instructor}
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center space-x-2 pt-4 border-t">
+                    {/* Desktop Actions */}
+                    <div className="hidden md:flex items-center space-x-2 pt-4 border-t">
                       <Button
                         size="sm"
                         variant="default"
                         className="flex-1"
-                        onClick={() => handleViewCourse(course)}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleViewCourse(course)
+                        }}
                       >
                         <FolderOpen className="w-4 h-4 mr-2" />
                         <span>View</span>
@@ -420,7 +450,8 @@ export function LMS() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation()
                             setEditingItem(course)
                             setShowCourseModal(true)
                           }}
@@ -433,7 +464,10 @@ export function LMS() {
                           size="sm"
                           variant="outline"
                           className="text-red-600 hover:text-red-700"
-                          onClick={() => handleDeleteCourse(course.id)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDeleteCourse(course.id)
+                          }}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -450,8 +484,40 @@ export function LMS() {
   )
 
   const renderCategories = () => (
-    <div className="space-y-6">
-      <div className="flex items-center space-x-4">
+    <div className="space-y-4 md:space-y-6">
+      {/* Mobile Header */}
+      <div className="md:hidden bg-gradient-to-r from-blue-600 to-green-600 -mx-4 -mt-6 px-4 py-4 mb-4">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleBackToCourses}
+          className="text-white hover:bg-white/20 mb-3 -ml-2"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back
+        </Button>
+        <div className="flex items-center justify-between">
+          <div className="flex-1 pr-2">
+            <h2 className="text-xl font-bold text-white line-clamp-1">{selectedCourse?.title}</h2>
+            <p className="text-blue-100 text-sm mt-1">{categories.length} categories</p>
+          </div>
+          <PermissionGuard module="lms" action="insert">
+            <Button
+              onClick={() => {
+                setEditingItem(null)
+                setShowCategoryModal(true)
+              }}
+              size="sm"
+              className="bg-white text-blue-600 hover:bg-blue-50"
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
+          </PermissionGuard>
+        </div>
+      </div>
+
+      {/* Desktop Header */}
+      <div className="hidden md:flex items-center space-x-4">
         <Button variant="outline" onClick={handleBackToCourses}>
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Courses
@@ -481,103 +547,165 @@ export function LMS() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-3 md:space-y-6">
           {categories.map((category: any, categoryIndex) => (
             <motion.div
               key={category.id}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: categoryIndex * 0.1 }}
+              transition={{ delay: categoryIndex * 0.05 }}
             >
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-green-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <span className="text-white font-bold text-lg">
-                          {categoryIndex + 1}
-                        </span>
+              <Card className="overflow-hidden">
+                <CardContent className="p-4 md:p-6">
+                  {/* Mobile Layout */}
+                  <div className="md:hidden">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center space-x-3 flex-1">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-green-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <span className="text-white font-bold">
+                            {categoryIndex + 1}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-lg font-bold text-gray-900 line-clamp-1">
+                            {category.title}
+                          </h3>
+                          {category.description && (
+                            <p className="text-xs text-gray-600 line-clamp-1">{category.description}</p>
+                          )}
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="text-xl font-bold text-gray-900">
-                          {category.title}
-                        </h3>
-                        {category.description && (
-                          <p className="text-sm text-gray-600">{category.description}</p>
+                      <div className="flex items-center gap-1 ml-2">
+                        {canUpdate('lms') && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              setEditingItem(category)
+                              setShowCategoryModal(true)
+                            }}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                        )}
+                        {canDelete('lms') && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleDeleteCategory(category.id)}
+                            className="text-red-600"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      {canCreate('lms') && (
-                        <Button
-                          size="sm"
-                          onClick={() => {
-                            setSelectedCategory(category)
-                            setEditingItem(null)
-                            setShowLessonModal(true)
-                          }}
-                          className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700"
-                        >
-                          <Plus className="w-4 h-4 mr-2" />
-                          Add Lesson
-                        </Button>
-                      )}
-                      {canUpdate('lms') && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setEditingItem(category)
-                            setShowCategoryModal(true)
-                          }}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                      )}
-                      {canDelete('lms') && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleDeleteCategory(category.id)}
-                          className="text-red-600"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      )}
+                    {canCreate('lms') && (
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          setSelectedCategory(category)
+                          setEditingItem(null)
+                          setShowLessonModal(true)
+                        }}
+                        className="w-full bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 mb-3"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Lesson
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Desktop Layout */}
+                  <div className="hidden md:block">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-green-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <span className="text-white font-bold text-lg">
+                            {categoryIndex + 1}
+                          </span>
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold text-gray-900">
+                            {category.title}
+                          </h3>
+                          {category.description && (
+                            <p className="text-sm text-gray-600">{category.description}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        {canCreate('lms') && (
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              setSelectedCategory(category)
+                              setEditingItem(null)
+                              setShowLessonModal(true)
+                            }}
+                            className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700"
+                          >
+                            <Plus className="w-4 h-4 mr-2" />
+                            Add Lesson
+                          </Button>
+                        )}
+                        {canUpdate('lms') && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setEditingItem(category)
+                              setShowCategoryModal(true)
+                            }}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                        )}
+                        {canDelete('lms') && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDeleteCategory(category.id)}
+                            className="text-red-600"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
 
                   {category.lessons && category.lessons.length > 0 && (
-                    <div className="ml-15 space-y-2">
+                    <div className="md:ml-15 space-y-2">
                       {category.lessons.map((lesson: Lesson) => (
                         <div
                           key={lesson.id}
                           onClick={() => handleViewLesson(lesson)}
-                          className="flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors group"
+                          className="flex items-center justify-between p-3 md:p-4 bg-gray-50 hover:bg-gray-100 active:bg-gray-200 rounded-lg cursor-pointer transition-colors group"
                         >
-                          <div className="flex items-center space-x-3 flex-1">
-                            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border-2 border-gray-200 group-hover:border-blue-500 transition-colors">
-                              <PlayCircle className="w-5 h-5 text-gray-600 group-hover:text-blue-600" />
+                          <div className="flex items-center space-x-2 md:space-x-3 flex-1 min-w-0">
+                            <div className="w-8 h-8 md:w-10 md:h-10 bg-white rounded-lg flex items-center justify-center border-2 border-gray-200 group-hover:border-blue-500 transition-colors flex-shrink-0">
+                              <PlayCircle className="w-4 h-4 md:w-5 md:h-5 text-gray-600 group-hover:text-blue-600" />
                             </div>
-                            <div className="flex-1">
+                            <div className="flex-1 min-w-0">
                               <div className="flex items-center space-x-2">
-                                <span className="font-medium text-gray-900">
+                                <span className="font-medium text-sm md:text-base text-gray-900 line-clamp-1">
                                   {lesson.title}
                                 </span>
                                 {lesson.is_free && (
-                                  <Badge className="bg-blue-100 text-blue-800 text-xs">
+                                  <Badge className="bg-blue-100 text-blue-800 text-xs flex-shrink-0">
                                     Free
                                   </Badge>
                                 )}
                               </div>
                               {lesson.duration && (
-                                <span className="text-sm text-gray-500">
+                                <span className="text-xs md:text-sm text-gray-500">
                                   {lesson.duration}
                                 </span>
                               )}
                             </div>
                           </div>
-                          <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center gap-1 md:space-x-2" onClick={(e) => e.stopPropagation()}>
                             {canUpdate('lms') && (
                               <Button
                                 size="sm"
@@ -588,8 +716,9 @@ export function LMS() {
                                   setEditingItem(lesson)
                                   setShowLessonModal(true)
                                 }}
+                                className="h-8 w-8 p-0 md:h-9 md:w-9"
                               >
-                                <Edit className="w-4 h-4" />
+                                <Edit className="w-3.5 h-3.5 md:w-4 md:h-4" />
                               </Button>
                             )}
                             {canDelete('lms') && (
@@ -597,9 +726,9 @@ export function LMS() {
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => handleDeleteLesson(lesson.id)}
-                                className="text-red-600 hover:text-red-700"
+                                className="text-red-600 hover:text-red-700 h-8 w-8 p-0 md:h-9 md:w-9"
                               >
-                                <Trash2 className="w-4 h-4" />
+                                <Trash2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
                               </Button>
                             )}
                           </div>
@@ -609,7 +738,7 @@ export function LMS() {
                   )}
 
                   {(!category.lessons || category.lessons.length === 0) && (
-                    <div className="ml-15 p-4 bg-gray-50 rounded-lg text-center text-gray-500 text-sm">
+                    <div className="md:ml-15 p-3 md:p-4 bg-gray-50 rounded-lg text-center text-gray-500 text-xs md:text-sm">
                       No lessons yet. Click "Add Lesson" to create your first lesson.
                     </div>
                   )}
@@ -770,8 +899,31 @@ export function LMS() {
     const isDirectVideo = selectedLesson.video_url?.match(/\.(mp4|webm|ogg)$/i)
 
     return (
-      <div className="space-y-6">
-        <div className="flex items-center space-x-4">
+      <div className="space-y-4 md:space-y-6">
+        {/* Mobile Header */}
+        <div className="md:hidden bg-gradient-to-r from-blue-600 to-green-600 -mx-4 -mt-6 px-4 py-4 mb-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleBackToCategories}
+            className="text-white hover:bg-white/20 mb-3 -ml-2"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back
+          </Button>
+          <div>
+            <h2 className="text-xl font-bold text-white line-clamp-2">{selectedLesson.title}</h2>
+            {selectedLesson.duration && (
+              <p className="text-blue-100 text-sm mt-1 flex items-center">
+                <Clock className="w-3.5 h-3.5 mr-1" />
+                {selectedLesson.duration}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Desktop Header */}
+        <div className="hidden md:flex items-center space-x-4">
           <Button variant="outline" onClick={handleBackToCategories}>
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Course
@@ -829,11 +981,11 @@ export function LMS() {
 
         {selectedLesson.description && (
           <Card>
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+            <CardContent className="p-4 md:p-6">
+              <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-3">
                 About this Lesson
               </h3>
-              <div className="text-gray-700 whitespace-pre-wrap">
+              <div className="text-sm md:text-base text-gray-700 whitespace-pre-wrap">
                 {linkifyText(selectedLesson.description)}
               </div>
             </CardContent>
@@ -842,7 +994,7 @@ export function LMS() {
 
         {attachments.length > 0 && (
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 md:p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Course Materials
               </h3>

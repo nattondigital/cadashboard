@@ -88,6 +88,10 @@ export default {
         'slide-in': 'slideIn 0.3s ease-out',
         'fade-in': 'fadeIn 0.2s ease-out'
       },
+      scale: {
+        '98': '0.98',
+        '102': '1.02',
+      },
       fontFamily: {
         sans: ['Inter', 'ui-sans-serif', 'system-ui'],
       }
