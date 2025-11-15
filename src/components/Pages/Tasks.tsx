@@ -2207,39 +2207,222 @@ export const Tasks: React.FC = () => {
                     </div>
                   )}
 
-                  {reminders.length > 0 && (
-                    <div>
-                      <h4 className="text-lg font-semibold text-brand-text mb-3 flex items-center gap-2">
-                        <Bell className="w-5 h-5" />
-                        Reminders
-                      </h4>
+                  {/* Reminders Section */}
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <Bell className="w-5 h-5 text-gray-600" />
+                        <h4 className="text-lg font-semibold text-gray-800">Reminders</h4>
+                      </div>
+                      <PermissionGuard module="tasks" action="update">
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => setShowReminderForm(!showReminderForm)}
+                          variant={showReminderForm ? "outline" : "default"}
+                        >
+                          {showReminderForm ? (
+                            <>
+                              <X className="w-4 h-4 mr-2" />
+                              Cancel
+                            </>
+                          ) : (
+                            <>
+                              <BellPlus className="w-4 h-4 mr-2" />
+                              Add Reminder
+                            </>
+                          )}
+                        </Button>
+                      </PermissionGuard>
+                    </div>
+
+                    {showReminderForm && (
+                      <div className="bg-gray-50 p-4 rounded-lg mb-4 space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Reminder Type
+                            </label>
+                            <Select
+                              value={reminderFormData.reminder_type}
+                              onValueChange={(value: any) => {
+                                setReminderFormData(prev => ({
+                                  ...prev,
+                                  reminder_type: value,
+                                  custom_datetime: value === 'custom' ? '' : null
+                                }))
+                              }}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="start_date">Start Date/Time</SelectItem>
+                                <SelectItem value="due_date">Due Date/Time</SelectItem>
+                                <SelectItem value="custom">Custom Date/Time</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {reminderFormData.reminder_type === 'custom' && (
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Custom Date & Time
+                              </label>
+                              <Input
+                                type="datetime-local"
+                                value={reminderFormData.custom_datetime || ''}
+                                onChange={(e) =>
+                                  setReminderFormData(prev => ({
+                                    ...prev,
+                                    custom_datetime: e.target.value
+                                  }))
+                                }
+                              />
+                            </div>
+                          )}
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Timing
+                            </label>
+                            <Select
+                              value={reminderFormData.offset_timing}
+                              onValueChange={(value: any) =>
+                                setReminderFormData(prev => ({ ...prev, offset_timing: value }))
+                              }
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="before">Before</SelectItem>
+                                <SelectItem value="after">After</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Offset Value
+                            </label>
+                            <Input
+                              type="number"
+                              min="0"
+                              value={reminderFormData.offset_value}
+                              onChange={(e) =>
+                                setReminderFormData(prev => ({
+                                  ...prev,
+                                  offset_value: parseInt(e.target.value) || 0
+                                }))
+                              }
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Offset Unit
+                            </label>
+                            <Select
+                              value={reminderFormData.offset_unit}
+                              onValueChange={(value: any) =>
+                                setReminderFormData(prev => ({ ...prev, offset_unit: value }))
+                              }
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="minutes">Minutes</SelectItem>
+                                <SelectItem value="hours">Hours</SelectItem>
+                                <SelectItem value="days">Days</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <Button type="button" size="sm" onClick={handleAddReminder}>
+                            {editingReminderId ? 'Update Reminder' : 'Save Reminder'}
+                          </Button>
+                          {editingReminderId && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={resetReminderForm}
+                            >
+                              Cancel Edit
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {reminders.length > 0 ? (
                       <div className="space-y-2">
                         {reminders.map((reminder) => (
                           <div
                             key={reminder.id}
-                            className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg"
+                            className={`flex items-center justify-between p-3 border rounded-lg transition-colors ${
+                              reminder.is_sent
+                                ? 'bg-gray-50 border-gray-200'
+                                : 'bg-white border-gray-200 hover:border-gray-300'
+                            }`}
                           >
-                            <Bell className="w-4 h-4 text-blue-600 mt-0.5" />
-                            <div className="flex-1">
-                              <p className="text-sm font-medium text-gray-900">
-                                {formatReminderDisplay(reminder)}
-                              </p>
-                              {reminder.calculated_reminder_time && (
-                                <p className="text-xs text-gray-500 mt-1">
-                                  Scheduled: {formatDateTime(reminder.calculated_reminder_time)}
-                                </p>
-                              )}
-                              {reminder.is_sent && reminder.sent_at && (
-                                <Badge variant="secondary" className="mt-1 text-xs">
-                                  Sent on {formatDateTime(reminder.sent_at)}
-                                </Badge>
-                              )}
+                            <div className="flex items-center gap-3 flex-1">
+                              <Bell className={`w-4 h-4 ${reminder.is_sent ? 'text-gray-400' : 'text-blue-600'}`} />
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <p className={`text-sm font-medium ${reminder.is_sent ? 'text-gray-600' : 'text-gray-900'}`}>
+                                    {formatReminderDisplay(reminder)}
+                                  </p>
+                                  {reminder.is_sent && (
+                                    <Badge variant="outline" className="text-xs text-gray-500 border-gray-300">
+                                      Sent
+                                    </Badge>
+                                  )}
+                                </div>
+                                {reminder.calculated_reminder_time && (
+                                  <p className="text-xs text-gray-500">
+                                    {formatDateTime(reminder.calculated_reminder_time)}
+                                  </p>
+                                )}
+                              </div>
                             </div>
+                            <PermissionGuard module="tasks" action="update">
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleEditReminder(reminder)}
+                                  disabled={reminder.is_sent}
+                                  className={reminder.is_sent ? 'opacity-50 cursor-not-allowed' : ''}
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleDeleteReminder(reminder.id!)}
+                                  disabled={reminder.is_sent}
+                                  className={reminder.is_sent ? 'opacity-50 cursor-not-allowed' : 'text-red-600 hover:text-red-700'}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </PermissionGuard>
                           </div>
                         ))}
                       </div>
-                    </div>
-                  )}
+                    ) : (
+                      <p className="text-sm text-gray-500 text-center py-4">
+                        No reminders set. Click "Add Reminder" to create one.
+                      </p>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
