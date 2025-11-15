@@ -35,7 +35,6 @@ const mastersNavigation = [
   { icon: Contact, label: 'Contacts', to: '/contacts', module: 'contacts' as ModuleName },
   { icon: LinkIcon, label: 'Affiliates', to: '/affiliates', module: 'affiliates' as ModuleName },
   { icon: Shield, label: 'Team', to: '/team', module: 'team' as ModuleName },
-  { icon: GraduationCap, label: 'LMS', to: '/lms', module: 'lms' as ModuleName },
 ]
 
 const membersManagementNavigation = [
@@ -49,7 +48,8 @@ const teamManagementNavigation = [
   { icon: Clock, label: 'Attendance', to: '/attendance', module: 'attendance' as ModuleName },
   { icon: Receipt, label: 'Expenses', to: '/expenses', module: 'expenses' as ModuleName },
   { icon: CalendarOff, label: 'Leave', to: '/leave', module: 'leave' as ModuleName },
-  { icon: CheckSquare, label: 'Tasks', to: '/tasks', module: 'tasks' as ModuleName }
+  { icon: CheckSquare, label: 'Tasks', to: '/tasks', module: 'tasks' as ModuleName },
+  { icon: GraduationCap, label: 'LMS', to: '/lms', module: 'lms' as ModuleName },
 ]
 
 const aiAgentsNavigation = [
