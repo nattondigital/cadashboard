@@ -1804,7 +1804,7 @@ export function Leads() {
 
   if (view === 'add') {
     return (
-      <div className="md:static fixed inset-0 z-50 bg-gradient-to-br from-orange-50 to-red-50 md:bg-transparent flex flex-col md:block md:p-6">
+      <div className="md:static fixed inset-0 z-50 bg-gradient-to-br from-orange-50 to-red-50 md:bg-white flex flex-col md:block md:p-6">
         {/* Mobile Header */}
         <div className="md:hidden bg-gradient-to-r from-orange-600 to-red-600 text-white p-4 shadow-lg flex-shrink-0">
           <div className="flex items-center space-x-3 mb-2">
@@ -2059,7 +2059,7 @@ export function Leads() {
 
   if (view === 'edit') {
     return (
-      <div className="md:static fixed inset-0 z-50 bg-gradient-to-br from-orange-50 to-red-50 md:bg-transparent flex flex-col md:block md:p-6">
+      <div className="md:static fixed inset-0 z-50 bg-gradient-to-br from-orange-50 to-red-50 md:bg-white flex flex-col md:block md:p-6">
         {/* Mobile Header */}
         <div className="md:hidden bg-gradient-to-r from-orange-600 to-red-600 text-white p-4 shadow-lg flex-shrink-0">
           <div className="flex items-center space-x-3 mb-2">
@@ -2527,50 +2527,50 @@ export function Leads() {
                     </CardHeader>
                     <CardContent className="md:p-6 p-5">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
-                        <div className="md:bg-transparent bg-gradient-to-br from-orange-50 to-red-50 md:p-0 p-4 md:rounded-none rounded-xl">
+                        <div className="md:bg-white bg-gradient-to-br from-orange-50 to-red-50 md:p-0 p-4 md:rounded-none rounded-xl">
                           <label className="text-xs md:text-sm text-gray-600 font-medium">Lead ID</label>
                           <p className="font-semibold mt-1 text-gray-900">{selectedLead.lead_id}</p>
                         </div>
-                        <div className="md:bg-transparent bg-gradient-to-br from-orange-50 to-red-50 md:p-0 p-4 md:rounded-none rounded-xl">
+                        <div className="md:bg-white bg-gradient-to-br from-orange-50 to-red-50 md:p-0 p-4 md:rounded-none rounded-xl">
                           <label className="text-xs md:text-sm text-gray-600 font-medium">Stage</label>
                           <p className="font-semibold mt-1">
                             <Badge variant="secondary" className="md:text-xs text-sm">{selectedLead.stage}</Badge>
                           </p>
                         </div>
-                        <div className="md:bg-transparent bg-gradient-to-br from-orange-50 to-red-50 md:p-0 p-4 md:rounded-none rounded-xl">
+                        <div className="md:bg-white bg-gradient-to-br from-orange-50 to-red-50 md:p-0 p-4 md:rounded-none rounded-xl">
                           <label className="text-xs md:text-sm text-gray-600 font-medium">Source</label>
                           <p className="font-semibold mt-1 text-gray-900">{selectedLead.source}</p>
                         </div>
-                        <div className="md:bg-transparent bg-gradient-to-br from-orange-50 to-red-50 md:p-0 p-4 md:rounded-none rounded-xl">
+                        <div className="md:bg-white bg-gradient-to-br from-orange-50 to-red-50 md:p-0 p-4 md:rounded-none rounded-xl">
                           <label className="text-xs md:text-sm text-gray-600 font-medium">Interest Level</label>
                           <p className="font-semibold mt-1">
                             <Badge className={`${interestColors[selectedLead.interest]} md:text-xs text-sm`}>{selectedLead.interest}</Badge>
                           </p>
                         </div>
-                        <div className="md:bg-transparent bg-gradient-to-br from-orange-50 to-red-50 md:p-0 p-4 md:rounded-none rounded-xl">
+                        <div className="md:bg-white bg-gradient-to-br from-orange-50 to-red-50 md:p-0 p-4 md:rounded-none rounded-xl">
                           <label className="text-xs md:text-sm text-gray-600 font-medium">Email</label>
                           <p className="font-semibold mt-1 text-gray-900 break-all">{selectedLead.email || 'N/A'}</p>
                         </div>
-                        <div className="md:bg-transparent bg-gradient-to-br from-orange-50 to-red-50 md:p-0 p-4 md:rounded-none rounded-xl">
+                        <div className="md:bg-white bg-gradient-to-br from-orange-50 to-red-50 md:p-0 p-4 md:rounded-none rounded-xl">
                           <label className="text-xs md:text-sm text-gray-600 font-medium">Phone</label>
                           <p className="font-semibold mt-1 text-gray-900">{selectedLead.phone}</p>
                         </div>
-                        <div className="md:bg-transparent bg-gradient-to-br from-orange-50 to-red-50 md:p-0 p-4 md:rounded-none rounded-xl">
+                        <div className="md:bg-white bg-gradient-to-br from-orange-50 to-red-50 md:p-0 p-4 md:rounded-none rounded-xl">
                           <label className="text-xs md:text-sm text-gray-600 font-medium">Assigned To</label>
                           <p className="font-semibold mt-1 text-gray-900">{selectedLead.assigned_to_name || 'Unassigned' || 'Unassigned'}</p>
                         </div>
-                        <div className="md:bg-transparent bg-gradient-to-br from-orange-50 to-red-50 md:p-0 p-4 md:rounded-none rounded-xl">
+                        <div className="md:bg-white bg-gradient-to-br from-orange-50 to-red-50 md:p-0 p-4 md:rounded-none rounded-xl">
                           <label className="text-xs md:text-sm text-gray-600 font-medium">Created Date</label>
                           <p className="font-semibold mt-1 text-gray-900">{formatDate(selectedLead.created_at)}</p>
                         </div>
                         {selectedLead.lead_score && (
-                          <div className="md:bg-transparent bg-gradient-to-br from-orange-50 to-red-50 md:p-0 p-4 md:rounded-none rounded-xl">
+                          <div className="md:bg-white bg-gradient-to-br from-orange-50 to-red-50 md:p-0 p-4 md:rounded-none rounded-xl">
                             <label className="text-xs md:text-sm text-gray-600 font-medium">Lead Score</label>
                             <p className="font-semibold mt-1 text-gray-900">{selectedLead.lead_score}/100</p>
                           </div>
                         )}
                         {selectedLead.last_contact && (
-                          <div className="md:bg-transparent bg-gradient-to-br from-orange-50 to-red-50 md:p-0 p-4 md:rounded-none rounded-xl">
+                          <div className="md:bg-white bg-gradient-to-br from-orange-50 to-red-50 md:p-0 p-4 md:rounded-none rounded-xl">
                             <label className="text-xs md:text-sm text-gray-600 font-medium">Last Contact</label>
                             <p className="font-semibold mt-1 text-gray-900">{formatDate(selectedLead.last_contact)}</p>
                           </div>
@@ -4107,7 +4107,7 @@ export function Leads() {
   }
 
   return (
-    <div className="md:p-6 md:p-4 p-0 bg-gradient-to-br from-orange-50 to-red-50 md:bg-transparent min-h-screen md:min-h-0">
+    <div className="md:p-6 md:p-4 p-0 bg-white min-h-screen md:min-h-0">
       <div className="hidden md:block mb-6">
         <PageHeader
           title="Leads Management"
