@@ -111,6 +111,7 @@ export const Tasks: React.FC = () => {
   const [view, setView] = useState<'list' | 'add' | 'edit' | 'view'>('list')
   const [recurringView, setRecurringView] = useState<'list' | 'add' | 'edit' | 'view'>('list')
   const [tasks, setTasks] = useState<Task[]>([])
+  const [taskReminders, setTaskReminders] = useState<Record<string, TaskReminder[]>>({})
   const [recurringTasks, setRecurringTasks] = useState<any[]>([])
   const [selectedRecurringTask, setSelectedRecurringTask] = useState<any | null>(null)
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
@@ -228,6 +229,31 @@ export const Tasks: React.FC = () => {
     }
   }
 
+  const fetchTaskReminders = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('task_reminders')
+        .select('*')
+        .eq('is_sent', false)
+        .order('calculated_reminder_time', { ascending: true })
+
+      if (error) throw error
+
+      // Group reminders by task_id
+      const remindersByTask: Record<string, TaskReminder[]> = {}
+      data?.forEach((reminder) => {
+        if (!remindersByTask[reminder.task_id]) {
+          remindersByTask[reminder.task_id] = []
+        }
+        remindersByTask[reminder.task_id].push(reminder)
+      })
+
+      setTaskReminders(remindersByTask)
+    } catch (error) {
+      console.error('Error fetching task reminders:', error)
+    }
+  }
+
   const fetchTasks = async () => {
     try {
       setIsLoading(true)
@@ -244,6 +270,9 @@ export const Tasks: React.FC = () => {
 
       if (error) throw error
       setTasks(data || [])
+
+      // Fetch reminders for all tasks
+      await fetchTaskReminders()
     } catch (error) {
       console.error('Error fetching tasks:', error)
     } finally {
@@ -1233,6 +1262,7 @@ export const Tasks: React.FC = () => {
                               <th className="text-left py-3 px-4 font-semibold text-brand-text">Priority</th>
                               <th className="text-left py-3 px-4 font-semibold text-brand-text">Assigned To</th>
                               <th className="text-left py-3 px-4 font-semibold text-brand-text">Due Date</th>
+                              <th className="text-left py-3 px-4 font-semibold text-brand-text">Reminder</th>
                               <th className="text-left py-3 px-4 font-semibold text-brand-text">Actions</th>
                             </tr>
                           </thead>
@@ -1286,6 +1316,18 @@ export const Tasks: React.FC = () => {
                                     </div>
                                   ) : (
                                     <span className="text-gray-400 text-sm">No deadline</span>
+                                  )}
+                                </td>
+                                <td className="py-3 px-4">
+                                  {taskReminders[task.id] && taskReminders[task.id].length > 0 ? (
+                                    <div className="flex items-center gap-2">
+                                      <Bell className="w-4 h-4 text-blue-600" />
+                                      <span className="text-sm text-gray-700">
+                                        {formatDateTime(taskReminders[task.id][0].calculated_reminder_time)}
+                                      </span>
+                                    </div>
+                                  ) : (
+                                    <span className="text-gray-400 text-sm">No reminder</span>
                                   )}
                                 </td>
                                 <td className="py-3 px-4">
