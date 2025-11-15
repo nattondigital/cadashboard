@@ -86,12 +86,6 @@ const mockTeamMembers = [
 
 const roleColors: Record<string, string> = {
   'Super Admin': 'bg-red-100 text-red-800',
-  'Sales Manager': 'bg-blue-100 text-blue-800',
-  'Content Manager': 'bg-purple-100 text-purple-800',
-  'Support Agent': 'bg-green-100 text-green-800',
-  'Marketing Specialist': 'bg-orange-100 text-orange-800',
-  'Developer': 'bg-cyan-100 text-cyan-800',
-  // Legacy role support
   'Admin': 'bg-orange-100 text-orange-800',
   'Manager': 'bg-blue-100 text-blue-800',
   'Team Lead': 'bg-purple-100 text-purple-800',
@@ -962,11 +956,10 @@ export function Team() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Super Admin">Super Admin</SelectItem>
-                      <SelectItem value="Sales Manager">Sales Manager</SelectItem>
-                      <SelectItem value="Content Manager">Content Manager</SelectItem>
-                      <SelectItem value="Support Agent">Support Agent</SelectItem>
-                      <SelectItem value="Marketing Specialist">Marketing Specialist</SelectItem>
-                      <SelectItem value="Developer">Developer</SelectItem>
+                      <SelectItem value="Admin">Admin</SelectItem>
+                      <SelectItem value="Manager">Manager</SelectItem>
+                      <SelectItem value="Team Lead">Team Lead</SelectItem>
+                      <SelectItem value="Team Member">Team Member</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -1657,11 +1650,10 @@ export function Team() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Super Admin">Super Admin</SelectItem>
-                      <SelectItem value="Sales Manager">Sales Manager</SelectItem>
-                      <SelectItem value="Content Manager">Content Manager</SelectItem>
-                      <SelectItem value="Support Agent">Support Agent</SelectItem>
-                      <SelectItem value="Marketing Specialist">Marketing Specialist</SelectItem>
-                      <SelectItem value="Developer">Developer</SelectItem>
+                      <SelectItem value="Admin">Admin</SelectItem>
+                      <SelectItem value="Manager">Manager</SelectItem>
+                      <SelectItem value="Team Lead">Team Lead</SelectItem>
+                      <SelectItem value="Team Member">Team Member</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
