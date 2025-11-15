@@ -377,6 +377,12 @@ export const Tasks: React.FC = () => {
   }
 
   const handleEditReminder = (reminder: TaskReminder) => {
+    // Check if reminder has been sent
+    if (reminder.is_sent) {
+      alert('Cannot edit a reminder that has already been sent')
+      return
+    }
+
     setEditingReminderId(reminder.id || null)
     setReminderFormData({
       reminder_type: reminder.reminder_type,
@@ -389,6 +395,13 @@ export const Tasks: React.FC = () => {
   }
 
   const handleDeleteReminder = async (reminderId: string) => {
+    // Check if reminder has been sent
+    const reminder = reminders.find(r => r.id === reminderId)
+    if (reminder?.is_sent) {
+      alert('Cannot delete a reminder that has already been sent')
+      return
+    }
+
     if (!confirm('Are you sure you want to delete this reminder?')) return
 
     try {
@@ -1977,14 +1990,25 @@ export const Tasks: React.FC = () => {
                               {reminders.map((reminder) => (
                                 <div
                                   key={reminder.id}
-                                  className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg hover:border-gray-300 transition-colors"
+                                  className={`flex items-center justify-between p-3 border rounded-lg transition-colors ${
+                                    reminder.is_sent
+                                      ? 'bg-gray-50 border-gray-200'
+                                      : 'bg-white border-gray-200 hover:border-gray-300'
+                                  }`}
                                 >
                                   <div className="flex items-center gap-3 flex-1">
-                                    <Bell className="w-4 h-4 text-blue-600" />
+                                    <Bell className={`w-4 h-4 ${reminder.is_sent ? 'text-gray-400' : 'text-blue-600'}`} />
                                     <div className="flex-1">
-                                      <p className="text-sm font-medium text-gray-900">
-                                        {formatReminderDisplay(reminder)}
-                                      </p>
+                                      <div className="flex items-center gap-2">
+                                        <p className={`text-sm font-medium ${reminder.is_sent ? 'text-gray-600' : 'text-gray-900'}`}>
+                                          {formatReminderDisplay(reminder)}
+                                        </p>
+                                        {reminder.is_sent && (
+                                          <Badge variant="outline" className="text-xs text-gray-500 border-gray-300">
+                                            Sent
+                                          </Badge>
+                                        )}
+                                      </div>
                                       {reminder.calculated_reminder_time && (
                                         <p className="text-xs text-gray-500">
                                           {formatDateTime(reminder.calculated_reminder_time)}
@@ -1998,6 +2022,8 @@ export const Tasks: React.FC = () => {
                                       size="sm"
                                       variant="ghost"
                                       onClick={() => handleEditReminder(reminder)}
+                                      disabled={reminder.is_sent}
+                                      className={reminder.is_sent ? 'opacity-50 cursor-not-allowed' : ''}
                                     >
                                       <Edit className="w-4 h-4" />
                                     </Button>
@@ -2006,7 +2032,8 @@ export const Tasks: React.FC = () => {
                                       size="sm"
                                       variant="ghost"
                                       onClick={() => handleDeleteReminder(reminder.id!)}
-                                      className="text-red-600 hover:text-red-700"
+                                      disabled={reminder.is_sent}
+                                      className={reminder.is_sent ? 'opacity-50 cursor-not-allowed' : 'text-red-600 hover:text-red-700'}
                                     >
                                       <Trash2 className="w-4 h-4" />
                                     </Button>
