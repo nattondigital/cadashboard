@@ -2384,7 +2384,7 @@ export function Leads() {
         </div>
 
         {/* Desktop Header */}
-        <div className="hidden md:block pt-6 px-6">
+        <div className="hidden md:block pt-6 px-6 md:bg-white">
           <div className="mb-4">
             <Button
               variant="ghost"
