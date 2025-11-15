@@ -1906,7 +1906,7 @@ export function Leads() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
                   <ValidatedInput
@@ -1936,7 +1936,7 @@ export function Leads() {
                 />
               </div>
 
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Source *</label>
                   <Select value={formData.source} onValueChange={(value) => setFormData(prev => ({ ...prev, source: value }))}>
@@ -2162,7 +2162,7 @@ export function Leads() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
                   <ValidatedInput
@@ -2192,7 +2192,7 @@ export function Leads() {
                 />
               </div>
 
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Source *</label>
                   <Select value={formData.source} onValueChange={(value) => setFormData(prev => ({ ...prev, source: value }))}>
