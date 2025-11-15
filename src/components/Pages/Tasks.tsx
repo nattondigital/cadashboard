@@ -658,7 +658,7 @@ export const Tasks: React.FC = () => {
         start_date: formData.startDate ? convertISTToUTC(formData.startDate) : null,
         estimated_hours: formData.estimatedHours ? parseFloat(formData.estimatedHours) : null,
         category: formData.category,
-        progress_percentage: task.progress_percentage,
+        progress_percentage: selectedTask.progress_percentage,
         supporting_documents: formData.supportingDocuments || []
       }
 
