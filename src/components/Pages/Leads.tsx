@@ -2329,7 +2329,7 @@ export function Leads() {
 
   if (view === 'view' && selectedLead) {
     return (
-      <div className="md:static fixed inset-0 z-50 bg-gradient-to-br from-orange-50 to-red-50 md:bg-transparent flex flex-col">
+      <div className="md:static fixed inset-0 z-50 bg-gradient-to-br from-orange-50 to-red-50 md:bg-white flex flex-col">
         {/* Mobile Header with Back Button, Name, and Tabs */}
         <div className="md:hidden bg-gradient-to-r from-orange-600 to-red-600 text-white flex-shrink-0 shadow-lg">
           <div className="p-4 pb-0">
