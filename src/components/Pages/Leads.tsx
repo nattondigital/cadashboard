@@ -1804,7 +1804,7 @@ export function Leads() {
 
   if (view === 'add') {
     return (
-      <div className="md:static fixed inset-0 z-50 bg-gradient-to-br from-orange-50 to-red-50 md:bg-transparent flex flex-col md:block md:p-6">
+      <div className="md:static fixed inset-0 z-50 flex flex-col md:block md:p-6">
         {/* Mobile Header */}
         <div className="md:hidden bg-gradient-to-r from-orange-600 to-red-600 text-white p-4 shadow-lg flex-shrink-0">
           <div className="flex items-center space-x-3 mb-2">
@@ -2059,7 +2059,7 @@ export function Leads() {
 
   if (view === 'edit') {
     return (
-      <div className="md:static fixed inset-0 z-50 bg-gradient-to-br from-orange-50 to-red-50 md:bg-transparent flex flex-col md:block md:p-6">
+      <div className="md:static fixed inset-0 z-50 flex flex-col md:block md:p-6">
         {/* Mobile Header */}
         <div className="md:hidden bg-gradient-to-r from-orange-600 to-red-600 text-white p-4 shadow-lg flex-shrink-0">
           <div className="flex items-center space-x-3 mb-2">
