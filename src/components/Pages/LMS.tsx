@@ -995,12 +995,14 @@ export function LMS() {
 
   return (
     <div className="p-6">
-      {/* Show PageHeader only on main courses view */}
+      {/* Show PageHeader only on main courses view and only on desktop */}
       {view === 'courses' && (
-        <PageHeader
-          title="Learning Management System"
-          subtitle="Create and manage your courses, categories, and lessons"
-        />
+        <div className="hidden md:block">
+          <PageHeader
+            title="Learning Management System"
+            subtitle="Create and manage your courses, categories, and lessons"
+          />
+        </div>
       )}
 
       {/* Form Views - Full Screen */}
@@ -1077,7 +1079,7 @@ export function LMS() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className={view === 'courses' ? 'mt-8' : ''}
+          className={view === 'courses' ? 'md:mt-8' : ''}
         >
           {view === 'courses' && renderCourses()}
           {view === 'categories' && renderCategories()}
