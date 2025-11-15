@@ -2965,7 +2965,7 @@ export function Leads() {
           )}
 
           {detailTab === 'personal' && (
-            <Card>
+            <Card className="md:block hidden">
               <CardHeader>
                 <CardTitle>Personal Details</CardTitle>
               </CardHeader>
@@ -3070,8 +3070,56 @@ export function Leads() {
             </Card>
           )}
 
+          {/* Mobile Personal Details */}
+          {detailTab === 'personal' && (
+            <div className="md:hidden p-4 space-y-4">
+              {linkedContact ? (
+                <div className="space-y-4">
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="text-xs text-gray-500 mb-1">Full Name</div>
+                    <div className="font-medium">{linkedContact.full_name || 'N/A'}</div>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="text-xs text-gray-500 mb-1">Email</div>
+                    <div className="font-medium">{linkedContact.email || 'N/A'}</div>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="text-xs text-gray-500 mb-1">Phone</div>
+                    <div className="font-medium">{linkedContact.phone}</div>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="text-xs text-gray-500 mb-1">Date of Birth</div>
+                    <div className="font-medium">{linkedContact.date_of_birth ? formatDate(linkedContact.date_of_birth) : 'N/A'}</div>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="text-xs text-gray-500 mb-1">Gender</div>
+                    <div className="font-medium">{linkedContact.gender || 'N/A'}</div>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="text-xs text-gray-500 mb-1">Education Level</div>
+                    <div className="font-medium">{linkedContact.education_level || 'N/A'}</div>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="text-xs text-gray-500 mb-1">Profession</div>
+                    <div className="font-medium">{linkedContact.profession || 'N/A'}</div>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="text-xs text-gray-500 mb-1">Experience</div>
+                    <div className="font-medium">{linkedContact.experience || 'N/A'}</div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <AlertCircle className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                  <p>No contact record found for this lead.</p>
+                  <p className="text-sm mt-2">Personal details will be available once a contact is created.</p>
+                </div>
+              )}
+            </div>
+          )}
+
           {detailTab === 'business' && (
-            <Card>
+            <Card className="md:block hidden">
               <CardHeader>
                 <CardTitle>Business Details</CardTitle>
               </CardHeader>
@@ -3168,8 +3216,48 @@ export function Leads() {
             </Card>
           )}
 
+          {/* Mobile Business Details */}
+          {detailTab === 'business' && (
+            <div className="md:hidden p-4 space-y-4">
+              {linkedContact ? (
+                <div className="space-y-4">
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="text-xs text-gray-500 mb-1">Business Name</div>
+                    <div className="font-medium">{linkedContact.business_name || 'N/A'}</div>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="text-xs text-gray-500 mb-1">GST Number</div>
+                    <div className="font-medium font-mono">{linkedContact.gst_number || 'N/A'}</div>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="text-xs text-gray-500 mb-1">Address</div>
+                    <div className="font-medium">{linkedContact.address || 'N/A'}</div>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="text-xs text-gray-500 mb-1">City</div>
+                    <div className="font-medium">{linkedContact.city || 'N/A'}</div>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="text-xs text-gray-500 mb-1">State</div>
+                    <div className="font-medium">{linkedContact.state || 'N/A'}</div>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="text-xs text-gray-500 mb-1">Pincode</div>
+                    <div className="font-medium">{linkedContact.pincode || 'N/A'}</div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <AlertCircle className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                  <p>No contact record found for this lead.</p>
+                  <p className="text-sm mt-2">Business details will be available once a contact is created.</p>
+                </div>
+              )}
+            </div>
+          )}
+
           {detailTab === 'notes' && (
-            <Card>
+            <Card className="md:block hidden">
               <CardHeader>
                 <CardTitle>Contact Notes</CardTitle>
               </CardHeader>
@@ -3286,8 +3374,124 @@ export function Leads() {
             </Card>
           )}
 
+          {/* Mobile Notes */}
+          {detailTab === 'notes' && (
+            <div className="md:hidden p-4 space-y-6">
+              {linkedContact ? (
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="text-lg font-semibold text-brand-text mb-3">Add New Note</h4>
+                    <div className="space-y-3">
+                      <textarea
+                        value={newNoteText}
+                        onChange={(e) => setNewNoteText(e.target.value)}
+                        placeholder="Type your note here..."
+                        rows={4}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent"
+                      />
+                      <Button
+                        onClick={(e) => {
+                          e.preventDefault()
+                          handleAddContactNote()
+                        }}
+                        disabled={!newNoteText.trim()}
+                        className="w-full"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Note
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-lg font-semibold text-brand-text mb-3">
+                      All Notes ({contactNotes.length})
+                    </h4>
+                    <div className="space-y-3">
+                      {contactNotes.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">
+                          <StickyNote className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                          <p>No notes added yet</p>
+                        </div>
+                      ) : (
+                        contactNotes.map((note) => (
+                          <div key={note.id} className="bg-gray-50 p-4 rounded-lg">
+                            {editingNoteId === note.id ? (
+                              <div className="space-y-3">
+                                <textarea
+                                  value={editingNoteText}
+                                  onChange={(e) => setEditingNoteText(e.target.value)}
+                                  rows={3}
+                                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent"
+                                />
+                                <div className="flex gap-2">
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleEditContactNote(note.id)}
+                                  >
+                                    <Save className="w-4 h-4 mr-2" />
+                                    Save
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      setEditingNoteId(null)
+                                      setEditingNoteText('')
+                                    }}
+                                  >
+                                    Cancel
+                                  </Button>
+                                </div>
+                              </div>
+                            ) : (
+                              <>
+                                <div className="flex items-start justify-between mb-2">
+                                  <div className="text-xs text-gray-500">
+                                    {formatDate(note.created_at)}
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() => {
+                                        setEditingNoteId(note.id)
+                                        setEditingNoteText(note.note_text)
+                                      }}
+                                    >
+                                      <Edit className="w-4 h-4" />
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="text-red-600"
+                                      onClick={() => handleDeleteContactNote(note.id)}
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+                                <p className="text-gray-700 whitespace-pre-wrap">{note.note_text}</p>
+                              </>
+                            )}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <AlertCircle className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                  <p>No contact record found for this lead.</p>
+                  <p className="text-sm mt-2">Notes will be available once a contact is created.</p>
+                </div>
+              )}
+            </div>
+          )}
+
           {detailTab === 'appointments' && (
-            <Card>
+            <Card className="md:block hidden">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle>Appointments ({contactAppointments.length})</CardTitle>
@@ -3399,8 +3603,123 @@ export function Leads() {
             </Card>
           )}
 
+          {/* Mobile Appointments */}
+          {detailTab === 'appointments' && (
+            <div className="md:hidden p-4 space-y-6">
+              {linkedContact ? (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-lg font-semibold text-gray-800">
+                      Appointments ({contactAppointments.length})
+                    </h4>
+                    <PermissionGuard module="appointments" action="insert">
+                      <motion.button
+                        whileTap={{ scale: 0.95 }}
+                        onClick={handleAddAppointment}
+                        className="bg-brand-primary text-white px-4 py-2 rounded-xl font-medium flex items-center gap-2 shadow-md"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Add
+                      </motion.button>
+                    </PermissionGuard>
+                  </div>
+
+                  {isLoadingAppointments ? (
+                    <div className="text-center py-12">
+                      <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-3 text-brand-primary" />
+                      <p className="text-gray-500 text-sm">Loading appointments...</p>
+                    </div>
+                  ) : contactAppointments.length === 0 ? (
+                    <div className="text-center py-12 text-gray-500">
+                      <Calendar className="w-16 h-16 mx-auto mb-3 text-gray-300\" />
+                      <p className="text-sm">No appointments scheduled</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {contactAppointments.map((appointment) => (
+                        <motion.div
+                          key={appointment.id}
+                          whileTap={{ scale: 0.98 }}
+                          className="bg-white rounded-2xl p-4 shadow-md border border-gray-100"
+                        >
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                <Badge className={
+                                  appointment.status === 'Confirmed' ? 'bg-green-100 text-green-800' :
+                                  appointment.status === 'Scheduled' ? 'bg-blue-100 text-blue-800' :
+                                  appointment.status === 'Cancelled' ? 'bg-red-100 text-red-800' :
+                                  'bg-gray-100 text-gray-800'
+                                }>
+                                  {appointment.status}
+                                </Badge>
+                                <Badge className="bg-purple-100 text-purple-800">
+                                  {appointment.meeting_type}
+                                </Badge>
+                              </div>
+                              <div className="text-xs text-gray-500 font-medium mb-2">
+                                ID: {appointment.appointment_id}
+                              </div>
+                            </div>
+                            <PermissionGuard module="appointments" action="update">
+                              <div className="flex gap-1">
+                                <button
+                                  onClick={() => handleEditAppointment(appointment)}
+                                  className="p-2 text-brand-primary hover:bg-brand-primary/10 rounded-lg transition-colors"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </button>
+                                <PermissionGuard module="appointments" action="delete">
+                                  <button
+                                    onClick={() => handleDeleteAppointment(appointment.id)}
+                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </PermissionGuard>
+                              </div>
+                            </PermissionGuard>
+                          </div>
+
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2 text-sm">
+                              <Calendar className="w-4 h-4 text-gray-400" />
+                              <span className="text-gray-700">{formatDate(appointment.appointment_date)}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm">
+                              <Clock className="w-4 h-4 text-gray-400" />
+                              <span className="text-gray-700">{appointment.appointment_time} ({appointment.duration_minutes}m)</span>
+                            </div>
+                            {appointment.location && (
+                              <div className="flex items-center gap-2 text-sm">
+                                <MapPin className="w-4 h-4 text-gray-400" />
+                                <span className="text-gray-700">{appointment.location}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {appointment.notes && (
+                            <div className="mt-3 pt-3 border-t border-gray-200">
+                              <p className="text-sm text-gray-600">{appointment.notes}</p>
+                            </div>
+                          )}
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <AlertCircle className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                  <p>No contact record found for this lead.</p>
+                  <p className="text-sm mt-2">Appointments will be available once a contact is created.</p>
+                </div>
+              )}
+            </div>
+          )}
+
           {detailTab === 'tasks' && (
-            <Card>
+            <Card className="md:block hidden">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle>Tasks ({contactTasks.length})</CardTitle>
@@ -3533,6 +3852,143 @@ export function Leads() {
                 )}
               </CardContent>
             </Card>
+          )}
+
+          {/* Mobile Tasks */}
+          {detailTab === 'tasks' && (
+            <div className="md:hidden p-4 space-y-6">
+              {linkedContact ? (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-lg font-semibold text-gray-800">
+                      Tasks ({contactTasks.length})
+                    </h4>
+                    <PermissionGuard module="tasks" action="insert">
+                      <motion.button
+                        whileTap={{ scale: 0.95 }}
+                        onClick={handleAddTask}
+                        className="bg-brand-primary text-white px-4 py-2 rounded-xl font-medium flex items-center gap-2 shadow-md"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Add
+                      </motion.button>
+                    </PermissionGuard>
+                  </div>
+
+                  {isLoadingTasks ? (
+                    <div className="text-center py-12">
+                      <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-3 text-brand-primary" />
+                      <p className="text-gray-500 text-sm">Loading tasks...</p>
+                    </div>
+                  ) : contactTasks.length === 0 ? (
+                    <div className="text-center py-12 text-gray-500">
+                      <CheckSquare className="w-16 h-16 mx-auto mb-3 text-gray-300" />
+                      <p className="text-sm">No tasks found</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {contactTasks.map((task) => (
+                        <motion.div
+                          key={task.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="bg-white rounded-2xl p-4 shadow-lg border border-gray-100"
+                        >
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex-1">
+                              <div className="flex flex-wrap items-center gap-2 mb-2">
+                                <Badge className={
+                                  task.status === 'Completed' ? 'bg-green-100 text-green-800 text-xs' :
+                                  task.status === 'In Progress' ? 'bg-blue-100 text-blue-800 text-xs' :
+                                  task.status === 'In Review' ? 'bg-yellow-100 text-yellow-800 text-xs' :
+                                  task.status === 'Cancelled' ? 'bg-red-100 text-red-800 text-xs' :
+                                  'bg-gray-100 text-gray-800 text-xs'
+                                }>
+                                  {task.status}
+                                </Badge>
+                                <Badge className={
+                                  task.priority === 'Urgent' ? 'bg-red-100 text-red-800 text-xs' :
+                                  task.priority === 'High' ? 'bg-orange-100 text-orange-800 text-xs' :
+                                  task.priority === 'Medium' ? 'bg-blue-100 text-blue-800 text-xs' :
+                                  'bg-gray-100 text-gray-800 text-xs'
+                                }>
+                                  <Flag className="w-3 h-3 mr-1" />
+                                  {task.priority}
+                                </Badge>
+                                <Badge className="bg-purple-100 text-purple-800 text-xs">
+                                  {task.category}
+                                </Badge>
+                              </div>
+                              <div className="font-medium text-gray-900 mb-1">{task.title}</div>
+                              <div className="text-xs text-gray-500 mb-2">
+                                ID: {task.task_id}
+                              </div>
+                            </div>
+                            <PermissionGuard module="tasks" action="update">
+                              <div className="flex gap-1">
+                                <button
+                                  onClick={() => handleEditTask(task)}
+                                  className="p-2 text-brand-primary hover:bg-brand-primary/10 rounded-lg transition-colors"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </button>
+                                <PermissionGuard module="tasks" action="delete">
+                                  <button
+                                    onClick={() => handleDeleteTask(task.id)}
+                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </PermissionGuard>
+                              </div>
+                            </PermissionGuard>
+                          </div>
+
+                          <div className="space-y-2">
+                            {task.assigned_to_name && (
+                              <div className="flex items-center gap-2 text-sm">
+                                <Users className="w-4 h-4 text-gray-400" />
+                                <span className="text-gray-700">{task.assigned_to_name}</span>
+                              </div>
+                            )}
+                            {task.due_date && (
+                              <div className="flex items-center gap-2 text-sm">
+                                <Calendar className="w-4 h-4 text-gray-400" />
+                                <span className="text-gray-700">Due: {formatDate(task.due_date)}</span>
+                              </div>
+                            )}
+                            <div className="space-y-1">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-gray-500">Progress</span>
+                                <span className="text-xs font-medium text-brand-primary">{task.progress_percentage}%</span>
+                              </div>
+                              <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div
+                                  className="bg-brand-primary h-2 rounded-full transition-all"
+                                  style={{ width: `${task.progress_percentage}%` }}
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          {task.description && (
+                            <div className="mt-3 pt-3 border-t border-gray-200">
+                              <p className="text-sm text-gray-600">{task.description}</p>
+                            </div>
+                          )}
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <AlertCircle className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                  <p>No contact record found for this lead.</p>
+                  <p className="text-sm mt-2">Tasks will be available once a contact is created.</p>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>
