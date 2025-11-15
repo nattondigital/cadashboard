@@ -4121,7 +4121,7 @@ export function Leads() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-white">Leads</h1>
-            <p className="text-orange-100 text-sm">{format(new Date(), 'EEEE, MMMM dd, yyyy')}</p>
+            <p className="text-orange-100 text-sm">{format(new Date(), 'MMMM dd, yyyy')}</p>
           </div>
           <PermissionGuard module="leads" action="insert">
             <motion.button
@@ -4210,10 +4210,10 @@ export function Leads() {
               placeholder="Search leads..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full md:max-w-md md:rounded-lg rounded-xl md:py-2 py-3 border-2 md:border border-orange-100 focus:ring-orange-500 shadow-md md:shadow-sm bg-white"
+              className="w-full md:max-w-md md:rounded-lg rounded-xl md:py-2 py-2 border-2 md:border border-orange-100 focus:ring-orange-500 shadow-md md:shadow-sm bg-white"
             />
             <select
-              className="w-full md:w-auto px-4 md:px-3 py-3 md:py-2 border-2 md:border border-orange-100 md:border-gray-300 rounded-xl md:rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 md:focus:ring-brand-primary text-sm font-medium shadow-md md:shadow-none bg-white"
+              className="w-full md:w-auto px-4 md:px-3 py-2 md:py-2 border-2 md:border border-orange-100 md:border-gray-300 rounded-xl md:rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 md:focus:ring-brand-primary text-sm font-medium shadow-md md:shadow-none bg-white"
               value={pipelineFilter}
               onChange={(e) => {
                 setPipelineFilter(e.target.value)
@@ -4228,7 +4228,7 @@ export function Leads() {
               ))}
             </select>
             <select
-              className="w-full md:w-auto px-4 md:px-3 py-3 md:py-2 border-2 md:border border-orange-100 md:border-gray-300 rounded-xl md:rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 md:focus:ring-brand-primary text-sm font-medium shadow-md md:shadow-none bg-white"
+              className="w-full md:w-auto px-4 md:px-3 py-2 md:py-2 border-2 md:border border-orange-100 md:border-gray-300 rounded-xl md:rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 md:focus:ring-brand-primary text-sm font-medium shadow-md md:shadow-none bg-white"
               value={sourceFilter}
               onChange={(e) => setSourceFilter(e.target.value)}
             >
@@ -4242,7 +4242,7 @@ export function Leads() {
               <option value="Cold Call">Cold Call</option>
             </select>
             <select
-              className="w-full md:w-auto px-4 md:px-3 py-3 md:py-2 border-2 md:border border-orange-100 md:border-gray-300 rounded-xl md:rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 md:focus:ring-brand-primary text-sm font-medium shadow-md md:shadow-none bg-white"
+              className="w-full md:w-auto px-4 md:px-3 py-2 md:py-2 border-2 md:border border-orange-100 md:border-gray-300 rounded-xl md:rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 md:focus:ring-brand-primary text-sm font-medium shadow-md md:shadow-none bg-white"
               value={interestFilter}
               onChange={(e) => setInterestFilter(e.target.value)}
             >
@@ -4252,7 +4252,7 @@ export function Leads() {
               <option value="Cold">Cold</option>
             </select>
             <select
-              className="w-full md:w-auto px-4 md:px-3 py-3 md:py-2 border-2 md:border border-orange-100 md:border-gray-300 rounded-xl md:rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 md:focus:ring-brand-primary text-sm font-medium shadow-md md:shadow-none bg-white"
+              className="w-full md:w-auto px-4 md:px-3 py-2 md:py-2 border-2 md:border border-orange-100 md:border-gray-300 rounded-xl md:rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 md:focus:ring-brand-primary text-sm font-medium shadow-md md:shadow-none bg-white"
               value={stageFilter}
               onChange={(e) => setStageFilter(e.target.value)}
             >
@@ -4262,7 +4262,7 @@ export function Leads() {
               ))}
             </select>
             <select
-              className="w-full md:w-auto px-4 md:px-3 py-3 md:py-2 border-2 md:border border-orange-100 md:border-gray-300 rounded-xl md:rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 md:focus:ring-brand-primary text-sm font-medium shadow-md md:shadow-none bg-white"
+              className="w-full md:w-auto px-4 md:px-3 py-2 md:py-2 border-2 md:border border-orange-100 md:border-gray-300 rounded-xl md:rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 md:focus:ring-brand-primary text-sm font-medium shadow-md md:shadow-none bg-white"
               value={assignedToFilter}
               onChange={(e) => setAssignedToFilter(e.target.value)}
             >
