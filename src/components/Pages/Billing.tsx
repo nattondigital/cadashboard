@@ -1281,15 +1281,6 @@ export function Billing() {
 
               <div className="p-4 space-y-4 pb-20">
                 <div className="bg-white rounded-2xl p-4 shadow-md">
-                  <h3 className="font-semibold text-gray-800 mb-3">Amount</h3>
-                  <div className="text-center p-4 bg-gradient-to-br from-cyan-50 to-blue-50 rounded-xl">
-                    <div className="text-3xl font-bold text-cyan-600">
-                      {formatCurrency(selectedItem.total_amount || selectedItem.amount || selectedItem.amount_paid || 0)}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-2xl p-4 shadow-md">
                   <h3 className="font-semibold text-gray-800 mb-3">Customer Information</h3>
                   <div className="space-y-2">
                     <div className="flex justify-between py-2">
@@ -1311,6 +1302,61 @@ export function Billing() {
                   </div>
                 </div>
 
+                {(activeTab === 'estimates' || activeTab === 'invoices') && selectedItem.items && selectedItem.items.length > 0 && (
+                  <div className="bg-white rounded-2xl p-4 shadow-md">
+                    <h3 className="font-semibold text-gray-800 mb-3">Products/Services</h3>
+                    <div className="space-y-3">
+                      {selectedItem.items.map((productItem: any, idx: number) => (
+                        <div key={idx} className="border border-gray-200 rounded-xl p-3 bg-gray-50">
+                          <div className="flex justify-between items-start mb-2">
+                            <div className="flex-1">
+                              <div className="font-medium text-gray-900">{productItem.product_name || productItem.description}</div>
+                              {productItem.description && productItem.product_name && (
+                                <div className="text-xs text-gray-500 mt-1">{productItem.description}</div>
+                              )}
+                            </div>
+                            <div className="text-right ml-2">
+                              <div className="font-bold text-cyan-600">
+                                {formatCurrency(productItem.total || (productItem.quantity * (productItem.unit_price || productItem.rate || productItem.price || 0)))}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex justify-between text-xs text-gray-600 pt-2 border-t border-gray-200">
+                            <span>Qty: {productItem.quantity}</span>
+                            <span>Unit Price: {formatCurrency(productItem.unit_price || productItem.rate || productItem.price || 0)}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {(activeTab === 'estimates' || activeTab === 'invoices') && (
+                  <div className="bg-white rounded-2xl p-4 shadow-md">
+                    <h3 className="font-semibold text-gray-800 mb-3">Financial Summary</h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between py-2">
+                        <span className="text-sm text-gray-500">Subtotal</span>
+                        <span className="text-sm font-medium text-gray-800">{formatCurrency(selectedItem.subtotal || 0)}</span>
+                      </div>
+                      {selectedItem.discount > 0 && (
+                        <div className="flex justify-between py-2 border-t border-gray-100">
+                          <span className="text-sm text-gray-500">Discount</span>
+                          <span className="text-sm font-medium text-green-600">-{formatCurrency(selectedItem.discount || 0)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between py-2 border-t border-gray-100">
+                        <span className="text-sm text-gray-500">Tax ({selectedItem.tax_rate || 0}%)</span>
+                        <span className="text-sm font-medium text-gray-800">{formatCurrency(selectedItem.tax_amount || 0)}</span>
+                      </div>
+                      <div className="flex justify-between py-3 border-t-2 border-gray-300">
+                        <span className="font-semibold text-gray-800">Total Amount</span>
+                        <span className="text-xl font-bold text-cyan-600">{formatCurrency(selectedItem.total_amount || 0)}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {activeTab === 'invoices' && (
                   <div className="bg-white rounded-2xl p-4 shadow-md">
                     <h3 className="font-semibold text-gray-800 mb-3">Payment Status</h3>
@@ -1331,12 +1377,65 @@ export function Billing() {
                   </div>
                 )}
 
+                {(activeTab === 'subscriptions' || activeTab === 'receipts') && (
+                  <div className="bg-white rounded-2xl p-4 shadow-md">
+                    <h3 className="font-semibold text-gray-800 mb-3">Amount</h3>
+                    <div className="text-center p-4 bg-gradient-to-br from-cyan-50 to-blue-50 rounded-xl">
+                      <div className="text-3xl font-bold text-cyan-600">
+                        {formatCurrency(selectedItem.total_amount || selectedItem.amount || selectedItem.amount_paid || 0)}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {selectedItem.notes && (
                   <div className="bg-white rounded-2xl p-4 shadow-md">
                     <h3 className="font-semibold text-gray-800 mb-3">Notes</h3>
                     <p className="text-sm text-gray-600">{selectedItem.notes}</p>
                   </div>
                 )}
+
+                {/* Action Buttons */}
+                <div className="space-y-3">
+                  {activeTab === 'estimates' && (
+                    <>
+                      <motion.button
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => {
+                          setSelectedItem(selectedItem)
+                          setShowEstimatePDF(true)
+                        }}
+                        className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl py-3 px-6 shadow-lg flex items-center justify-center gap-3 font-semibold"
+                      >
+                        <Download className="w-5 h-5" />
+                        View PDF
+                      </motion.button>
+                      {canUpdate('billing') && selectedItem.status !== 'Invoiced' && (
+                        <motion.button
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => handleCreateInvoice(selectedItem)}
+                          className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl py-3 px-6 shadow-lg flex items-center justify-center gap-3 font-semibold"
+                        >
+                          <FileText className="w-5 h-5" />
+                          Create Invoice
+                        </motion.button>
+                      )}
+                    </>
+                  )}
+                  {activeTab === 'invoices' && (
+                    <motion.button
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => {
+                        setSelectedItem(selectedItem)
+                        setShowInvoicePDF(true)
+                      }}
+                      className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl py-3 px-6 shadow-lg flex items-center justify-center gap-3 font-semibold"
+                    >
+                      <Printer className="w-5 h-5" />
+                      View Invoice PDF
+                    </motion.button>
+                  )}
+                </div>
               </div>
             </motion.div>
           )}
