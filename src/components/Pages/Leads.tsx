@@ -2307,7 +2307,7 @@ export function Leads() {
             </div>
 
             {/* Icon Tabs */}
-            <div className="flex justify-around">
+            <div className="flex gap-2 px-4 py-3">
               {[
                 { id: 'lead-details', label: 'Lead Details', icon: Flag },
                 { id: 'personal', label: 'Personal', icon: User },
@@ -2319,10 +2319,10 @@ export function Leads() {
                 <button
                   key={tab.id}
                   onClick={() => setDetailTab(tab.id as TabType)}
-                  className={`flex items-center justify-center pb-3 px-3 border-b-2 transition-colors ${
+                  className={`flex-1 py-3 rounded-xl font-medium transition-all flex items-center justify-center ${
                     detailTab === tab.id
-                      ? 'border-brand-primary text-brand-primary'
-                      : 'border-transparent text-gray-500'
+                      ? 'bg-white text-brand-primary shadow-lg'
+                      : 'bg-brand-primary/80 text-white'
                   }`}
                 >
                   <tab.icon className="w-5 h-5" />
