@@ -62,7 +62,7 @@ interface Attachment {
   created_at: string
 }
 
-type View = 'courses' | 'categories' | 'lessons' | 'lesson-detail'
+type View = 'courses' | 'categories' | 'lessons' | 'lesson-detail' | 'add-lesson' | 'edit-lesson' | 'add-course' | 'edit-course' | 'add-category' | 'edit-category'
 
 export function LMS() {
   const { canCreate, canUpdate, canDelete } = useAuth()
@@ -80,6 +80,18 @@ export function LMS() {
   const [showCategoryModal, setShowCategoryModal] = useState(false)
   const [showLessonModal, setShowLessonModal] = useState(false)
   const [editingItem, setEditingItem] = useState<any>(null)
+
+  // Check if device is mobile
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   useEffect(() => {
     fetchCourses()
@@ -294,18 +306,6 @@ export function LMS() {
             <h2 className="text-2xl font-bold text-white">Courses</h2>
             <p className="text-blue-100 text-sm mt-1">{courses.length} courses available</p>
           </div>
-          <PermissionGuard module="lms" action="insert">
-            <Button
-              onClick={() => {
-                setEditingItem(null)
-                setShowCourseModal(true)
-              }}
-              size="sm"
-              className="bg-white text-blue-600 hover:bg-blue-50"
-            >
-              <Plus className="w-4 h-4" />
-            </Button>
-          </PermissionGuard>
         </div>
       </div>
 
@@ -319,7 +319,7 @@ export function LMS() {
           <Button
             onClick={() => {
               setEditingItem(null)
-              setShowCourseModal(true)
+              setView('add-course')
             }}
             className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700"
           >
@@ -453,7 +453,7 @@ export function LMS() {
                           onClick={(e) => {
                             e.stopPropagation()
                             setEditingItem(course)
-                            setShowCourseModal(true)
+                            setView('edit-course')
                           }}
                         >
                           <Edit className="w-4 h-4" />
@@ -501,18 +501,6 @@ export function LMS() {
             <h2 className="text-xl font-bold text-white line-clamp-1">{selectedCourse?.title}</h2>
             <p className="text-blue-100 text-sm mt-1">{categories.length} categories</p>
           </div>
-          <PermissionGuard module="lms" action="insert">
-            <Button
-              onClick={() => {
-                setEditingItem(null)
-                setShowCategoryModal(true)
-              }}
-              size="sm"
-              className="bg-white text-blue-600 hover:bg-blue-50"
-            >
-              <Plus className="w-4 h-4" />
-            </Button>
-          </PermissionGuard>
         </div>
       </div>
 
@@ -530,7 +518,7 @@ export function LMS() {
           <Button
             onClick={() => {
               setEditingItem(null)
-              setShowCategoryModal(true)
+              setView('add-category')
             }}
             className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700"
           >
@@ -575,45 +563,7 @@ export function LMS() {
                           )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-1 ml-2">
-                        {canUpdate('lms') && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => {
-                              setEditingItem(category)
-                              setShowCategoryModal(true)
-                            }}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                        )}
-                        {canDelete('lms') && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleDeleteCategory(category.id)}
-                            className="text-red-600"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        )}
-                      </div>
                     </div>
-                    {canCreate('lms') && (
-                      <Button
-                        size="sm"
-                        onClick={() => {
-                          setSelectedCategory(category)
-                          setEditingItem(null)
-                          setShowLessonModal(true)
-                        }}
-                        className="w-full bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 mb-3"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Lesson
-                      </Button>
-                    )}
                   </div>
 
                   {/* Desktop Layout */}
@@ -641,7 +591,7 @@ export function LMS() {
                             onClick={() => {
                               setSelectedCategory(category)
                               setEditingItem(null)
-                              setShowLessonModal(true)
+                              setView('add-lesson')
                             }}
                             className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700"
                           >
@@ -655,7 +605,7 @@ export function LMS() {
                             variant="outline"
                             onClick={() => {
                               setEditingItem(category)
-                              setShowCategoryModal(true)
+                              setView('edit-category')
                             }}
                           >
                             <Edit className="w-4 h-4" />
@@ -705,7 +655,7 @@ export function LMS() {
                               )}
                             </div>
                           </div>
-                          <div className="flex items-center gap-1 md:space-x-2" onClick={(e) => e.stopPropagation()}>
+                          <div className="hidden md:flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
                             {canUpdate('lms') && (
                               <Button
                                 size="sm"
@@ -714,11 +664,11 @@ export function LMS() {
                                   setSelectedLesson(lesson)
                                   setSelectedCategory(category)
                                   setEditingItem(lesson)
-                                  setShowLessonModal(true)
+                                  setView('edit-lesson')
                                 }}
-                                className="h-8 w-8 p-0 md:h-9 md:w-9"
+                                className="h-9 w-9"
                               >
-                                <Edit className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                                <Edit className="w-4 h-4" />
                               </Button>
                             )}
                             {canDelete('lms') && (
@@ -726,9 +676,9 @@ export function LMS() {
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => handleDeleteLesson(lesson.id)}
-                                className="text-red-600 hover:text-red-700 h-8 w-8 p-0 md:h-9 md:w-9"
+                                className="text-red-600 hover:text-red-700 h-9 w-9"
                               >
-                                <Trash2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                                <Trash2 className="w-4 h-4" />
                               </Button>
                             )}
                           </div>
@@ -1059,50 +1009,54 @@ export function LMS() {
         {view === 'categories' && renderCategories()}
         {view === 'lessons' && renderLessons()}
         {view === 'lesson-detail' && renderLessonDetail()}
-      </motion.div>
-
-      <CourseModal
-        isOpen={showCourseModal}
-        onClose={() => {
-          setShowCourseModal(false)
-          setEditingItem(null)
-        }}
-        course={editingItem}
-        onSuccess={fetchCourses}
-      />
-
-      {selectedCourse && (
-        <CategoryModal
-          isOpen={showCategoryModal}
-          onClose={() => {
-            setShowCategoryModal(false)
-            setEditingItem(null)
-          }}
-          courseId={selectedCourse.id}
-          category={editingItem}
-          onSuccess={() => fetchCategories(selectedCourse.id)}
-        />
-      )}
-
-      {selectedCategory && (
-        <LessonModal
-          isOpen={showLessonModal}
-          onClose={() => {
-            setShowLessonModal(false)
-            setEditingItem(null)
-            setSelectedLesson(null)
-          }}
-          categoryId={selectedCategory.id}
-          lesson={editingItem}
-          onSuccess={() => {
-            if (view === 'categories' && selectedCourse) {
+        {(view === 'add-lesson' || view === 'edit-lesson') && selectedCategory && (
+          <LessonModal
+            isOpen={true}
+            onClose={() => {
+              setView('categories')
+              setEditingItem(null)
+              setSelectedLesson(null)
+            }}
+            categoryId={selectedCategory.id}
+            lesson={view === 'edit-lesson' ? editingItem : null}
+            onSuccess={() => {
+              setView('categories')
+              if (selectedCourse) {
+                fetchCategories(selectedCourse.id)
+              }
+            }}
+          />
+        )}
+        {(view === 'add-course' || view === 'edit-course') && (
+          <CourseModal
+            isOpen={true}
+            onClose={() => {
+              setView('courses')
+              setEditingItem(null)
+            }}
+            course={view === 'edit-course' ? editingItem : null}
+            onSuccess={() => {
+              setView('courses')
+              fetchCourses()
+            }}
+          />
+        )}
+        {(view === 'add-category' || view === 'edit-category') && selectedCourse && (
+          <CategoryModal
+            isOpen={true}
+            onClose={() => {
+              setView('categories')
+              setEditingItem(null)
+            }}
+            courseId={selectedCourse.id}
+            category={view === 'edit-category' ? editingItem : null}
+            onSuccess={() => {
+              setView('categories')
               fetchCategories(selectedCourse.id)
-            } else if (view === 'lessons') {
-              fetchLessons(selectedCategory.id)
-            }
-          }}
-        />
-      )}
+            }}
+          />
+        )}
+      </motion.div>
     </div>
   )
 }
