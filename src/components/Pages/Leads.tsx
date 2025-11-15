@@ -4118,76 +4118,21 @@ export function Leads() {
 
       {/* Mobile Header */}
       <div className="md:hidden bg-gradient-to-r from-orange-600 to-red-600 px-4 pt-6 pb-4 mb-4 shadow-lg">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-white">Leads</h1>
             <p className="text-orange-100 text-sm">{format(new Date(), 'EEEE, MMMM dd, yyyy')}</p>
           </div>
-          <PermissionGuard module="leads" action="create">
+          <PermissionGuard module="leads" action="insert">
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={handleAddClick}
-              className="bg-white text-orange-600 px-4 py-2.5 rounded-xl font-semibold flex items-center gap-2 shadow-lg"
+              className="bg-white text-orange-600 px-5 py-3 rounded-xl font-semibold flex items-center gap-2 shadow-lg hover:shadow-xl transition-shadow"
             >
               <Plus className="w-5 h-5" />
-              Add
+              <span>Add Lead</span>
             </motion.button>
           </PermissionGuard>
-        </div>
-
-        {/* Mobile Stats Cards */}
-        <div className="grid grid-cols-2 gap-3 -mb-8">
-          <motion.div
-            whileTap={{ scale: 0.98 }}
-            className="bg-white rounded-2xl p-4 shadow-lg"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <div className="bg-orange-100 p-2 rounded-xl">
-                <Users className="w-5 h-5 text-orange-600" />
-              </div>
-              <span className="text-2xl font-bold text-orange-600">{totalLeads}</span>
-            </div>
-            <p className="text-xs text-gray-600 font-medium">Total Leads</p>
-          </motion.div>
-
-          <motion.div
-            whileTap={{ scale: 0.98 }}
-            className="bg-white rounded-2xl p-4 shadow-lg"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <div className="bg-red-100 p-2 rounded-xl">
-                <Flag className="w-5 h-5 text-red-600" />
-              </div>
-              <span className="text-2xl font-bold text-red-600">{hotLeads}</span>
-            </div>
-            <p className="text-xs text-gray-600 font-medium">Hot Leads</p>
-          </motion.div>
-
-          <motion.div
-            whileTap={{ scale: 0.98 }}
-            className="bg-white rounded-2xl p-4 shadow-lg"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <div className="bg-blue-100 p-2 rounded-xl">
-                <Calendar className="w-5 h-5 text-blue-600" />
-              </div>
-              <span className="text-2xl font-bold text-blue-600">{demoBookedLeads}</span>
-            </div>
-            <p className="text-xs text-gray-600 font-medium">Demo Booked</p>
-          </motion.div>
-
-          <motion.div
-            whileTap={{ scale: 0.98 }}
-            className="bg-white rounded-2xl p-4 shadow-lg"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <div className="bg-green-100 p-2 rounded-xl">
-                <CheckSquare className="w-5 h-5 text-green-600" />
-              </div>
-              <span className="text-2xl font-bold text-green-600">{wonLeads}</span>
-            </div>
-            <p className="text-xs text-gray-600 font-medium">Won</p>
-          </motion.div>
         </div>
       </div>
 
