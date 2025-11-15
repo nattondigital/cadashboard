@@ -1804,8 +1804,25 @@ export function Leads() {
 
   if (view === 'add') {
     return (
-      <div className="p-6">
-        <div className="mb-6">
+      <div className="md:static fixed inset-0 z-50 bg-gradient-to-br from-orange-50 to-red-50 md:bg-transparent flex flex-col md:block md:p-6">
+        {/* Mobile Header */}
+        <div className="md:hidden bg-gradient-to-r from-orange-600 to-red-600 text-white p-4 shadow-lg flex-shrink-0">
+          <div className="flex items-center space-x-3 mb-2">
+            <button
+              onClick={handleBackToList}
+              className="text-white hover:bg-white/20 rounded-lg p-2 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <div>
+              <h1 className="text-xl font-bold">Add New Lead</h1>
+              <p className="text-orange-100 text-sm">Create a new lead entry</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Desktop Header */}
+        <div className="hidden md:block mb-6">
           <Button
             variant="ghost"
             size="sm"
@@ -1818,10 +1835,10 @@ export function Leads() {
           <h1 className="text-3xl font-bold text-brand-text">Add New Lead</h1>
         </div>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
+        <Card className="md:shadow-sm shadow-lg md:border border-0 md:rounded-lg rounded-none flex-1 md:flex-none overflow-y-auto md:overflow-visible">
+          <CardContent className="md:p-6 p-4">
+            <div className="space-y-4 md:space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                 <div className="relative contact-search-container">
                   <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
                   <div className="relative">
@@ -2016,12 +2033,20 @@ export function Leads() {
                 />
               </div>
 
-              <div className="flex items-center space-x-3 pt-4">
-                <Button onClick={handleCreateLead} disabled={!formData.name || !formData.phone || !formData.source || !formData.interest || !formData.pipeline_id || !formData.stage || (formData.pipeline_id && !availableStages[formData.pipeline_id]?.find(s => s.id === formData.stage))}>
-                  <Save className="w-4 h-4 mr-2" />
+              <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 pt-4">
+                <Button
+                  onClick={handleCreateLead}
+                  disabled={!formData.name || !formData.phone || !formData.source || !formData.interest || !formData.pipeline_id || !formData.stage || (formData.pipeline_id && !availableStages[formData.pipeline_id]?.find(s => s.id === formData.stage))}
+                  className="md:w-auto w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 py-6 md:py-2 rounded-xl md:rounded-lg font-semibold shadow-md"
+                >
+                  <Save className="w-5 h-5 mr-2" />
                   Save Lead
                 </Button>
-                <Button variant="outline" onClick={handleBackToList}>
+                <Button
+                  variant="outline"
+                  onClick={handleBackToList}
+                  className="md:w-auto w-full py-6 md:py-2 rounded-xl md:rounded-lg border-2 font-semibold"
+                >
                   Cancel
                 </Button>
               </div>
@@ -2034,8 +2059,25 @@ export function Leads() {
 
   if (view === 'edit') {
     return (
-      <div className="p-6">
-        <div className="mb-6">
+      <div className="md:static fixed inset-0 z-50 bg-gradient-to-br from-orange-50 to-red-50 md:bg-transparent flex flex-col md:block md:p-6">
+        {/* Mobile Header */}
+        <div className="md:hidden bg-gradient-to-r from-orange-600 to-red-600 text-white p-4 shadow-lg flex-shrink-0">
+          <div className="flex items-center space-x-3 mb-2">
+            <button
+              onClick={handleBackToList}
+              className="text-white hover:bg-white/20 rounded-lg p-2 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <div>
+              <h1 className="text-xl font-bold">Edit Lead</h1>
+              <p className="text-orange-100 text-sm">{formData.name}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Desktop Header */}
+        <div className="hidden md:block mb-6">
           <Button
             variant="ghost"
             size="sm"
@@ -2048,12 +2090,12 @@ export function Leads() {
           <h1 className="text-3xl font-bold text-brand-text">Edit Lead</h1>
         </div>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
+        <Card className="md:shadow-sm shadow-lg md:border border-0 md:rounded-lg rounded-none flex-1 md:flex-none overflow-y-auto md:overflow-visible">
+          <CardContent className="md:p-6 p-4">
+            <div className="space-y-4 md:space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                 <div className="relative contact-search-container">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
+                  <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-2">Full Name *</label>
                   <div className="relative">
                     <Input
                       value={formData.name}
@@ -2067,6 +2109,7 @@ export function Leads() {
                         }
                       }}
                       placeholder="Enter full name or search existing contacts"
+                      className="md:rounded-lg rounded-xl md:py-2 py-3 border-2 md:border border-orange-100 focus:ring-orange-500"
                     />
                     {isSearchingContacts && (
                       <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -2246,14 +2289,22 @@ export function Leads() {
                 />
               </div>
 
-              <div className="flex items-center space-x-3 pt-4">
+              <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 pt-4">
                 <PermissionGuard module="leads" action="update">
-                  <Button onClick={handleUpdateLead} disabled={!formData.name || !formData.phone || !formData.pipeline_id || !formData.stage || (formData.pipeline_id && !availableStages[formData.pipeline_id]?.find(s => s.id === formData.stage))}>
-                    <Save className="w-4 h-4 mr-2" />
+                  <Button
+                    onClick={handleUpdateLead}
+                    disabled={!formData.name || !formData.phone || !formData.pipeline_id || !formData.stage || (formData.pipeline_id && !availableStages[formData.pipeline_id]?.find(s => s.id === formData.stage))}
+                    className="md:w-auto w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 py-6 md:py-2 rounded-xl md:rounded-lg font-semibold shadow-md"
+                  >
+                    <Save className="w-5 h-5 mr-2" />
                     Update Lead
                   </Button>
                 </PermissionGuard>
-                <Button variant="outline" onClick={handleBackToList}>
+                <Button
+                  variant="outline"
+                  onClick={handleBackToList}
+                  className="md:w-auto w-full py-6 md:py-2 rounded-xl md:rounded-lg border-2 font-semibold"
+                >
                   Cancel
                 </Button>
                 {selectedLead && (
@@ -2261,9 +2312,9 @@ export function Leads() {
                     <Button
                       variant="outline"
                       onClick={() => handleDeleteLead(selectedLead.id)}
-                      className="text-red-600 hover:text-red-700 ml-auto"
+                      className="text-red-600 hover:text-red-700 md:ml-auto w-full md:w-auto py-6 md:py-2 rounded-xl md:rounded-lg border-2 font-semibold"
                     >
-                      <Trash2 className="w-4 h-4 mr-2" />
+                      <Trash2 className="w-5 h-5 mr-2" />
                       Delete Lead
                     </Button>
                   </PermissionGuard>
