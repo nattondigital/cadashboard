@@ -532,6 +532,7 @@ export function Billing() {
 
       await supabase.from(table).delete().eq('id', id)
       await loadData()
+      handleBackToList()
     } catch (error) {
       console.error('Error deleting:', error)
       alert('Error deleting record')
