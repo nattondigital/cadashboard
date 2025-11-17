@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   BarChart, Users, UserCheck, Link as LinkIcon, Shield,
-  Library, Zap, FileText, HelpCircle, Settings, Sparkles, CreditCard, GraduationCap, Wrench, ChevronDown, Clock, Receipt, Package, CalendarOff, Contact, FolderOpen, Menu, X, Calendar, CheckSquare, Bot, MessageSquare, TrendingUp, LayoutDashboard
+  Library, Zap, FileText, HelpCircle, Settings, Sparkles, CreditCard, GraduationCap, Wrench, ChevronDown, Clock, Receipt, Package, CalendarOff, Contact, FolderOpen, Menu, X, Calendar, CheckSquare, Bot, MessageSquare, TrendingUp
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Sidebar as SidebarContainer } from '@/components/ui/sidebar'
@@ -58,7 +58,6 @@ const aiAgentsNavigation = [
 ]
 
 const misReportingNavigation = [
-  { icon: LayoutDashboard, label: 'Dashboard Builder', to: '/dashboard-builder' },
   { icon: TrendingUp, label: 'Reports', to: '/reports' }
 ]
 

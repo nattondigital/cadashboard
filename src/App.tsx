@@ -39,9 +39,6 @@ import { PayrollMIS } from '@/components/Pages/PayrollMIS'
 import { SalesReport } from '@/components/Pages/SalesReport'
 import { TasksMIS } from '@/components/Pages/TasksMIS'
 import { LeadsMIS } from '@/components/Pages/LeadsMIS'
-import { DashboardBuilder } from '@/components/Pages/DashboardBuilder'
-import { CustomDashboard } from '@/components/Dashboard/CustomDashboard'
-import { DashboardTemplates } from '@/components/Dashboard/DashboardTemplates'
 
 function ProtectedRoutes() {
   const { isAuthenticated, isLoading, login } = useAuth()
@@ -92,9 +89,6 @@ function ProtectedRoutes() {
         <Route path="ai-agents/chat/:id" element={<ProtectedRoute module="ai_agents"><AIAgentChat /></ProtectedRoute>} />
         <Route path="ai-agents/logs" element={<ProtectedRoute module="ai_agents"><AIAgentLogs /></ProtectedRoute>} />
         <Route path="followups" element={<ProtectedRoute module="leads"><Followups /></ProtectedRoute>} />
-        <Route path="dashboard-builder" element={<DashboardBuilder />} />
-        <Route path="dashboard-builder/custom" element={<CustomDashboard />} />
-        <Route path="dashboard-builder/templates" element={<DashboardTemplates />} />
         <Route path="reports" element={<Reports />} />
         <Route path="reports/payroll-mis" element={<PayrollMIS />} />
         <Route path="reports/sales" element={<SalesReport />} />
