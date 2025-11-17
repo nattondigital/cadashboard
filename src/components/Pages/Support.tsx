@@ -1376,26 +1376,69 @@ export function Support() {
                 <div className="bg-white rounded-2xl shadow-lg p-6 space-y-4">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">Customer *</label>
-                    <select
-                      value={formData.customerId}
-                      onChange={(e) => {
-                        const contact = contacts.find(c => c.id === e.target.value)
-                        setFormData(prev => ({
-                          ...prev,
-                          customerId: e.target.value,
-                          customerName: contact?.full_name || '',
-                          customerEmail: contact?.email || ''
-                        }))
-                      }}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    >
-                      <option value="">Select customer</option>
-                      {contacts.map((contact) => (
-                        <option key={contact.id} value={contact.id}>
-                          {contact.full_name}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Search customer by name, email, or phone..."
+                        value={customerSearchTerm}
+                        onChange={(e) => setCustomerSearchTerm(e.target.value)}
+                        onFocus={() => setCustomerSearchTerm('')}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      />
+                      {customerSearchTerm && (
+                        <div className="absolute z-50 w-full mt-1 bg-white border-2 border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                          {contacts
+                            .filter((contact) => {
+                              const searchLower = customerSearchTerm.toLowerCase()
+                              return (
+                                contact.full_name?.toLowerCase().includes(searchLower) ||
+                                contact.email?.toLowerCase().includes(searchLower) ||
+                                contact.phone?.toLowerCase().includes(searchLower) ||
+                                contact.contact_id?.toLowerCase().includes(searchLower)
+                              )
+                            })
+                            .map((contact) => (
+                              <div
+                                key={contact.id}
+                                onClick={() => {
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    customerId: contact.id,
+                                    customerName: contact.full_name || '',
+                                    customerEmail: contact.email || ''
+                                  }))
+                                  setCustomerSearchTerm('')
+                                }}
+                                className="px-4 py-3 hover:bg-orange-50 cursor-pointer border-b last:border-b-0"
+                              >
+                                <div className="font-medium">{contact.full_name}</div>
+                                <div className="text-sm text-gray-500">
+                                  {contact.email || contact.phone || contact.contact_id}
+                                </div>
+                              </div>
+                            ))}
+                          {contacts.filter((contact) => {
+                            const searchLower = customerSearchTerm.toLowerCase()
+                            return (
+                              contact.full_name?.toLowerCase().includes(searchLower) ||
+                              contact.email?.toLowerCase().includes(searchLower) ||
+                              contact.phone?.toLowerCase().includes(searchLower) ||
+                              contact.contact_id?.toLowerCase().includes(searchLower)
+                            )
+                          }).length === 0 && (
+                            <div className="px-4 py-3 text-gray-500 text-center">
+                              No customers found
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {formData.customerName && !customerSearchTerm && (
+                        <div className="mt-2 text-sm text-gray-600 bg-orange-50 px-4 py-3 rounded-xl">
+                          Selected: <span className="font-medium">{formData.customerName}</span>
+                          {formData.customerEmail && ` (${formData.customerEmail})`}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div>
